@@ -4,7 +4,7 @@
 
 - Nova atividade **🎥 Vídeo-aula**: 1 ponto por hora.
 - Nova atividade **📄 Leitura de PDF**: 2 pontos por hora.
-- **Foto opcional** ao registrar uma atividade (fica salva no Firebase Storage).
+- **Foto opcional** ao registrar uma atividade (comprimida no navegador e salva direto no Firestore — sem usar Firebase Storage, que hoje exige plano pago).
 - **Feed**: mostra as atividades recentes com foto, reações (👍❤️🔥👏) e comentários.
 - **Bate-papo**: mensagens em tempo real entre vocês dois.
 - **Conquistas (badges)**: Maratonista (7 dias seguidos), Sem enrolação (começou antes das 8h), 100% (3+ atividades num mesmo dia).
@@ -13,13 +13,11 @@
 ## Passos para ativar tudo no Firebase
 
 1. **Firestore > Regras**: cole o conteúdo de `firestore.rules` (substitui o que já estava lá — adiciona as coleções `messages`, `reactions` e `comments`, e libera as duas novas atividades).
-2. **Storage**: se ainda não tiver ativado, vá em Firebase Console > Storage > "Get started" para criar o bucket (usa o plano gratuito, é só liberar).
-3. **Storage > Regras**: cole o conteúdo de `storage.rules`.
-4. Publique as regras em ambos os lugares.
+2. Publique.
+
+Não é preciso ativar o Firebase Storage — as fotos são reduzidas e comprimidas no próprio navegador (redimensionadas para no máximo 900px e convertidas para JPEG de qualidade média) e guardadas como texto dentro do próprio registro no Firestore, que já está no plano gratuito.
 
 Sem o passo 1, o Feed, o Bate-papo, as reações e os comentários vão dar erro de "permissão negada" (o Ranking e o registro de atividades continuam funcionando normalmente, pois usam a coleção antiga `entries`).
-
-Sem o passo 2/3, o upload de foto falha (mas o registro de atividade sem foto continua funcionando).
 
 ## Fluxo de atualização a partir de agora
 
