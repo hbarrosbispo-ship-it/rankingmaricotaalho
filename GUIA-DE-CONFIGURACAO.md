@@ -2,22 +2,24 @@
 
 ## O que mudou nesta versão
 
+- Removida a atividade "Leitura de material" (os registros antigos continuam no histórico, mas não valem mais pontos novos).
 - Nova atividade **🎥 Vídeo-aula**: 1 ponto por hora.
 - Nova atividade **📄 Leitura de PDF**: 2 pontos por hora.
-- **Foto opcional** ao registrar uma atividade (comprimida no navegador e salva direto no Firestore — sem usar Firebase Storage, que hoje exige plano pago).
+- **Foto opcional** ao registrar uma atividade (comprimida no navegador e salva direto no Firestore — sem usar Firebase Storage, que hoje exige plano pago). No celular, o campo de foto já abre a câmera direto (usa o atributo `capture="environment"` do input) em vez de pedir pra escolher da galeria.
 - **Feed**: mostra as atividades recentes com foto, reações (👍❤️🔥👏) e comentários.
 - **Bate-papo**: mensagens em tempo real entre vocês dois.
 - **Conquistas (badges)**: Maratonista (7 dias seguidos), Sem enrolação (começou antes das 8h), 100% (3+ atividades num mesmo dia).
-- **Meta do casal**: barra de progresso somando os pontos dos dois na semana (meta configurável em `META_SEMANAL_CASAL` no `index.html`).
+- **Loja**: pontos acumulados (histórico total menos o que já foi resgatado) podem ser trocados por prêmios combinados entre vocês. Itens e custos ficam em `STORE_ITEMS` no `index.html`.
+- **Meta do casal progressiva**: em vez de uma meta fixa, começa em 20 pontos na primeira semana e sobe a cada semana seguinte (configurável em `META_CASAL_DATA_INICIO`, `META_CASAL_PONTOS_INICIAL` e `META_CASAL_INCREMENTO_SEMANAL` no `index.html`).
 
 ## Passos para ativar tudo no Firebase
 
-1. **Firestore > Regras**: cole o conteúdo de `firestore.rules` (substitui o que já estava lá — adiciona as coleções `messages`, `reactions` e `comments`, e libera as duas novas atividades).
+1. **Firestore > Regras**: cole o conteúdo de `firestore.rules` (substitui o que já estava lá — agora também libera a coleção `resgates`, usada pela loja).
 2. Publique.
 
 Não é preciso ativar o Firebase Storage — as fotos são reduzidas e comprimidas no próprio navegador (redimensionadas para no máximo 900px e convertidas para JPEG de qualidade média) e guardadas como texto dentro do próprio registro no Firestore, que já está no plano gratuito.
 
-Sem o passo 1, o Feed, o Bate-papo, as reações e os comentários vão dar erro de "permissão negada" (o Ranking e o registro de atividades continuam funcionando normalmente, pois usam a coleção antiga `entries`).
+Sem o passo 1, a Loja vai dar erro de "permissão negada" ao tentar resgatar um prêmio (o Ranking, Feed, Bate-papo e o registro de atividades continuam funcionando normalmente).
 
 ## Fluxo de atualização a partir de agora
 
