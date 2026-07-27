@@ -6,11 +6,13 @@
 - Nova atividade **🎥 Vídeo-aula**: 1 ponto por hora.
 - Nova atividade **📄 Leitura de PDF**: 2 pontos por hora.
 - **Foto opcional** ao registrar uma atividade (comprimida no navegador e salva direto no Firestore — sem usar Firebase Storage, que hoje exige plano pago). No celular, o campo de foto já abre a câmera direto (usa o atributo `capture="environment"` do input) em vez de pedir pra escolher da galeria.
-- **Feed**: mostra as atividades recentes com foto, reações (👍❤️🔥👏) e comentários.
+- **Feed**: mostra as atividades recentes com foto, reações (👍❤️🔥👏😂😮🎉💪) e comentários.
 - **Bate-papo**: mensagens em tempo real entre vocês dois.
-- **Conquistas (badges)**: Maratonista (7 dias seguidos), Sem enrolação (começou antes das 8h), 100% (3+ atividades num mesmo dia).
-- **Loja**: pontos acumulados (histórico total menos o que já foi resgatado) podem ser trocados por prêmios combinados entre vocês. Itens e custos ficam em `STORE_ITEMS` no `index.html`.
+- **Conquistas (badges)**: sequência de dias (Pegando o ritmo / Maratonista / Lenda), 100% (3+ atividades num mesmo dia), Centena/Milhar (pontos acumulados), Mestre das questões, Maratona de vídeo-aulas, Leitor voraz, Documentado (5+ fotos) e Comunicativo (10+ comentários).
+- **Loja**: 8 prêmios (filme, série, sobremesa, jantar, café, massagem, passeio, presente surpresa). Pontos acumulados (histórico total menos o que já foi resgatado) podem ser trocados. Itens e custos ficam em `STORE_ITEMS` no `index.html`.
 - **Meta do casal progressiva**: em vez de uma meta fixa, começa em 20 pontos na primeira semana e sobe a cada semana seguinte (configurável em `META_CASAL_DATA_INICIO`, `META_CASAL_PONTOS_INICIAL` e `META_CASAL_INCREMENTO_SEMANAL` no `index.html`).
+- **Simulado** agora vale 4 pontos por vez (era 5).
+- **Sono**: só perde ponto se dormir menos de 7h ou mais de 9h (antes só valia 0 pontos dormindo exatamente 8h).
 
 ## Passos para ativar tudo no Firebase
 
