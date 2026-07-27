@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ranking de Metas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Segoe UI', system-ui, sans-serif; }
+  .bar-fill { transition: width 0.4s ease; }
+  .tab-btn.active { border-color: #4f46e5; color: #4f46e5; }
+  .react-btn.mine { background: #eef2ff; border-color: #6366f1; }
+</style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+
+<!-- ============================================================
+     PASSO 1: cole aqui a configuração do seu projeto Firebase.
+     Veja o GUIA-DE-CONFIGURACAO.md para saber onde encontrar isso.
+============================================================= -->
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyCrs2ntIdduqo3Jv2e4peCuWActEI7cqGI",
+  authDomain: "ranking-metas-a53e1.firebaseapp.com",
+  projectId: "ranking-metas-a53e1",
+  storageBucket: "ranking-metas-a53e1.firebasestorage.app",
+  messagingSenderId: "91386499619",
+  appId: "1:91386499619:web:ac4e2b8ca7d0ec8469d796"
+};
+
+// ============================================================
+// PASSO 2 (opcional): ajuste as atividades e os pontos aqui.
+// campo pode ser "quantidade" (ex: flashcards, questões),
+// "horas" (ex: leitura, sono) ou "ocorrencia" (ex: simulado).
+// ============================================================
+const ACTIVITIES = {
+  flashcards: {
+    emoji: "🗂️", label: "Flashcards",
+    campo: "quantidade", campoLabel: "Quantidade de flashcards",
+    bloco: 100, pontosPorBloco: 1
+  },
+  questoes: {
+    emoji: "❓", label: "Questões",
+    campo: "quantidade", campoLabel: "Quantidade de questões",
+    bloco: 10, pontosPorBloco: 1
+  },
+  leitura: {
+    emoji: "📖", label: "Leitura de material",
+    campo: "horas", campoLabel: "Horas de leitura",
+    pontosPorHora: 5
+  },
+  videoAula: {
+    emoji: "🎥", label: "Vídeo-aula",
+    campo: "horas", campoLabel: "Horas de vídeo-aula",
+    pontosPorHora: 1
+  },
+  leituraPdf: {
+    emoji: "📄", label: "Leitura de PDF",
+    campo: "horas", campoLabel: "Horas lendo PDF",
+    pontosPorHora: 2
+  },
+  simulado: {
+    emoji: "📝", label: "Simulado",
+    campo: "ocorrencia", campoLabel: "Quantos simulados",
+    pontosPorOcorrencia: 5
+  },
+  atividadeFisica: {
+    emoji: "🏋️", label: "Atividade física",
+    campo: "ocorrencia", campoLabel: "Quantas atividades",
+    pontosPorOcorrencia: 2
+  },
+  sono: {
+    emoji: "😴", label: "Sono",
+    campo: "horas", campoLabel: "Horas dormidas",
+    metaHoras: 8, penalidade: -1 // dormir menos ou mais que a meta tira 1 ponto
+  }
+};
+
+// Meta cooperativa do casal: soma dos pontos dos dois na semana (últimos 7 dias)
+const META_SEMANAL_CASAL = 150;
+
+// ============================================================
+// A partir daqui é lógica do app. Não precisa editar.
+// ============================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, doc, setDoc, onSnapshot, query, orderBy,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const entriesRef = collection(db, "entries");
+const messagesRef = collection(db, "messages");
+const reactionsRef = collection(db, "reactions");
+const commentsRef = collection(db, "comments");
+
+let allEntries = [];
+let allReactions = [];
+let allComments = [];
+let allMessages = [];
+let currentUser = localStorage.getItem("ranking_user") || "";
+let currentPeriod = "7";
+let currentTab = "ranking";
+const openComments = new Set();
+const REACTION_EMOJIS = ["👍", "❤️", "🔥", "👏"];
+
+function calcPoints(e) {
+  const a = ACTIVITIES[e.atividade];
+  if (!a) return 0;
+  const valor = e.valor || 0;
+  if (a.campo === "quantidade") {
+    return (valor / a.bloco) * a.pontosPorBloco;
+  }
+  if (a.campo === "horas" && a.pontosPorHora !== undefined) {
+    return valor * a.pontosPorHora;
+  }
+  if (a.campo === "horas" && a.metaHoras !== undefined) {
+    return valor === a.metaHoras ? 0 : a.penalidade;
+  }
+  if (a.campo === "ocorrencia") {
+    return valor * a.pontosPorOcorrencia;
+  }
+  return 0;
+}
+
+function fmt(n) {
+  return (Math.round(n * 10) / 10).toString();
+}
+
+function describeValue(e) {
+  const a = ACTIVITIES[e.atividade];
+  if (!a) return "";
+  if (a.campo === "quantidade") return `${e.valor} ${a.label.toLowerCase()}`;
+  if (a.campo === "horas") return `${e.valor}h`;
+  if (a.campo === "ocorrencia") return `${e.valor}x`;
+  return "";
+}
+
+function describeRule(a) {
+  if (a.campo === "quantidade") {
+    return `${a.pontosPorBloco} ponto${a.pontosPorBloco === 1 ? "" : "s"} a cada ${a.bloco} ${a.label.toLowerCase()}`;
+  }
+  if (a.campo === "horas" && a.pontosPorHora !== undefined) {
+    return `${a.pontosPorHora} ponto${a.pontosPorHora === 1 ? "" : "s"} por hora`;
+  }
+  if (a.campo === "horas" && a.metaHoras !== undefined) {
+    return `${a.penalidade} ponto se dormir menos ou mais que ${a.metaHoras}h`;
+  }
+  if (a.campo === "ocorrencia") {
+    return `${a.pontosPorOcorrencia} pontos por vez`;
+  }
+  return "";
+}
+
+function renderRegras() {
+  const el = document.getElementById("regras-list");
+  el.innerHTML = Object.values(ACTIVITIES).map(a => `
+    <div class="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0">
+      <span>${a.emoji} ${a.label}</span>
+      <span class="text-slate-500">${describeRule(a)}</span>
+    </div>
+  `).join("");
+}
+
+function withinPeriod(dateStr, period) {
+  if (period === "all") return true;
+  const days = period === "today" ? 1 : parseInt(period, 10);
+  const d = new Date(dateStr + "T00:00:00");
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const diff = (today - d) / (1000 * 60 * 60 * 24);
+  return diff >= 0 && diff < days;
+}
+
+// ---------- Badges (calculados a partir do histórico, sem dados extras) ----------
+function computeBadges(autor) {
+  const mine = allEntries.filter(e => e.autor === autor);
+  const badges = [];
+
+  // Maratonista: 7 dias seguidos (até hoje) com pelo menos 1 registro
+  const dias = new Set(mine.map(e => e.data));
+  let streak = 0;
+  for (let i = 0; i < 400; i++) {
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - i);
+    const iso = d.toISOString().slice(0,10);
+    if (dias.has(iso)) streak++;
+    else break;
+  }
+  if (streak >= 7) badges.push({ emoji: "📚", label: "Maratonista", desc: `${streak} dias seguidos estudando` });
+
+  // Sem enrolação: algum registro criado antes das 8h
+  const cedo = mine.some(e => e.criadoEm && new Date(e.criadoEm).getHours() < 8);
+  if (cedo) badges.push({ emoji: "☕", label: "Sem enrolação", desc: "Começou antes das 8h" });
+
+  // 100%: algum dia com 3+ atividades diferentes registradas
+  const porDia = {};
+  mine.forEach(e => {
+    porDia[e.data] = porDia[e.data] || new Set();
+    porDia[e.data].add(e.atividade);
+  });
+  const diaCompleto = Object.values(porDia).some(s => s.size >= 3);
+  if (diaCompleto) badges.push({ emoji: "💎", label: "100%", desc: "3+ atividades num mesmo dia" });
+
+  return badges;
+}
+
+function renderBadges() {
+  const el = document.getElementById("badges");
+  const autores = [...new Set(allEntries.map(e => e.autor))];
+  if (autores.length === 0) {
+    el.innerHTML = `<p class="text-slate-500 text-sm">Sem conquistas ainda.</p>`;
+    return;
+  }
+  el.innerHTML = autores.map(nome => {
+    const badges = computeBadges(nome);
+    return `
+      <div class="mb-3 last:mb-0">
+        <p class="text-sm font-medium mb-1">${nome}</p>
+        <div class="flex flex-wrap gap-2">
+          ${badges.length === 0
+            ? `<span class="text-xs text-slate-400">ainda sem medalhas</span>`
+            : badges.map(b => `<span title="${b.desc}" class="text-xs bg-amber-50 border border-amber-200 rounded-full px-2 py-1">${b.emoji} ${b.label}</span>`).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderMetaCasal() {
+  const el = document.getElementById("meta-casal");
+  const semanaEntries = allEntries.filter(e => withinPeriod(e.data, "7"));
+  const total = semanaEntries.reduce((s, e) => s + calcPoints(e), 0);
+  const pct = Math.max(0, Math.min(100, (total / META_SEMANAL_CASAL) * 100));
+  const atingiu = total >= META_SEMANAL_CASAL;
+  el.innerHTML = `
+    <div class="flex justify-between text-sm font-medium mb-1">
+      <span>💪 Meta do casal (7 dias)</span>
+      <span>${fmt(total)} / ${META_SEMANAL_CASAL} pts</span>
+    </div>
+    <div class="w-full bg-slate-200 rounded-full h-3 mb-1">
+      <div class="bar-fill bg-emerald-500 h-3 rounded-full" style="width:${pct}%"></div>
+    </div>
+    ${atingiu ? `<p class="text-xs text-emerald-600 font-medium">🎉 Meta da semana batida! Combinem o prêmio.</p>` : ""}
+  `;
+}
+
+function render() {
+  const filtered = allEntries.filter(e => withinPeriod(e.data, currentPeriod));
+
+  // ranking por pessoa
+  const totals = {};
+  filtered.forEach(e => {
+    totals[e.autor] = (totals[e.autor] || 0) + calcPoints(e);
+  });
+  const ranking = Object.entries(totals).sort((a,b) => b[1]-a[1]);
+  const maxScore = ranking.length ? Math.max(...ranking.map(r => r[1]), 1) : 1;
+
+  const rankingEl = document.getElementById("ranking");
+  if (ranking.length === 0) {
+    rankingEl.innerHTML = `<p class="text-slate-500 text-sm">Nenhum registro nesse período ainda.</p>`;
+  } else {
+    rankingEl.innerHTML = ranking.map(([nome, pts], i) => `
+      <div class="mb-3">
+        <div class="flex justify-between text-sm font-medium mb-1">
+          <span>${i === 0 ? "🥇 " : i === 1 ? "🥈 " : ""}${nome}</span>
+          <span>${fmt(pts)} pts</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-3">
+          <div class="bar-fill bg-indigo-500 h-3 rounded-full" style="width:${maxScore > 0 ? Math.max(0, pts/maxScore*100) : 0}%"></div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  renderBadges();
+  renderMetaCasal();
+  renderFeed();
+}
+
+function reactionsFor(entryId) {
+  const rs = allReactions.filter(r => r.entryId === entryId);
+  const counts = {};
+  rs.forEach(r => { counts[r.emoji] = (counts[r.emoji] || 0) + 1; });
+  return { rs, counts };
+}
+
+function myReaction(entryId, emoji) {
+  return allReactions.find(r => r.entryId === entryId && r.emoji === emoji && r.autor === currentUser);
+}
+
+function renderFeed() {
+  const listEl = document.getElementById("entries-list");
+  const recent = [...allEntries].sort((a,b) => b.data.localeCompare(a.data) || (b.criadoEm||0)-(a.criadoEm||0)).slice(0, 25);
+  if (recent.length === 0) {
+    listEl.innerHTML = `<p class="text-slate-500 text-sm">Nenhum registro ainda. Adicione o primeiro na aba Ranking.</p>`;
+    return;
+  }
+  listEl.innerHTML = recent.map(e => {
+    const a = ACTIVITIES[e.atividade] || {};
+    const pts = calcPoints(e);
+    const { counts } = reactionsFor(e.id);
+    const comments = allComments.filter(c => c.entryId === e.id).sort((x,y) => (x.criadoEm||0)-(y.criadoEm||0));
+    const isOpen = openComments.has(e.id);
+    return `
+    <div class="py-3 border-b border-slate-100 text-sm" data-entry="${e.id}">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="mr-1">${a.emoji || ""}</span>
+          <span class="font-medium">${e.autor}</span>
+          <span class="text-slate-500"> · ${a.label || e.atividade} · ${describeValue(e)} · ${e.data}</span>
+          <span class="${pts < 0 ? 'text-red-600' : 'text-indigo-600'} font-medium"> (${pts >= 0 ? '+' : ''}${fmt(pts)} pts)</span>
+        </div>
+        ${e.autor === currentUser ? `<button data-id="${e.id}" class="del-btn text-slate-400 hover:text-red-500 text-xs shrink-0">excluir</button>` : ""}
+      </div>
+      ${e.fotoUrl ? `<img src="${e.fotoUrl}" class="mt-2 max-h-64 rounded-lg border border-slate-200 object-cover" />` : ""}
+      <div class="flex items-center gap-1 mt-2">
+        ${REACTION_EMOJIS.map(em => `
+          <button data-entry="${e.id}" data-emoji="${em}"
+            class="react-btn ${myReaction(e.id, em) ? 'mine' : ''} text-xs border border-slate-200 rounded-full px-2 py-0.5 hover:bg-slate-50">
+            ${em} ${counts[em] || ""}
+          </button>
+        `).join("")}
+        <button data-entry="${e.id}" class="toggle-comments-btn text-xs text-slate-500 hover:underline ml-2">
+          💬 ${comments.length ? comments.length : "comentar"}
+        </button>
+      </div>
+      ${isOpen ? `
+        <div class="mt-2 pl-2 border-l-2 border-slate-100">
+          ${comments.map(c => `
+            <p class="text-xs mb-1"><span class="font-medium">${c.autor}:</span> ${c.texto}</p>
+          `).join("")}
+          <form class="comment-form flex gap-1 mt-1" data-entry="${e.id}">
+            <input type="text" placeholder="Escreva um comentário..." required
+              class="flex-1 border border-slate-300 rounded-lg px-2 py-1 text-xs" />
+            <button class="bg-indigo-600 text-white rounded-lg px-2 py-1 text-xs">Enviar</button>
+          </form>
+        </div>
+      ` : ""}
+    </div>
+    `;
+  }).join("");
+
+  document.querySelectorAll(".del-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (confirm("Excluir este registro?")) {
+        await deleteDoc(doc(db, "entries", btn.dataset.id));
+      }
+    });
+  });
+
+  document.querySelectorAll(".react-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const entryId = btn.dataset.entry;
+      const emoji = btn.dataset.emoji;
+      const existing = myReaction(entryId, emoji);
+      if (existing) {
+        await deleteDoc(doc(db, "reactions", existing.id));
+      } else {
+        await addDoc(reactionsRef, { entryId, autor: currentUser, emoji, criadoEm: Date.now() });
+      }
+    });
+  });
+
+  document.querySelectorAll(".toggle-comments-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.entry;
+      if (openComments.has(id)) openComments.delete(id);
+      else openComments.add(id);
+      renderFeed();
+    });
+  });
+
+  document.querySelectorAll(".comment-form").forEach(form => {
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const input = form.querySelector("input");
+      const texto = input.value.trim();
+      if (!texto) return;
+      await addDoc(commentsRef, { entryId: form.dataset.entry, autor: currentUser, texto, criadoEm: Date.now() });
+      input.value = "";
+    });
+  });
+}
+
+function renderChat() {
+  const el = document.getElementById("chat-messages");
+  const msgs = [...allMessages].sort((a,b) => (a.criadoEm||0)-(b.criadoEm||0));
+  el.innerHTML = msgs.map(m => `
+    <div class="mb-2 text-sm ${m.autor === currentUser ? 'text-right' : ''}">
+      <span class="inline-block ${m.autor === currentUser ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-800'} rounded-2xl px-3 py-1.5 max-w-[80%]">
+        ${m.autor !== currentUser ? `<span class="block text-xs opacity-70">${m.autor}</span>` : ""}
+        ${m.texto}
+      </span>
+    </div>
+  `).join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+// escuta em tempo real
+onSnapshot(query(entriesRef, orderBy("data", "desc")), snap => {
+  allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+});
+onSnapshot(reactionsRef, snap => {
+  allReactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+});
+onSnapshot(commentsRef, snap => {
+  allComments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+});
+onSnapshot(query(messagesRef, orderBy("criadoEm", "asc")), snap => {
+  allMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderChat();
+});
+
+// abas
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentTab = btn.dataset.tab;
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+    document.getElementById("tab-" + currentTab).classList.remove("hidden");
+  });
+});
+
+// filtros de período
+document.querySelectorAll(".period-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentPeriod = btn.dataset.period;
+    document.querySelectorAll(".period-btn").forEach(b => b.classList.remove("bg-indigo-600","text-white"));
+    btn.classList.add("bg-indigo-600","text-white");
+    render();
+  });
+});
+
+// formulário: monta as opções de atividade dinamicamente a partir de ACTIVITIES
+const atividadeSelect = document.getElementById("atividade");
+atividadeSelect.innerHTML = Object.entries(ACTIVITIES).map(([key, a]) =>
+  `<option value="${key}">${a.emoji} ${a.label} (${describeRule(a)})</option>`
+).join("");
+renderRegras();
+
+const valorLabel = document.getElementById("valor-label");
+const valorInput = document.getElementById("valor");
+
+function updateValorField() {
+  const a = ACTIVITIES[atividadeSelect.value];
+  valorLabel.textContent = a.campoLabel;
+  if (a.campo === "quantidade") {
+    valorInput.step = "1"; valorInput.min = "0"; valorInput.value = "";
+  } else if (a.campo === "horas") {
+    valorInput.step = "0.1"; valorInput.min = "0"; valorInput.value = "";
+  } else if (a.campo === "ocorrencia") {
+    valorInput.step = "1"; valorInput.min = "1"; valorInput.value = "1";
+  }
+}
+atividadeSelect.addEventListener("change", updateValorField);
+updateValorField();
+
+const form = document.getElementById("entry-form");
+const submitBtn = form.querySelector("button[type=submit], button:not([type])");
+
+form.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const atividade = atividadeSelect.value;
+  const valor = parseFloat(valorInput.value);
+  const data = document.getElementById("data").value;
+  const fotoInput = document.getElementById("foto");
+  const file = fotoInput.files[0];
+  if (!valor || valor <= 0 || !data) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Salvando...";
+  try {
+    const ref = doc(entriesRef);
+    let fotoUrl = null;
+    if (file) {
+      const sRef = storageRef(storage, `entries/${ref.id}`);
+      await uploadBytes(sRef, file);
+      fotoUrl = await getDownloadURL(sRef);
+    }
+    await setDoc(ref, {
+      autor: currentUser,
+      atividade, valor, data,
+      criadoEm: Date.now(),
+      fotoUrl
+    });
+    form.reset();
+    document.getElementById("data").value = new Date().toISOString().slice(0,10);
+    updateValorField();
+  } catch (err) {
+    alert("Erro ao salvar: " + err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Salvar";
+  }
+});
+
+document.getElementById("chat-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const input = document.getElementById("chat-input");
+  const texto = input.value.trim();
+  if (!texto) return;
+  await addDoc(messagesRef, { autor: currentUser, texto, criadoEm: Date.now() });
+  input.value = "";
+});
+
+// tela de identificação
+function setupUser() {
+  document.getElementById("current-user-name").textContent = currentUser;
+  document.getElementById("gate").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+}
+if (currentUser) setupUser();
+
+document.getElementById("name-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const name = document.getElementById("name-input").value.trim();
+  if (!name) return;
+  currentUser = name;
+  localStorage.setItem("ranking_user", name);
+  setupUser();
+});
+
+document.getElementById("switch-user").addEventListener("click", () => {
+  localStorage.removeItem("ranking_user");
+  currentUser = "";
+  document.getElementById("gate").classList.remove("hidden");
+  document.getElementById("app").classList.add("hidden");
+});
+
+document.getElementById("data").value = new Date().toISOString().slice(0,10);
+</script>
+
+<!-- ============================================================
+     HTML / interface
+============================================================= -->
+<div class="max-w-2xl mx-auto p-4">
+
+  <header class="text-center py-6">
+    <h1 class="text-2xl font-bold text-indigo-700">🏆 Ranking de Metas</h1>
+    <p class="text-slate-500 text-sm">Flashcards, questões, leitura, vídeo-aulas, simulados, atividade física e sono. Quem pontua mais?</p>
+  </header>
+
+  <!-- tela de identificação -->
+  <div id="gate" class="bg-white rounded-xl shadow p-6 mb-6">
+    <h2 class="font-semibold mb-3">Como você quer aparecer no ranking?</h2>
+    <form id="name-form" class="flex gap-2">
+      <input id="name-input" type="text" placeholder="Seu nome" required
+             class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+      <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Entrar</button>
+    </form>
+    <p class="text-xs text-slate-400 mt-2">O nome fica salvo só neste navegador. Cada pessoa entra com o próprio nome no seu celular/computador.</p>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="flex justify-between items-center mb-4 text-sm text-slate-500">
+      <span>Você é: <strong id="current-user-name" class="text-slate-700"></strong></span>
+      <button id="switch-user" class="text-indigo-600 hover:underline">trocar</button>
+    </div>
+
+    <!-- abas -->
+    <div class="flex gap-4 border-b border-slate-200 mb-4 text-sm font-medium">
+      <button class="tab-btn active pb-2 border-b-2 border-transparent" data-tab="ranking">Ranking</button>
+      <button class="tab-btn pb-2 border-b-2 border-transparent" data-tab="feed">Feed</button>
+      <button class="tab-btn pb-2 border-b-2 border-transparent" data-tab="chat">Bate-papo</button>
+    </div>
+
+    <!-- ===================== ABA RANKING ===================== -->
+    <div id="tab-ranking" class="tab-panel">
+      <div class="bg-white rounded-xl shadow p-5 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-semibold">Ranking</h2>
+          <div class="flex gap-1 text-xs">
+            <button class="period-btn px-2 py-1 rounded-md" data-period="today">Hoje</button>
+            <button class="period-btn px-2 py-1 rounded-md bg-indigo-600 text-white" data-period="7">7 dias</button>
+            <button class="period-btn px-2 py-1 rounded-md" data-period="30">30 dias</button>
+            <button class="period-btn px-2 py-1 rounded-md" data-period="all">Tudo</button>
+          </div>
+        </div>
+        <div id="ranking"></div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-5 mb-6">
+        <h2 class="font-semibold mb-3">💪 Meta do casal</h2>
+        <div id="meta-casal"></div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-5 mb-6">
+        <h2 class="font-semibold mb-3">🏅 Conquistas</h2>
+        <div id="badges"></div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-5 mb-6">
+        <h2 class="font-semibold mb-3">Pontuação por atividade</h2>
+        <div id="regras-list"></div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-5 mb-6">
+        <h2 class="font-semibold mb-3">Registrar atividade</h2>
+        <form id="entry-form" class="grid grid-cols-2 gap-3 text-sm">
+          <label class="col-span-2">
+            Atividade
+            <select id="atividade" class="w-full border border-slate-300 rounded-lg px-3 py-2 mt-1"></select>
+          </label>
+          <label class="col-span-2" id="valor-wrap">
+            <span id="valor-label">Valor</span>
+            <input id="valor" type="number" step="0.1" min="0" required
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 mt-1" />
+          </label>
+          <label class="col-span-2">
+            Data
+            <input id="data" type="date" required
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 mt-1" />
+          </label>
+          <label class="col-span-2">
+            Foto (opcional, prova de que fez a atividade)
+            <input id="foto" type="file" accept="image/*" capture="environment"
+                   class="w-full text-xs mt-1" />
+          </label>
+          <button type="submit" class="col-span-2 bg-indigo-600 text-white rounded-lg py-2 font-medium mt-1">Salvar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===================== ABA FEED ===================== -->
+    <div id="tab-feed" class="tab-panel hidden">
+      <div class="bg-white rounded-xl shadow p-5 mb-10">
+        <h2 class="font-semibold mb-3">Feed de atividades</h2>
+        <div id="entries-list"></div>
+      </div>
+    </div>
+
+    <!-- ===================== ABA CHAT ===================== -->
+    <div id="tab-chat" class="tab-panel hidden">
+      <div class="bg-white rounded-xl shadow p-5 mb-10 flex flex-col" style="height: 60vh;">
+        <h2 class="font-semibold mb-3">Bate-papo</h2>
+        <div id="chat-messages" class="flex-1 overflow-y-auto mb-3"></div>
+        <form id="chat-form" class="flex gap-2">
+          <input id="chat-input" type="text" placeholder="Escreva uma mensagem..." required
+                 class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Enviar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

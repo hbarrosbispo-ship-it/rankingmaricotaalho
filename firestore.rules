@@ -1,0 +1,63 @@
+rules_version = '2';
+
+// Regras do Firestore para o app "Ranking de Metas".
+// Cole este conteúdo em Firebase Console > Firestore Database > Regras.
+//
+// Como o app não usa login (só um nome salvo no navegador), estas regras
+// liberam leitura e escrita para quem tiver o link do site. Isso é aceitável
+// para um app pessoal entre duas pessoas, mas qualquer pessoa que descobrir
+// a URL também conseguiria ler ou escrever registros. Se quiser mais
+// segurança no futuro, dá pra evoluir para Firebase Authentication.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // registros de atividades (ranking, feed)
+    match /entries/{entryId} {
+      allow read: if true;
+
+      // só permite criar registros com os campos esperados
+      allow create: if request.resource.data.keys().hasAll(['autor','atividade','valor','data'])
+                    && request.resource.data.autor is string
+                    && request.resource.data.atividade in ['flashcards','questoes','leitura','videoAula','leituraPdf','simulado','atividadeFisica','sono']
+                    && request.resource.data.valor is number
+                    && request.resource.data.valor > 0;
+
+      allow delete: if true;
+      allow update: if false;
+    }
+
+    // mensagens do bate-papo
+    match /messages/{messageId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['autor','texto','criadoEm'])
+                    && request.resource.data.autor is string
+                    && request.resource.data.texto is string
+                    && request.resource.data.texto.size() > 0
+                    && request.resource.data.texto.size() < 1000;
+      allow delete: if false;
+      allow update: if false;
+    }
+
+    // reações (emoji) em registros do feed
+    match /reactions/{reactionId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['entryId','autor','emoji'])
+                    && request.resource.data.autor is string
+                    && request.resource.data.emoji is string;
+      allow delete: if true;
+      allow update: if false;
+    }
+
+    // comentários em registros do feed
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['entryId','autor','texto'])
+                    && request.resource.data.autor is string
+                    && request.resource.data.texto is string
+                    && request.resource.data.texto.size() > 0
+                    && request.resource.data.texto.size() < 500;
+      allow delete: if true;
+      allow update: if false;
+    }
+  }
+}
