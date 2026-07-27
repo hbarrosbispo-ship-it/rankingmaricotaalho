@@ -44,11 +44,6 @@ const ACTIVITIES = {
     campo: "quantidade", campoLabel: "Quantidade de questões",
     bloco: 10, pontosPorBloco: 1
   },
-  leitura: {
-    emoji: "📖", label: "Leitura de material",
-    campo: "horas", campoLabel: "Horas de leitura",
-    pontosPorHora: 5
-  },
   videoAula: {
     emoji: "🎥", label: "Vídeo-aula",
     campo: "horas", campoLabel: "Horas de vídeo-aula",
@@ -76,8 +71,21 @@ const ACTIVITIES = {
   }
 };
 
-// Meta cooperativa do casal: soma dos pontos dos dois na semana (últimos 7 dias)
-const META_SEMANAL_CASAL = 150;
+// Meta cooperativa do casal: progressiva, aumenta a cada semana.
+// META_CASAL_DATA_INICIO marca o início da "semana 1". Ajuste os números
+// abaixo para mudar o ritmo de progressão.
+const META_CASAL_DATA_INICIO = "2026-07-27";
+const META_CASAL_PONTOS_INICIAL = 20;
+const META_CASAL_INCREMENTO_SEMANAL = 20;
+
+// Loja: pontos acumulados (histórico total, menos o que já foi resgatado)
+// podem ser trocados por esses prêmios. Ajuste itens e custos à vontade.
+const STORE_ITEMS = [
+  { id: "filme", emoji: "🎬", label: "Escolher o filme", custo: 60 },
+  { id: "jantar", emoji: "🍽️", label: "Jantar escolhido pelo vencedor", custo: 100 },
+  { id: "cafe", emoji: "☕", label: "Café pago pelo outro", custo: 150 },
+  { id: "folga", emoji: "🛋️", label: "Day off de tarefas domésticas", custo: 250 }
+];
 
 // ============================================================
 // A partir daqui é lógica do app. Não precisa editar.
@@ -94,11 +102,13 @@ const entriesRef = collection(db, "entries");
 const messagesRef = collection(db, "messages");
 const reactionsRef = collection(db, "reactions");
 const commentsRef = collection(db, "comments");
+const resgatesRef = collection(db, "resgates");
 
 let allEntries = [];
 let allReactions = [];
 let allComments = [];
 let allMessages = [];
+let allResgates = [];
 let currentUser = localStorage.getItem("ranking_user") || "";
 let currentPeriod = "7";
 let currentTab = "ranking";
@@ -229,22 +239,100 @@ function renderBadges() {
   }).join("");
 }
 
+function getCasalSemanaInfo() {
+  const inicio = new Date(META_CASAL_DATA_INICIO + "T00:00:00");
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  const diffDias = Math.floor((hoje - inicio) / (1000*60*60*24));
+  const semanaIndex = Math.max(0, Math.floor(diffDias / 7));
+  const semanaInicio = new Date(inicio);
+  semanaInicio.setDate(semanaInicio.getDate() + semanaIndex * 7);
+  const semanaFim = new Date(semanaInicio);
+  semanaFim.setDate(semanaFim.getDate() + 7);
+  const meta = META_CASAL_PONTOS_INICIAL + META_CASAL_INCREMENTO_SEMANAL * semanaIndex;
+  return {
+    numero: semanaIndex + 1,
+    inicioIso: semanaInicio.toISOString().slice(0,10),
+    fimIso: semanaFim.toISOString().slice(0,10),
+    meta
+  };
+}
+
 function renderMetaCasal() {
   const el = document.getElementById("meta-casal");
-  const semanaEntries = allEntries.filter(e => withinPeriod(e.data, "7"));
+  const { numero, inicioIso, fimIso, meta } = getCasalSemanaInfo();
+  const semanaEntries = allEntries.filter(e => e.data >= inicioIso && e.data < fimIso);
   const total = semanaEntries.reduce((s, e) => s + calcPoints(e), 0);
-  const pct = Math.max(0, Math.min(100, (total / META_SEMANAL_CASAL) * 100));
-  const atingiu = total >= META_SEMANAL_CASAL;
+  const pct = Math.max(0, Math.min(100, (total / meta) * 100));
+  const atingiu = total >= meta;
   el.innerHTML = `
     <div class="flex justify-between text-sm font-medium mb-1">
-      <span>💪 Meta do casal (7 dias)</span>
-      <span>${fmt(total)} / ${META_SEMANAL_CASAL} pts</span>
+      <span>💪 Meta do casal · semana ${numero}</span>
+      <span>${fmt(total)} / ${fmt(meta)} pts</span>
     </div>
     <div class="w-full bg-slate-200 rounded-full h-3 mb-1">
       <div class="bar-fill bg-emerald-500 h-3 rounded-full" style="width:${pct}%"></div>
     </div>
-    ${atingiu ? `<p class="text-xs text-emerald-600 font-medium">🎉 Meta da semana batida! Combinem o prêmio.</p>` : ""}
+    ${atingiu ? `<p class="text-xs text-emerald-600 font-medium">🎉 Meta da semana batida! Combinem o prêmio.</p>` : `<p class="text-xs text-slate-400">A meta aumenta a cada semana (essa semana: ${fmt(meta)} pts).</p>`}
   `;
+}
+
+function saldoDe(autor) {
+  const totalGanho = allEntries.filter(e => e.autor === autor).reduce((s, e) => s + calcPoints(e), 0);
+  const totalGasto = allResgates.filter(r => r.autor === autor).reduce((s, r) => s + r.custo, 0);
+  return totalGanho - totalGasto;
+}
+
+function renderLoja() {
+  const el = document.getElementById("loja-itens");
+  const autores = [...new Set(allEntries.map(e => e.autor))];
+  if (currentUser && !autores.includes(currentUser)) autores.push(currentUser);
+
+  const saldosHtml = autores.map(nome => `
+    <span class="text-xs bg-slate-100 rounded-full px-2 py-1 mr-2">${nome}: <strong>${fmt(saldoDe(nome))} pts</strong></span>
+  `).join("");
+
+  const itensHtml = STORE_ITEMS.map(item => {
+    const saldo = saldoDe(currentUser);
+    const podeResgatar = saldo >= item.custo;
+    return `
+      <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 text-sm">
+        <span>${item.emoji} ${item.label} <span class="text-slate-400">(${item.custo} pts)</span></span>
+        <button data-item-id="${item.id}" ${podeResgatar ? "" : "disabled"}
+          class="resgatar-btn text-xs rounded-lg px-3 py-1.5 font-medium ${podeResgatar ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}">
+          Resgatar
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  const historico = [...allResgates].sort((a,b) => (b.criadoEm||0)-(a.criadoEm||0)).slice(0, 10);
+  const historicoHtml = historico.length === 0
+    ? `<p class="text-xs text-slate-400 mt-3">Nenhum resgate ainda.</p>`
+    : `<p class="text-xs font-medium text-slate-500 mt-4 mb-1">Resgates recentes</p>` + historico.map(r => `
+        <p class="text-xs text-slate-500">${r.autor} resgatou ${r.item} (-${r.custo} pts)</p>
+      `).join("");
+
+  el.innerHTML = `
+    <div class="mb-3">${saldosHtml}</div>
+    ${itensHtml}
+    ${historicoHtml}
+  `;
+
+  document.querySelectorAll(".resgatar-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const item = STORE_ITEMS.find(i => i.id === btn.dataset.itemId);
+      if (!item) return;
+      if (saldoDe(currentUser) < item.custo) return;
+      if (!confirm(`Resgatar "${item.label}" por ${item.custo} pts?`)) return;
+      await addDoc(resgatesRef, {
+        autor: currentUser,
+        item: item.label,
+        custo: item.custo,
+        criadoEm: Date.now()
+      });
+    });
+  });
 }
 
 function render() {
@@ -277,6 +365,7 @@ function render() {
 
   renderBadges();
   renderMetaCasal();
+  renderLoja();
   renderFeed();
 }
 
@@ -441,6 +530,10 @@ onSnapshot(commentsRef, snap => {
   allComments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   render();
 });
+onSnapshot(resgatesRef, snap => {
+  allResgates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+});
 onSnapshot(query(messagesRef, orderBy("criadoEm", "asc")), snap => {
   allMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderChat();
@@ -570,7 +663,7 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
 
   <header class="text-center py-6">
     <h1 class="text-2xl font-bold text-indigo-700">🏆 Ranking de Metas</h1>
-    <p class="text-slate-500 text-sm">Flashcards, questões, leitura, vídeo-aulas, simulados, atividade física e sono. Quem pontua mais?</p>
+    <p class="text-slate-500 text-sm">Flashcards, questões, vídeo-aulas, leitura de PDF, simulados, atividade física e sono. Quem pontua mais?</p>
   </header>
 
   <!-- tela de identificação -->
@@ -620,6 +713,11 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
       <div class="bg-white rounded-xl shadow p-5 mb-6">
         <h2 class="font-semibold mb-3">🏅 Conquistas</h2>
         <div id="badges"></div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-5 mb-6">
+        <h2 class="font-semibold mb-3">🎁 Loja</h2>
+        <div id="loja-itens"></div>
       </div>
 
       <div class="bg-white rounded-xl shadow p-5 mb-6">

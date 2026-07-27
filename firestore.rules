@@ -18,7 +18,7 @@ service cloud.firestore {
       // só permite criar registros com os campos esperados
       allow create: if request.resource.data.keys().hasAll(['autor','atividade','valor','data'])
                     && request.resource.data.autor is string
-                    && request.resource.data.atividade in ['flashcards','questoes','leitura','videoAula','leituraPdf','simulado','atividadeFisica','sono']
+                    && request.resource.data.atividade in ['flashcards','questoes','videoAula','leituraPdf','simulado','atividadeFisica','sono']
                     && request.resource.data.valor is number
                     && request.resource.data.valor > 0;
 
@@ -56,6 +56,18 @@ service cloud.firestore {
                     && request.resource.data.texto is string
                     && request.resource.data.texto.size() > 0
                     && request.resource.data.texto.size() < 500;
+      allow delete: if true;
+      allow update: if false;
+    }
+
+    // resgates feitos na loja de prêmios
+    match /resgates/{resgateId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['autor','item','custo'])
+                    && request.resource.data.autor is string
+                    && request.resource.data.item is string
+                    && request.resource.data.custo is number
+                    && request.resource.data.custo > 0;
       allow delete: if true;
       allow update: if false;
     }
