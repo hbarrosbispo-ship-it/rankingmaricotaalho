@@ -57,7 +57,7 @@ const ACTIVITIES = {
   simulado: {
     emoji: "📝", label: "Simulado",
     campo: "ocorrencia", campoLabel: "Quantos simulados",
-    pontosPorOcorrencia: 5
+    pontosPorOcorrencia: 4
   },
   atividadeFisica: {
     emoji: "🏋️", label: "Atividade física",
@@ -67,7 +67,7 @@ const ACTIVITIES = {
   sono: {
     emoji: "😴", label: "Sono",
     campo: "horas", campoLabel: "Horas dormidas",
-    metaHoras: 8, penalidade: -1 // dormir menos ou mais que a meta tira 1 ponto
+    minHoras: 7, maxHoras: 9, penalidade: -1 // só perde ponto se dormir menos de 7h ou mais de 9h
   }
 };
 
@@ -82,9 +82,13 @@ const META_CASAL_INCREMENTO_SEMANAL = 20;
 // podem ser trocados por esses prêmios. Ajuste itens e custos à vontade.
 const STORE_ITEMS = [
   { id: "filme", emoji: "🎬", label: "Escolher o filme", custo: 60 },
-  { id: "jantar", emoji: "🍽️", label: "Jantar escolhido pelo vencedor", custo: 100 },
+  { id: "serie", emoji: "📺", label: "Escolher a série pra maratonar", custo: 60 },
+  { id: "sobremesa", emoji: "🍦", label: "Sobremesa especial", custo: 120 },
+  { id: "jantar", emoji: "🍽️", label: "Jantar escolhido pelo vencedor", custo: 150 },
   { id: "cafe", emoji: "☕", label: "Café pago pelo outro", custo: 150 },
-  { id: "folga", emoji: "🛋️", label: "Day off de tarefas domésticas", custo: 250 }
+  { id: "massagem", emoji: "💆", label: "Massagem de 20 minutos", custo: 200 },
+  { id: "passeio", emoji: "🎡", label: "Passeio à escolha do vencedor", custo: 350 },
+  { id: "presente", emoji: "🎁", label: "Presente surpresa", custo: 500 }
 ];
 
 // ============================================================
@@ -113,7 +117,7 @@ let currentUser = localStorage.getItem("ranking_user") || "";
 let currentPeriod = "7";
 let currentTab = "ranking";
 const openComments = new Set();
-const REACTION_EMOJIS = ["👍", "❤️", "🔥", "👏"];
+const REACTION_EMOJIS = ["👍", "❤️", "🔥", "👏", "😂", "😮", "🎉", "💪"];
 
 function calcPoints(e) {
   const a = ACTIVITIES[e.atividade];
@@ -125,8 +129,8 @@ function calcPoints(e) {
   if (a.campo === "horas" && a.pontosPorHora !== undefined) {
     return valor * a.pontosPorHora;
   }
-  if (a.campo === "horas" && a.metaHoras !== undefined) {
-    return valor === a.metaHoras ? 0 : a.penalidade;
+  if (a.campo === "horas" && a.minHoras !== undefined && a.maxHoras !== undefined) {
+    return (valor >= a.minHoras && valor <= a.maxHoras) ? 0 : a.penalidade;
   }
   if (a.campo === "ocorrencia") {
     return valor * a.pontosPorOcorrencia;
@@ -154,8 +158,8 @@ function describeRule(a) {
   if (a.campo === "horas" && a.pontosPorHora !== undefined) {
     return `${a.pontosPorHora} ponto${a.pontosPorHora === 1 ? "" : "s"} por hora`;
   }
-  if (a.campo === "horas" && a.metaHoras !== undefined) {
-    return `${a.penalidade} ponto se dormir menos ou mais que ${a.metaHoras}h`;
+  if (a.campo === "horas" && a.minHoras !== undefined && a.maxHoras !== undefined) {
+    return `${a.penalidade} ponto se dormir menos de ${a.minHoras}h ou mais de ${a.maxHoras}h`;
   }
   if (a.campo === "ocorrencia") {
     return `${a.pontosPorOcorrencia} pontos por vez`;
@@ -184,11 +188,15 @@ function withinPeriod(dateStr, period) {
 }
 
 // ---------- Badges (calculados a partir do histórico, sem dados extras) ----------
+function somaValor(entries, atividade) {
+  return entries.filter(e => e.atividade === atividade).reduce((s, e) => s + (e.valor || 0), 0);
+}
+
 function computeBadges(autor) {
   const mine = allEntries.filter(e => e.autor === autor);
   const badges = [];
 
-  // Maratonista: 7 dias seguidos (até hoje) com pelo menos 1 registro
+  // Sequência de dias seguidos com pelo menos 1 registro (mostra só o nível mais alto)
   const dias = new Set(mine.map(e => e.data));
   let streak = 0;
   for (let i = 0; i < 400; i++) {
@@ -199,11 +207,9 @@ function computeBadges(autor) {
     if (dias.has(iso)) streak++;
     else break;
   }
-  if (streak >= 7) badges.push({ emoji: "📚", label: "Maratonista", desc: `${streak} dias seguidos estudando` });
-
-  // Sem enrolação: algum registro criado antes das 8h
-  const cedo = mine.some(e => e.criadoEm && new Date(e.criadoEm).getHours() < 8);
-  if (cedo) badges.push({ emoji: "☕", label: "Sem enrolação", desc: "Começou antes das 8h" });
+  if (streak >= 14) badges.push({ emoji: "🏅", label: "Lenda da sequência", desc: `${streak} dias seguidos estudando` });
+  else if (streak >= 7) badges.push({ emoji: "📚", label: "Maratonista", desc: `${streak} dias seguidos estudando` });
+  else if (streak >= 3) badges.push({ emoji: "🔥", label: "Pegando o ritmo", desc: `${streak} dias seguidos estudando` });
 
   // 100%: algum dia com 3+ atividades diferentes registradas
   const porDia = {};
@@ -213,6 +219,36 @@ function computeBadges(autor) {
   });
   const diaCompleto = Object.values(porDia).some(s => s.size >= 3);
   if (diaCompleto) badges.push({ emoji: "💎", label: "100%", desc: "3+ atividades num mesmo dia" });
+
+  // Pontuação total acumulada
+  const totalPontos = mine.reduce((s, e) => s + calcPoints(e), 0);
+  if (totalPontos >= 1000) badges.push({ emoji: "🚀", label: "Milhar", desc: "1000+ pontos acumulados" });
+  else if (totalPontos >= 100) badges.push({ emoji: "🏆", label: "Centena", desc: "100+ pontos acumulados" });
+
+  // Mestre das questões: 500+ questões respondidas no total
+  if (somaValor(mine, "questoes") >= 500) {
+    badges.push({ emoji: "❓", label: "Mestre das questões", desc: "500+ questões respondidas" });
+  }
+
+  // Maratona de vídeo-aulas: 10+ horas
+  if (somaValor(mine, "videoAula") >= 10) {
+    badges.push({ emoji: "🎥", label: "Maratona de vídeo-aulas", desc: "10+ horas de vídeo-aula" });
+  }
+
+  // Leitor voraz: 20+ horas de PDF
+  if (somaValor(mine, "leituraPdf") >= 20) {
+    badges.push({ emoji: "📄", label: "Leitor voraz", desc: "20+ horas de leitura de PDF" });
+  }
+
+  // Documentado: 5+ registros com foto
+  if (mine.filter(e => e.fotoUrl).length >= 5) {
+    badges.push({ emoji: "📸", label: "Documentado", desc: "5+ atividades com foto" });
+  }
+
+  // Comunicativo: 10+ comentários feitos no feed
+  if (allComments.filter(c => c.autor === autor).length >= 10) {
+    badges.push({ emoji: "💬", label: "Comunicativo", desc: "10+ comentários no feed" });
+  }
 
   return badges;
 }
