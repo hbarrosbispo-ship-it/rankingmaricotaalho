@@ -10,6 +10,11 @@
   .bar-fill { transition: width 0.4s ease; }
   .tab-btn.active { border-color: #4f46e5; color: #4f46e5; }
   .react-btn.mine { background: #eef2ff; border-color: #6366f1; }
+  @keyframes confetti-fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+    100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
+  }
+  #chat-widget { transition: opacity 0.15s ease, transform 0.15s ease; }
 </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
@@ -82,11 +87,11 @@ const META_CASAL_INCREMENTO_SEMANAL = 20;
 // podem ser trocados por esses prêmios. Ajuste itens e custos à vontade.
 const STORE_ITEMS = [
   { id: "filme", emoji: "🎬", label: "Escolher o filme", custo: 60 },
-  { id: "serie", emoji: "📺", label: "Escolher a série pra maratonar", custo: 60 },
+  { id: "serie", emoji: "📺", label: "Escolher a série pra maratonar", custo: 100 },
   { id: "sobremesa", emoji: "🍦", label: "Sobremesa especial", custo: 120 },
   { id: "jantar", emoji: "🍽️", label: "Jantar escolhido pelo vencedor", custo: 150 },
-  { id: "cafe", emoji: "☕", label: "Café pago pelo outro", custo: 150 },
-  { id: "massagem", emoji: "💆", label: "Massagem de 20 minutos", custo: 200 },
+  { id: "cafe", emoji: "☕", label: "Café pago pelo outro", custo: 250 },
+  { id: "massagem", emoji: "💆", label: "Massagem com as duas mãos de 10 minutos", custo: 200 },
   { id: "passeio", emoji: "🎡", label: "Passeio à escolha do vencedor", custo: 350 },
   { id: "presente", emoji: "🎁", label: "Presente surpresa", custo: 500 }
 ];
@@ -192,11 +197,26 @@ function somaValor(entries, atividade) {
   return entries.filter(e => e.atividade === atividade).reduce((s, e) => s + (e.valor || 0), 0);
 }
 
+// Todas as medalhas possíveis. Cada uma fica cinza até ser conquistada,
+// quando então ganha cor (veja renderBadges).
+const BADGE_DEFS = [
+  { emoji: "🔥", label: "Pegando o ritmo", desc: "3+ dias seguidos estudando", check: ctx => ctx.streak >= 3 },
+  { emoji: "📚", label: "Maratonista", desc: "7+ dias seguidos estudando", check: ctx => ctx.streak >= 7 },
+  { emoji: "🏅", label: "Lenda da sequência", desc: "14+ dias seguidos estudando", check: ctx => ctx.streak >= 14 },
+  { emoji: "🏆", label: "Centena", desc: "100+ pontos acumulados", check: ctx => ctx.totalPontos >= 100 },
+  { emoji: "🚀", label: "Milhar", desc: "1000+ pontos acumulados", check: ctx => ctx.totalPontos >= 1000 },
+  { emoji: "💎", label: "100%", desc: "3+ atividades num mesmo dia", check: ctx => ctx.diaCompleto },
+  { emoji: "❓", label: "Mestre das questões", desc: "500+ questões respondidas", check: ctx => ctx.somaQuestoes >= 500 },
+  { emoji: "🎥", label: "Maratona de vídeo-aulas", desc: "10+ horas de vídeo-aula", check: ctx => ctx.somaVideo >= 10 },
+  { emoji: "📄", label: "Leitor voraz", desc: "20+ horas de leitura de PDF", check: ctx => ctx.somaPdf >= 20 },
+  { emoji: "📸", label: "Documentado", desc: "5+ atividades com foto", check: ctx => ctx.fotos >= 5 },
+  { emoji: "💬", label: "Comunicativo", desc: "10+ comentários no feed", check: ctx => ctx.comentarios >= 10 }
+];
+
 function computeBadges(autor) {
   const mine = allEntries.filter(e => e.autor === autor);
-  const badges = [];
 
-  // Sequência de dias seguidos com pelo menos 1 registro (mostra só o nível mais alto)
+  // Sequência de dias seguidos com pelo menos 1 registro
   const dias = new Set(mine.map(e => e.data));
   let streak = 0;
   for (let i = 0; i < 400; i++) {
@@ -207,9 +227,6 @@ function computeBadges(autor) {
     if (dias.has(iso)) streak++;
     else break;
   }
-  if (streak >= 14) badges.push({ emoji: "🏅", label: "Lenda da sequência", desc: `${streak} dias seguidos estudando` });
-  else if (streak >= 7) badges.push({ emoji: "📚", label: "Maratonista", desc: `${streak} dias seguidos estudando` });
-  else if (streak >= 3) badges.push({ emoji: "🔥", label: "Pegando o ritmo", desc: `${streak} dias seguidos estudando` });
 
   // 100%: algum dia com 3+ atividades diferentes registradas
   const porDia = {};
@@ -218,39 +235,19 @@ function computeBadges(autor) {
     porDia[e.data].add(e.atividade);
   });
   const diaCompleto = Object.values(porDia).some(s => s.size >= 3);
-  if (diaCompleto) badges.push({ emoji: "💎", label: "100%", desc: "3+ atividades num mesmo dia" });
 
-  // Pontuação total acumulada
-  const totalPontos = mine.reduce((s, e) => s + calcPoints(e), 0);
-  if (totalPontos >= 1000) badges.push({ emoji: "🚀", label: "Milhar", desc: "1000+ pontos acumulados" });
-  else if (totalPontos >= 100) badges.push({ emoji: "🏆", label: "Centena", desc: "100+ pontos acumulados" });
+  const ctx = {
+    streak,
+    diaCompleto,
+    totalPontos: mine.reduce((s, e) => s + calcPoints(e), 0),
+    somaQuestoes: somaValor(mine, "questoes"),
+    somaVideo: somaValor(mine, "videoAula"),
+    somaPdf: somaValor(mine, "leituraPdf"),
+    fotos: mine.filter(e => e.fotoUrl).length,
+    comentarios: allComments.filter(c => c.autor === autor).length
+  };
 
-  // Mestre das questões: 500+ questões respondidas no total
-  if (somaValor(mine, "questoes") >= 500) {
-    badges.push({ emoji: "❓", label: "Mestre das questões", desc: "500+ questões respondidas" });
-  }
-
-  // Maratona de vídeo-aulas: 10+ horas
-  if (somaValor(mine, "videoAula") >= 10) {
-    badges.push({ emoji: "🎥", label: "Maratona de vídeo-aulas", desc: "10+ horas de vídeo-aula" });
-  }
-
-  // Leitor voraz: 20+ horas de PDF
-  if (somaValor(mine, "leituraPdf") >= 20) {
-    badges.push({ emoji: "📄", label: "Leitor voraz", desc: "20+ horas de leitura de PDF" });
-  }
-
-  // Documentado: 5+ registros com foto
-  if (mine.filter(e => e.fotoUrl).length >= 5) {
-    badges.push({ emoji: "📸", label: "Documentado", desc: "5+ atividades com foto" });
-  }
-
-  // Comunicativo: 10+ comentários feitos no feed
-  if (allComments.filter(c => c.autor === autor).length >= 10) {
-    badges.push({ emoji: "💬", label: "Comunicativo", desc: "10+ comentários no feed" });
-  }
-
-  return badges;
+  return BADGE_DEFS.map(def => ({ ...def, earned: !!def.check(ctx) }));
 }
 
 function renderBadges() {
@@ -263,12 +260,17 @@ function renderBadges() {
   el.innerHTML = autores.map(nome => {
     const badges = computeBadges(nome);
     return `
-      <div class="mb-3 last:mb-0">
+      <div class="mb-4 last:mb-0">
         <p class="text-sm font-medium mb-1">${nome}</p>
         <div class="flex flex-wrap gap-2">
-          ${badges.length === 0
-            ? `<span class="text-xs text-slate-400">ainda sem medalhas</span>`
-            : badges.map(b => `<span title="${b.desc}" class="text-xs bg-amber-50 border border-amber-200 rounded-full px-2 py-1">${b.emoji} ${b.label}</span>`).join("")}
+          ${badges.map(b => `
+            <span title="${b.desc}" class="text-xs rounded-full px-2 py-1 border transition
+              ${b.earned
+                ? 'bg-amber-50 border-amber-200 text-slate-800'
+                : 'bg-slate-100 border-slate-200 text-slate-400 grayscale opacity-60'}">
+              ${b.emoji} ${b.label}
+            </span>
+          `).join("")}
         </div>
       </div>
     `;
@@ -294,6 +296,30 @@ function getCasalSemanaInfo() {
   };
 }
 
+function launchFireworks() {
+  const overlay = document.createElement("div");
+  overlay.className = "fixed inset-0 pointer-events-none z-[200] overflow-hidden";
+  document.body.appendChild(overlay);
+  const cores = ["#f43f5e","#f59e0b","#10b981","#6366f1","#ec4899","#3b82f6","#eab308"];
+  const total = 80;
+  for (let i = 0; i < total; i++) {
+    const piece = document.createElement("div");
+    const cor = cores[Math.floor(Math.random() * cores.length)];
+    const left = Math.random() * 100;
+    const delay = Math.random() * 0.6;
+    const duration = 1.8 + Math.random() * 1.2;
+    const size = 6 + Math.random() * 6;
+    const rotate = Math.random() * 360;
+    piece.style.cssText = `
+      position:absolute; top:-10%; left:${left}%; width:${size}px; height:${size * 0.4}px;
+      background:${cor}; opacity:0.9; transform:rotate(${rotate}deg);
+      animation: confetti-fall ${duration}s ease-in ${delay}s forwards;
+    `;
+    overlay.appendChild(piece);
+  }
+  setTimeout(() => overlay.remove(), 3200);
+}
+
 function renderMetaCasal() {
   const el = document.getElementById("meta-casal");
   const { numero, inicioIso, fimIso, meta } = getCasalSemanaInfo();
@@ -311,6 +337,16 @@ function renderMetaCasal() {
     </div>
     ${atingiu ? `<p class="text-xs text-emerald-600 font-medium">🎉 Meta da semana batida! Combinem o prêmio.</p>` : `<p class="text-xs text-slate-400">A meta aumenta a cada semana (essa semana: ${fmt(meta)} pts).</p>`}
   `;
+
+  // Comemoração (mensagem + fogos) só uma vez por semana, quando a meta é batida
+  const chaveComemoracao = "meta_casal_comemorada_" + inicioIso;
+  if (atingiu && !localStorage.getItem(chaveComemoracao)) {
+    localStorage.setItem(chaveComemoracao, "1");
+    launchFireworks();
+    setTimeout(() => {
+      alert(`🎉 Parabéns! Vocês bateram a meta da semana ${numero} (${fmt(meta)} pts)! Combinem o prêmio de vocês.`);
+    }, 100);
+  }
 }
 
 function saldoDe(autor) {
@@ -440,7 +476,7 @@ function renderFeed() {
         </div>
         ${e.autor === currentUser ? `<button data-id="${e.id}" class="del-btn text-slate-400 hover:text-red-500 text-xs shrink-0">excluir</button>` : ""}
       </div>
-      ${e.fotoUrl ? `<img src="${e.fotoUrl}" class="mt-2 max-h-64 rounded-lg border border-slate-200 object-cover" />` : ""}
+      ${e.fotoUrl ? `<img src="${e.fotoUrl}" data-full="${e.fotoUrl}" class="mt-2 max-h-64 rounded-lg border border-slate-200 object-cover cursor-zoom-in" />` : ""}
       <div class="flex items-center gap-1 mt-2">
         ${REACTION_EMOJIS.map(em => `
           <button data-entry="${e.id}" data-emoji="${em}"
@@ -551,6 +587,10 @@ function renderChat() {
     </div>
   `).join("");
   el.scrollTop = el.scrollHeight;
+
+  if (!chatAberto && allMessages.length > chatMsgCountVisto) {
+    document.getElementById("chat-fab-badge").classList.remove("hidden");
+  }
 }
 
 // escuta em tempo real
@@ -665,11 +705,49 @@ document.getElementById("chat-form").addEventListener("submit", async (ev) => {
   input.value = "";
 });
 
+// widget flutuante de bate-papo
+let chatAberto = false;
+let chatMsgCountVisto = 0;
+
+function abrirChat() {
+  chatAberto = true;
+  document.getElementById("chat-widget").classList.remove("hidden");
+  document.getElementById("chat-fab").classList.add("hidden");
+  document.getElementById("chat-fab-badge").classList.add("hidden");
+  chatMsgCountVisto = allMessages.length;
+  const el = document.getElementById("chat-messages");
+  el.scrollTop = el.scrollHeight;
+}
+
+function fecharChat() {
+  chatAberto = false;
+  document.getElementById("chat-widget").classList.add("hidden");
+  document.getElementById("chat-fab").classList.remove("hidden");
+}
+
+document.getElementById("chat-fab").addEventListener("click", abrirChat);
+document.getElementById("chat-close").addEventListener("click", fecharChat);
+
+// lightbox: clique numa foto do feed pra ver em tamanho maior
+document.getElementById("lightbox").addEventListener("click", () => {
+  document.getElementById("lightbox").classList.add("hidden");
+  document.getElementById("lightbox").classList.remove("flex");
+});
+document.getElementById("entries-list").addEventListener("click", (ev) => {
+  if (ev.target.tagName === "IMG" && ev.target.dataset.full) {
+    document.getElementById("lightbox-img").src = ev.target.dataset.full;
+    const lb = document.getElementById("lightbox");
+    lb.classList.remove("hidden");
+    lb.classList.add("flex");
+  }
+});
+
 // tela de identificação
 function setupUser() {
   document.getElementById("current-user-name").textContent = currentUser;
   document.getElementById("gate").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
+  document.getElementById("chat-fab").classList.remove("hidden");
 }
 if (currentUser) setupUser();
 
@@ -723,7 +801,6 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
     <div class="flex gap-4 border-b border-slate-200 mb-4 text-sm font-medium">
       <button class="tab-btn active pb-2 border-b-2 border-transparent" data-tab="ranking">Ranking</button>
       <button class="tab-btn pb-2 border-b-2 border-transparent" data-tab="feed">Mais</button>
-      <button class="tab-btn pb-2 border-b-2 border-transparent" data-tab="chat">Bate-papo</button>
     </div>
 
     <!-- ===================== ABA RANKING ===================== -->
@@ -796,19 +873,31 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
       </div>
     </div>
 
-    <!-- ===================== ABA CHAT ===================== -->
-    <div id="tab-chat" class="tab-panel hidden">
-      <div class="bg-white rounded-xl shadow p-5 mb-10 flex flex-col" style="height: 60vh;">
-        <h2 class="font-semibold mb-3">Bate-papo</h2>
-        <div id="chat-messages" class="flex-1 overflow-y-auto mb-3"></div>
-        <form id="chat-form" class="flex gap-2">
-          <input id="chat-input" type="text" placeholder="Escreva uma mensagem..." required
-                 class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
-          <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Enviar</button>
-        </form>
-      </div>
-    </div>
   </div>
+</div>
+
+<!-- ===================== WIDGET DE BATE-PAPO FLUTUANTE ===================== -->
+<button id="chat-fab" class="hidden fixed bottom-5 right-5 z-[150] bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-14 h-14 shadow-lg flex items-center justify-center text-2xl">
+  💬
+  <span id="chat-fab-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">•</span>
+</button>
+
+<div id="chat-widget" class="hidden fixed bottom-5 right-5 z-[150] w-[92vw] max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col border border-slate-200" style="height: 70vh; max-height: 560px;">
+  <div class="flex items-center justify-between px-4 py-3 bg-indigo-600 text-white rounded-t-2xl">
+    <span class="font-semibold text-sm">💬 Bate-papo</span>
+    <button id="chat-close" class="text-white/80 hover:text-white text-lg leading-none">✕</button>
+  </div>
+  <div id="chat-messages" class="flex-1 overflow-y-auto p-3"></div>
+  <form id="chat-form" class="flex gap-2 p-3 border-t border-slate-100">
+    <input id="chat-input" type="text" placeholder="Escreva uma mensagem..." required
+           class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Enviar</button>
+  </form>
+</div>
+
+<!-- ===================== LIGHTBOX DE FOTOS DO FEED ===================== -->
+<div id="lightbox" class="hidden fixed inset-0 bg-black/80 z-[300] items-center justify-center p-4 cursor-zoom-out">
+  <img id="lightbox-img" src="" class="max-w-full max-h-full rounded-lg" />
 </div>
 
 </body>
