@@ -23,7 +23,14 @@ service cloud.firestore {
                     && request.resource.data.valor > 0;
 
       allow delete: if true;
-      allow update: if false;
+
+      // edição: só o autor original do registro pode editar (não dá pra
+      // mudar quem é o autor), e o resultado precisa continuar válido
+      allow update: if request.resource.data.autor == resource.data.autor
+                    && request.resource.data.keys().hasAll(['autor','atividade','valor','data'])
+                    && request.resource.data.atividade in ['flashcards','questoes','videoAula','leituraPdf','simulado','atividadeFisica','sono']
+                    && request.resource.data.valor is number
+                    && request.resource.data.valor > 0;
     }
 
     // mensagens do bate-papo

@@ -103,7 +103,7 @@ const STORE_ITEMS = [
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
   getFirestore, collection, addDoc, doc, onSnapshot, query, orderBy,
-  deleteDoc
+  deleteDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig);
@@ -452,8 +452,13 @@ function render() {
 function reactionsFor(entryId) {
   const rs = allReactions.filter(r => r.entryId === entryId);
   const counts = {};
-  rs.forEach(r => { counts[r.emoji] = (counts[r.emoji] || 0) + 1; });
-  return { rs, counts };
+  const nomes = {};
+  rs.forEach(r => {
+    counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+    nomes[r.emoji] = nomes[r.emoji] || [];
+    nomes[r.emoji].push(r.autor);
+  });
+  return { rs, counts, nomes };
 }
 
 function myReaction(entryId, emoji) {
@@ -470,7 +475,7 @@ function renderFeed() {
   listEl.innerHTML = recent.map(e => {
     const a = ACTIVITIES[e.atividade] || {};
     const pts = calcPoints(e);
-    const { counts } = reactionsFor(e.id);
+    const { counts, nomes } = reactionsFor(e.id);
     const comments = allComments.filter(c => c.entryId === e.id).sort((x,y) => (x.criadoEm||0)-(y.criadoEm||0));
     const isOpen = openComments.has(e.id);
     return `
@@ -482,12 +487,17 @@ function renderFeed() {
           <span class="text-slate-500"> · ${a.label || e.atividade} · ${describeValue(e)} · ${e.data}</span>
           <span class="${pts < 0 ? 'text-red-600' : 'text-indigo-600'} font-medium"> (${pts >= 0 ? '+' : ''}${fmt(pts)} pts)</span>
         </div>
-        ${e.autor === currentUser ? `<button data-id="${e.id}" class="del-btn text-slate-400 hover:text-red-500 text-xs shrink-0">excluir</button>` : ""}
+        ${e.autor === currentUser ? `
+          <span class="flex gap-2 shrink-0">
+            <button data-id="${e.id}" class="edit-btn text-slate-400 hover:text-indigo-600 text-xs">editar</button>
+            <button data-id="${e.id}" class="del-btn text-slate-400 hover:text-red-500 text-xs">excluir</button>
+          </span>
+        ` : ""}
       </div>
       ${e.fotoUrl ? `<img src="${e.fotoUrl}" data-full="${e.fotoUrl}" class="mt-2 max-h-64 rounded-lg border border-slate-200 object-cover cursor-zoom-in" />` : ""}
-      <div class="flex items-center gap-1 mt-2">
+      <div class="flex items-center gap-1 mt-2 flex-wrap">
         ${REACTION_EMOJIS.map(em => `
-          <button data-entry="${e.id}" data-emoji="${em}"
+          <button data-entry="${e.id}" data-emoji="${em}" title="${(nomes[em]||[]).join(', ')}"
             class="react-btn ${myReaction(e.id, em) ? 'mine' : ''} text-xs border border-slate-200 rounded-full px-2 py-0.5 hover:bg-slate-50">
             ${em} ${counts[em] || ""}
           </button>
@@ -496,6 +506,11 @@ function renderFeed() {
           💬 ${comments.length ? comments.length : "comentar"}
         </button>
       </div>
+      ${Object.keys(nomes).length > 0 ? `
+        <p class="text-xs text-slate-400 mt-1">
+          ${Object.entries(nomes).map(([em, ns]) => `${em} ${ns.join(", ")}`).join(" · ")}
+        </p>
+      ` : ""}
       ${isOpen ? `
         <div class="mt-2 pl-2 border-l-2 border-slate-100">
           ${comments.map(c => `
@@ -517,6 +532,13 @@ function renderFeed() {
       if (confirm("Excluir este registro?")) {
         await deleteDoc(doc(db, "entries", btn.dataset.id));
       }
+    });
+  });
+
+  document.querySelectorAll(".edit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const entry = allEntries.find(e => e.id === btn.dataset.id);
+      if (entry) entrarEmModoEdicao(entry);
     });
   });
 
@@ -661,14 +683,10 @@ const valorInput = document.getElementById("valor");
 function updateValorField() {
   const a = ACTIVITIES[atividadeSelect.value];
   valorLabel.textContent = a.campoLabel;
-  if (a.campo === "quantidade") {
-    valorInput.step = "1"; valorInput.min = "0"; valorInput.value = "";
-  } else if (a.campo === "horas") {
-    valorInput.step = "0.1"; valorInput.min = "0"; valorInput.value = "";
-  } else if (a.campo === "minutos") {
-    valorInput.step = "1"; valorInput.min = "0"; valorInput.value = "";
-  } else if (a.campo === "ocorrencia") {
-    valorInput.step = "1"; valorInput.min = "1"; valorInput.value = "1";
+  if (a.campo === "ocorrencia") {
+    valorInput.value = "1";
+  } else {
+    valorInput.value = "";
   }
 }
 atividadeSelect.addEventListener("change", updateValorField);
@@ -676,13 +694,18 @@ updateValorField();
 
 const form = document.getElementById("entry-form");
 const submitBtn = form.querySelector("button[type=submit], button:not([type])");
+const formTitulo = document.getElementById("form-titulo");
+const cancelarEdicaoBtn = document.getElementById("cancelar-edicao");
 const fotoInput = document.getElementById("foto");
 const fotoPreviewWrap = document.getElementById("foto-preview-wrap");
 const fotoPreviewImg = document.getElementById("foto-preview-img");
 
-function showFotoPreview(file) {
-  if (!file) { hideFotoPreview(); return; }
-  fotoPreviewImg.src = URL.createObjectURL(file);
+// id do registro em edição (null = modo "novo registro")
+let editandoId = null;
+
+function showFotoPreview(srcOuArquivo) {
+  if (!srcOuArquivo) { hideFotoPreview(); return; }
+  fotoPreviewImg.src = typeof srcOuArquivo === "string" ? srcOuArquivo : URL.createObjectURL(srcOuArquivo);
   fotoPreviewWrap.classList.remove("hidden");
 }
 
@@ -698,8 +721,57 @@ document.getElementById("foto-preview-remover").addEventListener("click", () => 
   hideFotoPreview();
 });
 
-// permite colar (Ctrl+V) um print direto no campo de foto, sem precisar
-// salvar a imagem num arquivo antes de anexar
+function entrarEmModoEdicao(entry) {
+  editandoId = entry.id;
+  document.getElementById("tab-ranking").classList.remove("hidden");
+  document.getElementById("tab-feed").classList.add("hidden");
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector('.tab-btn[data-tab="ranking"]').classList.add("active");
+
+  atividadeSelect.value = entry.atividade;
+  updateValorField();
+  valorInput.value = entry.valor;
+  document.getElementById("data").value = entry.data;
+  fotoInput.value = "";
+  if (entry.fotoUrl) showFotoPreview(entry.fotoUrl);
+  else hideFotoPreview();
+
+  formTitulo.textContent = "Editar atividade";
+  submitBtn.textContent = "Salvar edição";
+  cancelarEdicaoBtn.classList.remove("hidden");
+  form.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function sairDoModoEdicao() {
+  editandoId = null;
+  form.reset();
+  hideFotoPreview();
+  document.getElementById("data").value = new Date().toISOString().slice(0,10);
+  updateValorField();
+  formTitulo.textContent = "Registrar atividade";
+  submitBtn.textContent = "Salvar";
+  cancelarEdicaoBtn.classList.add("hidden");
+}
+
+cancelarEdicaoBtn.addEventListener("click", sairDoModoEdicao);
+
+// toast de confirmação (usado pelo "colar print")
+function mostrarToast(texto) {
+  let toast = document.getElementById("app-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "app-toast";
+    toast.className = "fixed top-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-2 rounded-lg shadow-lg z-[400] transition-opacity";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = texto;
+  toast.style.opacity = "1";
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => { toast.style.opacity = "0"; }, 2200);
+}
+
+// permite colar (Ctrl+V) um print em qualquer campo do formulário de
+// registro/edição de atividade, sem precisar salvar a imagem como arquivo antes
 document.addEventListener("paste", (ev) => {
   const items = ev.clipboardData && ev.clipboardData.items;
   if (!items) return;
@@ -711,42 +783,49 @@ document.addEventListener("paste", (ev) => {
       dt.items.add(new File([file], `colado-${Date.now()}.png`, { type: file.type || "image/png" }));
       fotoInput.files = dt.files;
       showFotoPreview(fotoInput.files[0]);
+      mostrarToast("📎 Print colado! Confira no campo Foto.");
       ev.preventDefault();
       break;
     }
   }
-});
+}, true);
 
 form.addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const atividade = atividadeSelect.value;
-  const valor = parseFloat(valorInput.value);
+  const valor = parseFloat(String(valorInput.value).replace(",", "."));
   const data = document.getElementById("data").value;
   const file = fotoInput.files[0];
   if (!valor || valor <= 0 || !data) return;
 
   submitBtn.disabled = true;
-  submitBtn.textContent = "Salvando...";
+  submitBtn.textContent = editandoId ? "Salvando edição..." : "Salvando...";
   try {
     let fotoUrl = null;
     if (file) {
       fotoUrl = await compressImage(file);
+    } else if (editandoId && !fotoPreviewWrap.classList.contains("hidden")) {
+      // manteve a foto original (não trocou nem removeu)
+      const original = allEntries.find(e => e.id === editandoId);
+      fotoUrl = original ? (original.fotoUrl || null) : null;
     }
-    await addDoc(entriesRef, {
-      autor: currentUser,
-      atividade, valor, data,
-      criadoEm: Date.now(),
-      fotoUrl
-    });
-    form.reset();
-    hideFotoPreview();
-    document.getElementById("data").value = new Date().toISOString().slice(0,10);
-    updateValorField();
+
+    if (editandoId) {
+      await updateDoc(doc(db, "entries", editandoId), { atividade, valor, data, fotoUrl });
+    } else {
+      await addDoc(entriesRef, {
+        autor: currentUser,
+        atividade, valor, data,
+        criadoEm: Date.now(),
+        fotoUrl
+      });
+    }
+    sairDoModoEdicao();
   } catch (err) {
     alert("Erro ao salvar: " + err.message);
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = "Salvar";
+    submitBtn.textContent = editandoId ? "Salvar edição" : "Salvar";
   }
 });
 
@@ -878,7 +957,10 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
       </div>
 
       <div class="bg-white rounded-xl shadow p-5 mb-6">
-        <h2 class="font-semibold mb-3">Registrar atividade</h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-semibold" id="form-titulo">Registrar atividade</h2>
+          <button type="button" id="cancelar-edicao" class="hidden text-xs text-slate-500 hover:underline">cancelar edição</button>
+        </div>
         <form id="entry-form" class="grid grid-cols-2 gap-3 text-sm">
           <label class="col-span-2">
             Atividade
@@ -886,7 +968,7 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
           </label>
           <label class="col-span-2" id="valor-wrap">
             <span id="valor-label">Valor</span>
-            <input id="valor" type="number" step="0.1" min="0" required
+            <input id="valor" type="text" inputmode="decimal" required
                    class="w-full border border-slate-300 rounded-lg px-3 py-2 mt-1" />
           </label>
           <label class="col-span-2">
@@ -898,7 +980,7 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
             Foto (opcional, prova de que fez a atividade)
             <input id="foto" type="file" accept="image/*" capture="environment"
                    class="w-full text-xs mt-1" />
-            <span id="foto-dica" class="block text-xs text-slate-400 mt-1">Dica: dá pra colar um print direto aqui (clique no campo acima e Ctrl+V / Cmd+V).</span>
+            <span id="foto-dica" class="block text-xs text-slate-400 mt-1">Dica: clique em qualquer campo aqui do formulário e cole (Ctrl+V / Cmd+V) um print — não precisa clicar no campo de foto.</span>
             <div id="foto-preview-wrap" class="hidden mt-2 flex items-center gap-2">
               <img id="foto-preview-img" class="max-h-24 rounded-lg border border-slate-200" />
               <button type="button" id="foto-preview-remover" class="text-xs text-red-500 hover:underline">remover foto</button>
