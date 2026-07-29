@@ -14,17 +14,19 @@
 - **Simulado** agora vale 4 pontos por vez (era 5).
 - **Sono**: só perde ponto se dormir menos de 7h ou mais de 9h (antes só valia 0 pontos dormindo exatamente 8h).
 - **Vídeo-aula e Leitura de PDF agora são em minutos, não em horas** (a taxa de pontos continua a mesma, só o jeito de informar o tempo mudou). ⚠️ Registros antigos dessas duas atividades foram lançados em horas — eles continuam no histórico, mas agora são recalculados como se o número fosse minutos, então o total de pontos deles cai bastante. Se isso incomodar, me avise que ajustamos manualmente esses registros antigos.
-- **Colar print direto no registro**: no campo de foto, clique nele e aperte Ctrl+V (ou Cmd+V no Mac) que a imagem da área de transferência é anexada na hora, sem precisar salvar o print como arquivo antes.
+- **Colar print em qualquer campo do formulário**: clique em qualquer campo do "Registrar atividade" (não precisa ser no campo Foto) e aperte Ctrl+V (ou Cmd+V no Mac) que a imagem da área de transferência é anexada na hora, com prévia aparecendo e um aviso confirmando ("📎 Print colado!").
 - Corrigido: a bolinha vermelha do bate-papo agora só aparece quando chega mensagem nova de verdade (antes aparecia sempre, mesmo sem novidade).
+- **Editar atividade já publicada**: registros que você mesmo criou agora têm um botão "editar" no Feed, ao lado de "excluir". Abre o mesmo formulário preenchido com os dados atuais pra corrigir valor, data, atividade ou foto.
+- **Reações com nome de quem reagiu**: abaixo dos emojis de reação no Feed aparece quem reagiu com cada um (ex: "❤️ Hélio").
 
 ## Passos para ativar tudo no Firebase
 
-1. **Firestore > Regras**: cole o conteúdo de `firestore.rules` (substitui o que já estava lá — agora também libera a coleção `resgates`, usada pela loja).
+1. **Firestore > Regras**: cole o conteúdo de `firestore.rules` (substitui o que já estava lá — agora também libera a edição de atividades pelo próprio autor, além da coleção `resgates` usada pela loja).
 2. Publique.
 
 Não é preciso ativar o Firebase Storage — as fotos são reduzidas e comprimidas no próprio navegador (redimensionadas para no máximo 900px e convertidas para JPEG de qualidade média) e guardadas como texto dentro do próprio registro no Firestore, que já está no plano gratuito.
 
-Sem o passo 1, a Loja vai dar erro de "permissão negada" ao tentar resgatar um prêmio (o Ranking, Feed, Bate-papo e o registro de atividades continuam funcionando normalmente).
+Sem o passo 1, o botão "editar" e a Loja vão dar erro de "permissão negada" (o Ranking, Feed, Bate-papo e o registro de novas atividades continuam funcionando normalmente).
 
 ## Fluxo de atualização a partir de agora
 
