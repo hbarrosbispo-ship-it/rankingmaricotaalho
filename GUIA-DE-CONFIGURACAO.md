@@ -13,6 +13,9 @@
 - **Meta do casal progressiva**: em vez de uma meta fixa, começa em 20 pontos na primeira semana e sobe a cada semana seguinte (configurável em `META_CASAL_DATA_INICIO`, `META_CASAL_PONTOS_INICIAL` e `META_CASAL_INCREMENTO_SEMANAL` no `index.html`). Quando a meta da semana é batida, aparecem fogos de artifício na tela e uma mensagem de parabéns (uma vez por semana).
 - **Simulado** agora vale 4 pontos por vez (era 5).
 - **Sono**: só perde ponto se dormir menos de 7h ou mais de 9h (antes só valia 0 pontos dormindo exatamente 8h).
+- **Vídeo-aula e Leitura de PDF agora são em minutos, não em horas** (a taxa de pontos continua a mesma, só o jeito de informar o tempo mudou). ⚠️ Registros antigos dessas duas atividades foram lançados em horas — eles continuam no histórico, mas agora são recalculados como se o número fosse minutos, então o total de pontos deles cai bastante. Se isso incomodar, me avise que ajustamos manualmente esses registros antigos.
+- **Colar print direto no registro**: no campo de foto, clique nele e aperte Ctrl+V (ou Cmd+V no Mac) que a imagem da área de transferência é anexada na hora, sem precisar salvar o print como arquivo antes.
+- Corrigido: a bolinha vermelha do bate-papo agora só aparece quando chega mensagem nova de verdade (antes aparecia sempre, mesmo sem novidade).
 
 ## Passos para ativar tudo no Firebase
 
