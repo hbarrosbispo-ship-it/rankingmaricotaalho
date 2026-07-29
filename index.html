@@ -36,7 +36,8 @@ const firebaseConfig = {
 // ============================================================
 // PASSO 2 (opcional): ajuste as atividades e os pontos aqui.
 // campo pode ser "quantidade" (ex: flashcards, questões),
-// "horas" (ex: leitura, sono) ou "ocorrencia" (ex: simulado).
+// "horas" (ex: sono), "minutos" (ex: vídeo-aula, leitura de PDF)
+// ou "ocorrencia" (ex: simulado).
 // ============================================================
 const ACTIVITIES = {
   flashcards: {
@@ -51,12 +52,12 @@ const ACTIVITIES = {
   },
   videoAula: {
     emoji: "🎥", label: "Vídeo-aula",
-    campo: "horas", campoLabel: "Horas de vídeo-aula",
+    campo: "minutos", campoLabel: "Minutos de vídeo-aula",
     pontosPorHora: 1
   },
   leituraPdf: {
     emoji: "📄", label: "Leitura de PDF",
-    campo: "horas", campoLabel: "Horas lendo PDF",
+    campo: "minutos", campoLabel: "Minutos lendo PDF",
     pontosPorHora: 2
   },
   simulado: {
@@ -134,6 +135,9 @@ function calcPoints(e) {
   if (a.campo === "horas" && a.pontosPorHora !== undefined) {
     return valor * a.pontosPorHora;
   }
+  if (a.campo === "minutos" && a.pontosPorHora !== undefined) {
+    return (valor / 60) * a.pontosPorHora;
+  }
   if (a.campo === "horas" && a.minHoras !== undefined && a.maxHoras !== undefined) {
     return (valor >= a.minHoras && valor <= a.maxHoras) ? 0 : a.penalidade;
   }
@@ -152,6 +156,7 @@ function describeValue(e) {
   if (!a) return "";
   if (a.campo === "quantidade") return `${e.valor} ${a.label.toLowerCase()}`;
   if (a.campo === "horas") return `${e.valor}h`;
+  if (a.campo === "minutos") return `${e.valor}min`;
   if (a.campo === "ocorrencia") return `${e.valor}x`;
   return "";
 }
@@ -162,6 +167,9 @@ function describeRule(a) {
   }
   if (a.campo === "horas" && a.pontosPorHora !== undefined) {
     return `${a.pontosPorHora} ponto${a.pontosPorHora === 1 ? "" : "s"} por hora`;
+  }
+  if (a.campo === "minutos" && a.pontosPorHora !== undefined) {
+    return `${a.pontosPorHora} ponto${a.pontosPorHora === 1 ? "" : "s"} por hora (${Math.round(a.pontosPorHora / 60 * 100) / 100} por minuto)`;
   }
   if (a.campo === "horas" && a.minHoras !== undefined && a.maxHoras !== undefined) {
     return `${a.penalidade} ponto se dormir menos de ${a.minHoras}h ou mais de ${a.maxHoras}h`;
@@ -612,6 +620,10 @@ onSnapshot(resgatesRef, snap => {
 });
 onSnapshot(query(messagesRef, orderBy("criadoEm", "asc")), snap => {
   allMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (chatMsgCountVisto === null) {
+    chatMsgCountVisto = allMessages.length;
+    localStorage.setItem("chat_msgs_vistos", String(chatMsgCountVisto));
+  }
   renderChat();
 });
 
@@ -653,6 +665,8 @@ function updateValorField() {
     valorInput.step = "1"; valorInput.min = "0"; valorInput.value = "";
   } else if (a.campo === "horas") {
     valorInput.step = "0.1"; valorInput.min = "0"; valorInput.value = "";
+  } else if (a.campo === "minutos") {
+    valorInput.step = "1"; valorInput.min = "0"; valorInput.value = "";
   } else if (a.campo === "ocorrencia") {
     valorInput.step = "1"; valorInput.min = "1"; valorInput.value = "1";
   }
@@ -662,13 +676,52 @@ updateValorField();
 
 const form = document.getElementById("entry-form");
 const submitBtn = form.querySelector("button[type=submit], button:not([type])");
+const fotoInput = document.getElementById("foto");
+const fotoPreviewWrap = document.getElementById("foto-preview-wrap");
+const fotoPreviewImg = document.getElementById("foto-preview-img");
+
+function showFotoPreview(file) {
+  if (!file) { hideFotoPreview(); return; }
+  fotoPreviewImg.src = URL.createObjectURL(file);
+  fotoPreviewWrap.classList.remove("hidden");
+}
+
+function hideFotoPreview() {
+  fotoPreviewWrap.classList.add("hidden");
+  fotoPreviewImg.src = "";
+}
+
+fotoInput.addEventListener("change", () => showFotoPreview(fotoInput.files[0]));
+
+document.getElementById("foto-preview-remover").addEventListener("click", () => {
+  fotoInput.value = "";
+  hideFotoPreview();
+});
+
+// permite colar (Ctrl+V) um print direto no campo de foto, sem precisar
+// salvar a imagem num arquivo antes de anexar
+document.addEventListener("paste", (ev) => {
+  const items = ev.clipboardData && ev.clipboardData.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type && item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (!file) continue;
+      const dt = new DataTransfer();
+      dt.items.add(new File([file], `colado-${Date.now()}.png`, { type: file.type || "image/png" }));
+      fotoInput.files = dt.files;
+      showFotoPreview(fotoInput.files[0]);
+      ev.preventDefault();
+      break;
+    }
+  }
+});
 
 form.addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const atividade = atividadeSelect.value;
   const valor = parseFloat(valorInput.value);
   const data = document.getElementById("data").value;
-  const fotoInput = document.getElementById("foto");
   const file = fotoInput.files[0];
   if (!valor || valor <= 0 || !data) return;
 
@@ -686,6 +739,7 @@ form.addEventListener("submit", async (ev) => {
       fotoUrl
     });
     form.reset();
+    hideFotoPreview();
     document.getElementById("data").value = new Date().toISOString().slice(0,10);
     updateValorField();
   } catch (err) {
@@ -707,7 +761,11 @@ document.getElementById("chat-form").addEventListener("submit", async (ev) => {
 
 // widget flutuante de bate-papo
 let chatAberto = false;
-let chatMsgCountVisto = 0;
+const chatMsgsVistosSalvo = localStorage.getItem("chat_msgs_vistos");
+// null = ainda não sabemos quantas mensagens já existiam; é definido na
+// primeira leitura do chat (ver onSnapshot de messagesRef mais abaixo),
+// pra não marcar o histórico já existente como "não lido".
+let chatMsgCountVisto = chatMsgsVistosSalvo !== null ? parseInt(chatMsgsVistosSalvo, 10) : null;
 
 function abrirChat() {
   chatAberto = true;
@@ -715,6 +773,7 @@ function abrirChat() {
   document.getElementById("chat-fab").classList.add("hidden");
   document.getElementById("chat-fab-badge").classList.add("hidden");
   chatMsgCountVisto = allMessages.length;
+  localStorage.setItem("chat_msgs_vistos", String(chatMsgCountVisto));
   const el = document.getElementById("chat-messages");
   el.scrollTop = el.scrollHeight;
 }
@@ -839,6 +898,11 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
             Foto (opcional, prova de que fez a atividade)
             <input id="foto" type="file" accept="image/*" capture="environment"
                    class="w-full text-xs mt-1" />
+            <span id="foto-dica" class="block text-xs text-slate-400 mt-1">Dica: dá pra colar um print direto aqui (clique no campo acima e Ctrl+V / Cmd+V).</span>
+            <div id="foto-preview-wrap" class="hidden mt-2 flex items-center gap-2">
+              <img id="foto-preview-img" class="max-h-24 rounded-lg border border-slate-200" />
+              <button type="button" id="foto-preview-remover" class="text-xs text-red-500 hover:underline">remover foto</button>
+            </div>
           </label>
           <button type="submit" class="col-span-2 bg-indigo-600 text-white rounded-lg py-2 font-medium mt-1">Salvar</button>
         </form>
