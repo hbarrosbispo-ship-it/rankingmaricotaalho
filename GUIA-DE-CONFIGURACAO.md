@@ -31,3 +31,13 @@ Sem o passo 1, o botão "editar" e a Loja vão dar erro de "permissão negada" (
 ## Fluxo de atualização a partir de agora
 
 O projeto está ligado a um repositório GitHub. Para pedir uma mudança, é só falar comigo no chat — eu edito o `index.html`, dou commit e push, e o Netlify publica sozinho em cerca de 1 minuto (contanto que o site esteja linkado ao repositório em Netlify > Site settings > Build & deploy > Link repository).
+
+## Instalar como app no iPhone (PWA)
+
+1. Abra o site no **Safari** (precisa ser o Safari, não o Chrome).
+2. Toque no botão de **Compartilhar** (quadrado com seta) e depois em **Adicionar à Tela de Início**.
+3. O ícone do 🏆 aparece na tela inicial e o app abre em tela cheia, sem a barra do navegador.
+
+No Android (Chrome): menu ⋮ > **Instalar app**.
+
+Arquivos do PWA: `manifest.webmanifest`, `sw.js` (service worker) e a pasta `icons/`. Se mudar o `index.html`, o app pega a versão nova sozinho quando está online.

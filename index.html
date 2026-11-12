@@ -2,7 +2,15 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#4f46e5" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Ranking" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
 <title>Ranking de Metas</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -15,6 +23,9 @@
     100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
   }
   #chat-widget { transition: opacity 0.15s ease, transform 0.15s ease; }
+  /* PWA no iOS: respeitar notch e barra inferior */
+  body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); -webkit-tap-highlight-color: transparent; }
+  #chat-fab, #chat-widget { bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
 </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
@@ -1046,5 +1057,10 @@ document.getElementById("data").value = new Date().toISOString().slice(0,10);
   <img id="lightbox-img" src="" class="max-w-full max-h-full rounded-lg" />
 </div>
 
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
 </body>
 </html>
