@@ -262,7 +262,7 @@
     background: var(--nav); border-top: 1px solid var(--line);
     backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
   }
-  .nav-inner { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 72px 1fr 1fr; align-items: center; }
+  .nav-inner { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 66px 1fr 1fr 1fr; align-items: center; }
   .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; color: var(--faint); font-size: 10.5px; font-weight: 700; }
   .tab-btn .ico { font-size: 21px; filter: grayscale(1); opacity: .7; transition: all .2s; }
   .tab-btn.active { color: var(--text); }
@@ -349,6 +349,35 @@
   .poke { font-size: 16px; padding: 4px 8px; border-radius: 10px; background: var(--input); border: 1px solid var(--line); }
   .poke:disabled { opacity: .4; }
   .goal-mini { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  /* ---------- pacote 3: painel, gráficos, mapa de calor, cronômetro ---------- */
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+  .stat { background: var(--input); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+  .stat b { display: block; font-size: 20px; font-weight: 800; margin-top: 2px; }
+  .stat span { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .stat small { display: block; font-size: 10.5px; color: var(--faint); margin-top: 2px; }
+  .up { color: var(--ok); } .down { color: var(--bad); }
+  .chart { display: flex; align-items: flex-end; gap: 4px; }
+  .chart-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bars { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 96px; width: 100%; }
+  .chart-bar { width: 42%; max-width: 16px; min-height: 2px; border-radius: 6px 6px 2px 2px; transition: height .5s; }
+  .chart-label { font-size: 9.5px; color: var(--faint); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; }
+  .heat { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 3px; }
+  .heat i { aspect-ratio: 1; border-radius: 4px; background: var(--track); display: block; }
+  .heat i.l1 { background: rgba(124,92,255,.35); } .heat i.l2 { background: rgba(124,92,255,.6); }
+  .heat i.l3 { background: rgba(124,92,255,.85); } .heat i.l4 { background: #ff5fa2; }
+  .heat i.fut { opacity: 0; }
+  .heat-legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 8px; font-size: 10px; color: var(--faint); }
+  .heat-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; background: var(--track); }
+  .heat-legend i.l1 { background: rgba(124,92,255,.35); } .heat-legend i.l2 { background: rgba(124,92,255,.6); }
+  .heat-legend i.l3 { background: rgba(124,92,255,.85); } .heat-legend i.l4 { background: #ff5fa2; }
+  .timer-display { font-size: 52px; font-weight: 800; text-align: center; letter-spacing: 1px; font-variant-numeric: tabular-nums; margin: 6px 0 12px; }
+  .timer-btns { display: flex; gap: 8px; }
+  .timer-btns .btn { flex: 1; }
+  .timer-pill { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 4px; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+    background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(124,92,255,.35); cursor: pointer; }
+  .retro { white-space: pre-wrap; font-size: 13.5px; line-height: 1.55; background: var(--input); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin: 12px 0; }
   .empty { text-align: center; padding: 18px 8px; color: var(--muted); font-size: 14px; }
   .empty .big { font-size: 34px; margin-bottom: 6px; }
 </style>
@@ -388,6 +417,7 @@
         <button id="switch-user" class="avatar" title="Trocar de usuário"></button>
       </div>
     </div>
+    <div id="timer-pill" class="timer-pill hidden"></div>
   </div>
 
   <main class="wrap">
@@ -459,6 +489,53 @@
       </div>
     </section>
 
+    <!-- ===== PAINEL ===== -->
+    <section id="tab-painel" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>⏱️ Foco</h2><span class="small muted">cronômetro de estudo</span></div>
+        <div id="timer"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>📊 Estatísticas</h2><span class="small muted">temporada atual</span></div>
+        <div class="chips" id="stat-people"></div>
+        <div class="stat-grid" id="stat-grid"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Pontos por dia</h2><span class="small muted">últimos 14 dias</span></div>
+        <div id="chart-dias"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Pontos por semana</h2><span class="small muted">temporada</span></div>
+        <div id="chart-semanas"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Onde os pontos vêm</h2><span class="small muted" id="ativ-quem"></span></div>
+        <div id="stat-ativ"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>🗓️ Mapa de calor</h2><span class="small muted">últimas 17 semanas</span></div>
+        <div id="heatmap"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>📸 Retrospectiva</h2></div>
+        <div class="chips" id="retro-chips">
+          <button class="chip on" data-retro="atual">Esta semana</button>
+          <button class="chip" data-retro="passada">Semana passada</button>
+          <button class="chip" data-retro="mes">Este mês</button>
+        </div>
+        <div class="retro" id="retro-text"></div>
+        <button id="retro-share" class="btn block">Compartilhar resumo</button>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>💾 Seus dados</h2></div>
+        <p class="small muted" style="margin-bottom:12px">Baixe uma cópia de segurança. As fotos não entram no arquivo, só a informação de que existem.</p>
+        <div class="timer-btns">
+          <button id="export-json" class="btn ghost">Backup (JSON)</button>
+          <button id="export-csv" class="btn ghost">Registros (CSV)</button>
+        </div>
+      </div>
+    </section>
+
     <!-- ===== MEDALHAS ===== -->
     <section id="tab-medalhas" class="tab-panel hidden">
       <div class="card">
@@ -495,6 +572,7 @@
       <button class="tab-btn active" data-tab="home"><span class="ico">🏠</span>Início</button>
       <button class="tab-btn" data-tab="feed"><span class="ico">📰</span>Feed</button>
       <button id="fab-add" class="fab-add" aria-label="Registrar atividade">+</button>
+      <button class="tab-btn" data-tab="painel"><span class="ico">📊</span>Painel</button>
       <button class="tab-btn" data-tab="medalhas"><span class="ico">🏅</span>Medalhas</button>
       <button class="tab-btn" data-tab="loja"><span class="ico">🎁</span>Loja</button>
     </div>
@@ -1259,8 +1337,253 @@ function renderFeed() {
 function render() {
   if (!currentUser) return;
   renderHero(); renderAlerta(); renderMissoes(); renderDuelo(); renderRanking(); renderMetaCasal(); renderMetaPessoal();
-  renderMedalhas(); renderLoja(); renderFeed(); renderHall();
+  renderMedalhas(); renderLoja(); renderFeed(); renderHall(); renderPainel();
   checkNewBadges(); checkNewMissions();
+}
+
+// ============================================================
+// PAINEL: estatísticas, gráficos, mapa de calor, retrospectiva
+// ============================================================
+let statPerson = "";
+let retroModo = "atual";
+const hueOf = nome => { let h = 0; for (const c of nome) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const solid = nome => `hsl(${hueOf(nome)} 75% 58%)`;
+const ddmm = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+const addDias = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+function ptsPorDia(autor) {
+  const m = {};
+  allEntries.filter(e => e.autor === autor).forEach(e => { m[e.data] = (m[e.data] || 0) + calcPoints(e); });
+  return m;
+}
+function barChart(labels, series) {
+  const max = Math.max(1, ...series.flatMap(s => s.vals));
+  return `<div class="legend">${series.map(s => `<span><i style="background:${solid(s.nome)}"></i>${esc(s.nome)}</span>`).join("")}</div>
+    <div class="chart">${labels.map((l, i) => `
+      <div class="chart-col">
+        <div class="chart-bars">${series.map(s => `<div class="chart-bar" title="${esc(s.nome)}: ${fmt(s.vals[i])} pts" style="height:${Math.max(0, s.vals[i]) / max * 100}%;background:${solid(s.nome)}"></div>`).join("")}</div>
+        <div class="chart-label">${l}</div>
+      </div>`).join("")}</div>`;
+}
+
+function renderPainel() {
+  const autores = allAuthors();
+  if (!statPerson || !autores.includes(statPerson)) statPerson = currentUser;
+  $("stat-people").innerHTML = autores.map(n => `<button class="chip ${n === statPerson ? "on" : ""}" data-person="${esc(n)}">${esc(n)}</button>`).join("");
+  $("ativ-quem").textContent = statPerson;
+
+  // --- números da temporada ---
+  const mine = seasonEntries().filter(e => e.autor === statPerson);
+  const porDia = {}; mine.forEach(e => { porDia[e.data] = (porDia[e.data] || 0) + calcPoints(e); });
+  const dias = Object.keys(porDia).length;
+  const total = mine.reduce((s, e) => s + calcPoints(e), 0);
+  let melhor = ["", 0]; Object.entries(porDia).forEach(([d, p]) => { if (p > melhor[1]) melhor = [d, p]; });
+  const idx = currentWeekIdx(), wA = weekInfo(idx);
+  const dentro = w => mine.filter(e => e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0);
+  const semA = dentro(wA), semP = idx > 0 ? dentro(weekInfo(idx - 1)) : null;
+  let deltaHtml = `<b>–</b><small>sem semana anterior ainda</small>`;
+  if (semP !== null && semP > 0) {
+    const dl = Math.round((semA - semP) / semP * 100);
+    deltaHtml = `<b class="${dl >= 0 ? "up" : "down"}">${dl >= 0 ? "▲" : "▼"} ${Math.abs(dl)}%</b><small>${fmt(semA)} vs ${fmt(semP)} pts</small>`;
+  } else if (semP !== null) deltaHtml = `<b>${fmt(semA)}</b><small>semana passada: 0 pts</small>`;
+  $("stat-grid").innerHTML = `
+    <div class="stat"><span>Pontos</span><b>${fmt(total)}</b></div>
+    <div class="stat"><span>Dias ativos</span><b>${dias}</b></div>
+    <div class="stat"><span>Média por dia ativo</span><b>${dias ? fmt(total / dias) : "0"}</b></div>
+    <div class="stat"><span>Melhor dia</span><b>${fmt(melhor[1])}</b><small>${melhor[0] ? ddmm(melhor[0]) : "–"}</small></div>
+    <div class="stat"><span>Tempo de estudo</span><b>${horasFmt(sumBy(mine, "videoAula") + sumBy(mine, "leituraPdf"))}</b><small>vídeo + PDF</small></div>
+    <div class="stat"><span>Questões</span><b>${fmt(sumBy(mine, "questoes"))}</b></div>
+    <div class="stat"><span>Flashcards</span><b>${fmt(sumBy(mine, "flashcards"))}</b></div>
+    <div class="stat"><span>Esta semana vs anterior</span>${deltaHtml}</div>`;
+
+  // --- pontos por dia (14 dias, a dupla toda) ---
+  const hoje = startOfToday();
+  const dias14 = Array.from({ length: 14 }, (_, i) => localIso(addDias(hoje, i - 13)));
+  const mapas = Object.fromEntries(autores.map(a => [a, ptsPorDia(a)]));
+  $("chart-dias").innerHTML = barChart(dias14.map(d => d.slice(8)), autores.map(a => ({ nome: a, vals: dias14.map(d => mapas[a][d] || 0) })));
+
+  // --- pontos por semana (temporada, até 8 semanas) ---
+  const ini = Math.max(0, idx - 7);
+  const sems = Array.from({ length: idx - ini + 1 }, (_, i) => weekInfo(ini + i));
+  $("chart-semanas").innerHTML = barChart(sems.map(w => "S" + w.numero), autores.map(a => ({
+    nome: a, vals: sems.map(w => seasonEntries().filter(e => e.autor === a && e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0))
+  }))) + `<p class="tiny faint" style="margin-top:10px">Meta da dupla nesta semana: ${fmt(wA.meta)} pts (soma dos dois).</p>`;
+
+  // --- por atividade ---
+  const porAtiv = Object.entries(ACTIVITIES).map(([k, a]) => [a, mine.filter(e => e.atividade === k).reduce((s, e) => s + calcPoints(e), 0)]);
+  const maxA = Math.max(1, ...porAtiv.map(x => x[1]));
+  $("stat-ativ").innerHTML = total === 0 && mine.length === 0
+    ? `<p class="small muted">Sem registros nesta temporada ainda.</p>`
+    : porAtiv.sort((a, b) => b[1] - a[1]).map(([a, p]) => `
+      <div style="margin-bottom:12px"><div class="rank-top" style="margin-bottom:5px;font-weight:600;font-size:13px"><span>${a.emoji} ${a.label}</span><span>${fmt(p)} pts</span></div>
+      <div class="track" style="height:8px"><div class="fill" style="width:${Math.max(0, p / maxA * 100)}%"></div></div></div>`).join("");
+
+  // --- mapa de calor (17 semanas, de segunda a domingo, usa todo o histórico) ---
+  const mp = mapas[statPerson] || {};
+  const seg = addDias(hoje, -((hoje.getDay() + 6) % 7));
+  const inicioH = addDias(seg, -16 * 7);
+  let cel = "";
+  for (let i = 0; i < 17 * 7; i++) {
+    const d = addDias(inicioH, i), iso = localIso(d), p = mp[iso] || 0;
+    const lv = d > hoje ? "fut" : p <= 0 ? "" : p < 5 ? "l1" : p < 10 ? "l2" : p < 20 ? "l3" : "l4";
+    cel += `<i class="${lv}" title="${ddmm(iso)}: ${fmt(p)} pts"></i>`;
+  }
+  $("heatmap").innerHTML = `<div class="heat">${cel}</div>
+    <div class="heat-legend">menos <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> mais</div>`;
+
+  renderRetro();
+}
+
+// ---------- retrospectiva ----------
+function retroPeriodo() {
+  const idx = currentWeekIdx();
+  if (retroModo === "atual") { const w = weekInfo(idx); return { titulo: `Semana ${w.numero}`, ini: w.inicioIso, fim: w.fimIso }; }
+  if (retroModo === "passada") { if (idx === 0) return null; const w = weekInfo(idx - 1); return { titulo: `Semana ${w.numero}`, ini: w.inicioIso, fim: w.fimIso }; }
+  const h = new Date();
+  const ini = localIso(new Date(h.getFullYear(), h.getMonth(), 1));
+  const fim = localIso(new Date(h.getFullYear(), h.getMonth() + 1, 1));
+  return { titulo: h.toLocaleDateString("pt-BR", { month: "long" }), ini, fim };
+}
+function retroTexto() {
+  const p = retroPeriodo();
+  if (!p) return "Ainda não há semana anterior nesta temporada.";
+  const es = seasonEntries().filter(e => e.data >= p.ini && e.data < p.fim);
+  const fimShow = localIso(addDias(new Date(p.fim + "T00:00:00"), -1));
+  if (!es.length) return `📸 Retrospectiva · ${p.titulo} (${ddmm(p.ini)} a ${ddmm(fimShow)})\n\nNenhum registro neste período ainda.`;
+  const autores = [...new Set(es.map(e => e.autor))];
+  const resumo = autores.map(a => {
+    const m = es.filter(e => e.autor === a);
+    const pts = m.reduce((s, e) => s + calcPoints(e), 0);
+    return { a, pts, dias: new Set(m.map(e => e.data)).size, q: sumBy(m, "questoes"), f: sumBy(m, "flashcards"),
+             est: sumBy(m, "videoAula") + sumBy(m, "leituraPdf"), tr: sumBy(m, "atividadeFisica"), sim: sumBy(m, "simulado") };
+  }).sort((x, y) => y.pts - x.pts);
+  const medalhas = ["🥇", "🥈", "🥉"];
+  let t = `📸 Retrospectiva · ${p.titulo} (${ddmm(p.ini)} a ${ddmm(fimShow)})\n`;
+  resumo.forEach((r, i) => {
+    t += `\n${medalhas[i] || "•"} ${r.a}: ${fmt(r.pts)} pts em ${r.dias} dia${r.dias === 1 ? "" : "s"}`;
+    const det = [r.q && `${fmt(r.q)} questões`, r.f && `${fmt(r.f)} flashcards`, r.est && `${horasFmt(r.est)} de estudo`, r.tr && `${fmt(r.tr)} treino${r.tr === 1 ? "" : "s"}`, r.sim && `${fmt(r.sim)} simulado${r.sim === 1 ? "" : "s"}`].filter(Boolean);
+    if (det.length) t += `\n   ${det.join(" · ")}`;
+  });
+  const soma = resumo.reduce((s, r) => s + r.pts, 0);
+  t += `\n\n💞 Juntos: ${fmt(soma)} pts`;
+  if (resumo.length > 1 && resumo[0].pts > resumo[1].pts) t += `\n🏆 Destaque: ${resumo[0].a}`;
+  return t + `\n\n— Maricota & Alho`;
+}
+function renderRetro() {
+  document.querySelectorAll("#retro-chips .chip").forEach(c => c.classList.toggle("on", c.dataset.retro === retroModo));
+  $("retro-text").textContent = retroTexto();
+}
+$("retro-chips").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-retro]"); if (!b) return;
+  retroModo = b.dataset.retro; renderRetro();
+});
+$("retro-share").addEventListener("click", async () => {
+  const text = retroTexto();
+  try {
+    if (navigator.share) { await navigator.share({ text }); return; }
+    await navigator.clipboard.writeText(text); mostrarToast("📋 Resumo copiado!");
+  } catch (e) { if (e && e.name !== "AbortError") mostrarToast("Não consegui compartilhar, copie o texto manualmente."); }
+});
+$("stat-people").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-person]"); if (!b) return;
+  statPerson = b.dataset.person; renderPainel();
+});
+
+// ---------- exportar dados ----------
+function baixar(nome, conteudo, mime) {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: mime }));
+  const a = document.createElement("a"); a.href = url; a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  mostrarToast("💾 Arquivo gerado: " + nome);
+}
+$("export-json").addEventListener("click", () => {
+  const dados = {
+    app: "Maricota & Alho", exportadoEm: new Date().toISOString(), temporada: SEASON,
+    registros: allEntries.map(({ fotoUrl, ...e }) => ({ ...e, temFoto: !!fotoUrl })),
+    resgates: allResgates, comentarios: allComments, reacoes: allReactions, mensagens: allMessages
+  };
+  baixar(`backup-maricota-alho-${todayIso()}.json`, JSON.stringify(dados, null, 2), "application/json");
+});
+$("export-csv").addEventListener("click", () => {
+  const cel = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const linhas = [["data", "autor", "atividade", "valor", "pontos", "temporada"].join(",")];
+  [...allEntries].sort((a, b) => a.data.localeCompare(b.data)).forEach(e =>
+    linhas.push([e.data, e.autor, e.atividade, e.valor, fmt(calcPoints(e)).replace(",", "."), isSeasonEntry(e) ? SEASON.nome : SEASON.anterior].map(cel).join(",")));
+  baixar(`registros-maricota-alho-${todayIso()}.csv`, "﻿" + linhas.join("\n"), "text/csv;charset=utf-8");
+});
+
+// ============================================================
+// CRONÔMETRO DE ESTUDO (+ pomodoro opcional)
+// O estado fica salvo no aparelho, então sobrevive a recarregar a página.
+// ============================================================
+const TIMER_KEY = "foco_timer";
+const TIMER_PADRAO = { ativ: "videoAula", start: null, acum: 0, marco: 0, pomo: false };
+function timerGet() { try { return { ...TIMER_PADRAO, ...(JSON.parse(localStorage.getItem(TIMER_KEY)) || {}) }; } catch (e) { return { ...TIMER_PADRAO }; } }
+function timerSet(s) { try { localStorage.setItem(TIMER_KEY, JSON.stringify(s)); } catch (e) {} }
+const timerElapsed = s => s.acum + (s.start ? Date.now() - s.start : 0);
+function relogio(ms) {
+  const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+function goTab(nome) { document.querySelector(`.tab-btn[data-tab="${nome}"]`).click(); }
+
+function initTimer() {
+  const opcoes = Object.entries(ACTIVITIES).filter(([, a]) => a.campo === "minutos")
+    .map(([k, a]) => `<option value="${k}">${a.emoji} ${a.label}</option>`).join("");
+  $("timer").innerHTML = `
+    <label class="field" style="margin-bottom:0">O que você vai fazer?
+      <select id="timer-ativ">${opcoes}</select></label>
+    <div class="timer-display" id="timer-display">00:00</div>
+    <label class="small muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;justify-content:center">
+      <input type="checkbox" id="timer-pomo" /> Modo pomodoro (aviso de pausa a cada 25 min)</label>
+    <div class="timer-btns">
+      <button class="btn" id="timer-toggle">Iniciar</button>
+      <button class="btn ghost" id="timer-stop">Parar e registrar</button>
+    </div>`;
+  const s = timerGet();
+  $("timer-ativ").value = ACTIVITIES[s.ativ] ? s.ativ : "videoAula";
+  $("timer-pomo").checked = !!s.pomo;
+  $("timer-ativ").addEventListener("change", () => { const x = timerGet(); x.ativ = $("timer-ativ").value; timerSet(x); tick(); });
+  $("timer-pomo").addEventListener("change", () => { const x = timerGet(); x.pomo = $("timer-pomo").checked; timerSet(x); });
+  $("timer-toggle").addEventListener("click", () => {
+    const x = timerGet();
+    if (x.start) { x.acum = timerElapsed(x); x.start = null; } else { x.start = Date.now(); }
+    timerSet(x); tick();
+  });
+  $("timer-stop").addEventListener("click", () => {
+    const x = timerGet(); const ms = timerElapsed(x);
+    if (ms < 30000) {
+      timerSet({ ...TIMER_PADRAO, ativ: x.ativ, pomo: x.pomo }); tick();
+      mostrarToast("Tempo muito curto para registrar (menos de 30 s)."); return;
+    }
+    const minutos = Math.max(1, Math.round(ms / 60000));
+    timerSet({ ...TIMER_PADRAO, ativ: x.ativ, pomo: x.pomo }); tick();
+    resetForm(); atividadeSelect.value = x.ativ; updateValorField(); valorInput.value = String(minutos); abrirSheet();
+    mostrarToast(`⏱️ ${minutos} min prontos para registrar. Confira e salve!`);
+  });
+  $("timer-pill").addEventListener("click", () => goTab("painel"));
+  tick();
+  setInterval(tick, 1000);
+}
+function tick() {
+  const s = timerGet(), ms = timerElapsed(s), rodando = !!s.start;
+  const disp = $("timer-display"); if (!disp) return;
+  disp.textContent = relogio(ms);
+  $("timer-toggle").textContent = rodando ? "Pausar" : (ms > 0 ? "Continuar" : "Iniciar");
+  const pill = $("timer-pill");
+  if (ms > 0) {
+    const a = ACTIVITIES[s.ativ] || {};
+    pill.classList.remove("hidden");
+    pill.innerHTML = `<span>⏱️ ${relogio(ms)} · ${a.emoji || ""} ${esc(a.label || "")}</span><span>${rodando ? "● rodando" : "⏸ pausado"}</span>`;
+  } else pill.classList.add("hidden");
+  if (rodando && s.pomo) {
+    const bloco = Math.floor(ms / (25 * 60000));
+    if (bloco > s.marco) {
+      s.marco = bloco; timerSet(s);
+      mostrarToast("🍅 25 minutos de foco! Hora de uma pausa curta.", 6000);
+      try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+    }
+  }
 }
 
 // ---------- cutucada gentil (vai pro bate-papo, 1 por dia por pessoa) ----------
@@ -1557,6 +1880,7 @@ $("name-form").addEventListener("submit", (ev) => {
   currentUser = name; localStorage.setItem("ranking_user", name); setupUser();
 });
 $("data").value = todayIso();
+initTimer();
 if (currentUser) setupUser();
 </script>
 

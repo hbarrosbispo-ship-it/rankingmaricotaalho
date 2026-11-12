@@ -60,3 +60,11 @@ Arquivos do PWA: `manifest.webmanifest`, `sw.js` (service worker) e a pasta `ico
 - **Meta pessoal**: só você vê, fica salva neste aparelho (botão "editar").
 - **Cutucada** 👋 no ranking (vai para o bate-papo, 1 por dia por pessoa) e **aviso gentil** na tela inicial (depois das 17h sem registro, ou quando falta pouco para a meta da dupla).
 - Duas medalhas novas: Missionário e Duelista.
+
+## Pacote 3 (acompanhamento)
+
+- **Aba Painel** (📊): estatísticas por pessoa (pontos, dias ativos, média, melhor dia, tempo de estudo, questões, flashcards, semana vs anterior), gráfico de pontos por dia (14 dias) e por semana, pontos por atividade e **mapa de calor** das últimas 17 semanas (usa todo o histórico, inclusive a temporada anterior).
+- **Cronômetro de estudo** ⏱️ com modo pomodoro opcional. Ao parar, abre o formulário já preenchido com os minutos. O estado fica salvo no aparelho, então sobrevive a fechar o app, e uma barra no topo mostra o tempo rodando.
+- **Retrospectiva** da semana atual, da semana passada ou do mês, com botão de compartilhar (usa a folha de compartilhamento do iPhone).
+- **Exportar dados**: backup em JSON e registros em CSV (sem as fotos).
+- Ainda não feitos, porque exigem configuração no Firebase: atividades personalizáveis (precisa mudar as regras do Firestore) e notificações push (precisa do Firebase Cloud Messaging e de um servidor).
