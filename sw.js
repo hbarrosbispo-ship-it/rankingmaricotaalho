@@ -1,6 +1,6 @@
 // Service worker simples: network-first para o HTML (sempre pega a versão nova
 // quando online), com cache de fallback para abrir offline. Firestore não é interceptado.
-const CACHE = "ranking-v5";
+const CACHE = "ranking-v6";
 const SHELL = ["./", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

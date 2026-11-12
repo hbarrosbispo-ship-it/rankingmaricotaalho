@@ -76,3 +76,10 @@ O visual "Aurora" (degradês e vidro) foi trocado por um mais sóbrio: fundo cin
 - Início: indicadores (pontos hoje, sequência, saldo, nível), faixa de **Constância** com os últimos 14 dias, metas semanais em barras.
 - Medalhas: hexágono colorido pelo nível, com a meta do nível no centro.
 - Versão anterior guardada em `backup_pre_rebranding/index_aurora.html`.
+
+## Ideias de outros apps de estudo (Estugram, Lilo)
+
+- **Desafio da semana**: gira sozinho entre 4 modelos (`DESAFIOS`): metas somadas da dupla, "os dois em 5 dias" e uma **corrida** (quem chega primeiro a 6h de estudo). Dá +50 XP (na corrida, só para quem chega primeiro). Nada é salvo: tudo é calculado dos registros.
+- **Interação da semana** (aba Feed): comentário vale 2 pontos e reação 1, só nos registros do outro.
+- **Missão com foto**: "Registrar 2 atividades com foto" entrou no sorteio de missões.
+- Ainda não feito: "Estudando agora" (mostrar o cronômetro do outro ao vivo) e desafios criados por vocês. Precisam de novos dados no Firebase e, portanto, de mudar as regras.

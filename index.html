@@ -403,6 +403,11 @@
       </div>
 
       <div class="card">
+        <div class="card-head"><h2>Desafio da semana</h2><span class="small muted" id="desafio-sem"></span></div>
+        <div id="desafio"></div>
+      </div>
+
+      <div class="card">
         <div class="card-head">
           <h2>Ranking</h2>
           <div class="chips" id="period-chips">
@@ -434,6 +439,10 @@
 
     <!-- ===== FEED ===== -->
     <section id="tab-feed" class="tab-panel hidden">
+      <div class="card full">
+        <div class="card-head"><h2>Interação da semana</h2><span class="small muted">comentários e reações nos registros do outro</span></div>
+        <div id="interacao"></div>
+      </div>
       <div class="card full">
         <div class="card-head"><h2>Feed de atividades</h2><span class="small muted">temporada atual</span></div>
         <div id="entries-list"></div>
@@ -812,7 +821,8 @@ const MISSION_POOL = [
   { id: "pdf90", emoji: "📄", label: "Ler 1h30 de PDF", goal: 90, fmt: x => horasFmt(x), metric: es => sumBy(es, "leituraPdf") },
   { id: "sim1", emoji: "📝", label: "Fazer 1 simulado", goal: 1, metric: es => sumBy(es, "simulado") },
   { id: "cheio1", emoji: "💎", label: "Ter 1 dia 100% (3+ atividades)", goal: 1, metric: diasCheios },
-  { id: "q100", emoji: "🎯", label: "Resolver 100 questões", goal: 100, metric: es => sumBy(es, "questoes") }
+  { id: "q100", emoji: "🎯", label: "Resolver 100 questões", goal: 100, metric: es => sumBy(es, "questoes") },
+  { id: "foto2", emoji: "📸", label: "Registrar 2 atividades com foto", goal: 2, metric: es => es.filter(e => e.fotoUrl).length }
 ];
 const MISSION_XP = 40, MISSION_BONUS_XP = 60;
 function missionsOfWeek(idx) { const n = MISSION_POOL.length; return [0, 1, 2].map(k => MISSION_POOL[(idx * 3 + k) % n]); }
@@ -837,7 +847,7 @@ const LEVELS = [
 ];
 function xpDe(autor) {
   const t = missionTotals(autor);
-  return Math.max(0, Math.round(ganhoDe(autor) * 10)) + t.feitas * MISSION_XP + t.semanasCheias * MISSION_BONUS_XP;
+  return Math.max(0, Math.round(ganhoDe(autor) * 10)) + t.feitas * MISSION_XP + t.semanasCheias * MISSION_BONUS_XP + desafiosGanhos(autor) * DESAFIO_XP;
 }
 function levelInfo(xp) {
   let i = 0; while (i + 1 < LEVELS.length && xp >= LEVELS[i + 1][0]) i++;
@@ -854,6 +864,69 @@ function duelTotals(idx) {
 }
 function duelWinner(idx) { const r = duelTotals(idx); return r.length > 1 && r[0][1] > 0 && r[0][1] > r[1][1] ? r[0][0] : null; }
 function duelWins(autor) { let n = 0; for (let i = 0; i < currentWeekIdx(); i++) if (duelWinner(i) === autor) n++; return n; }
+
+// ---------- desafio da semana (gira sozinho; nada é salvo) ----------
+const DESAFIO_XP = 50;
+const DESAFIOS = [
+  { id: "quest", tipo: "soma", titulo: "Juntos, 300 questões", goal: 300, metric: es => sumBy(es, "questoes") },
+  { id: "dias", tipo: "ambos", titulo: "Os dois registram em 5 dias diferentes", goal: 5, metric: es => diasAtivos(es) },
+  { id: "corrida", tipo: "corrida", titulo: "Corrida: quem chega primeiro a 6h de estudo (vídeo + PDF)", goal: 360, metric: es => sumBy(es, "videoAula") + sumBy(es, "leituraPdf"), fmt: x => horasFmt(x) },
+  { id: "flash", tipo: "soma", titulo: "Juntos, 1000 flashcards", goal: 1000, metric: es => sumBy(es, "flashcards") }
+];
+function desafioDaSemana(idx) {
+  const def = DESAFIOS[idx % DESAFIOS.length], w = weekInfo(idx);
+  const es = seasonEntries().filter(e => e.data >= w.inicioIso && e.data < w.fimIso);
+  const autores = allAuthors();
+  const porAutor = Object.fromEntries(autores.map(a => [a, def.metric(es.filter(e => e.autor === a))]));
+  let done = false, winner = null, total = 0;
+  if (def.tipo === "soma") { total = def.metric(es); done = total >= def.goal; }
+  else if (def.tipo === "ambos") { done = autores.length > 1 && autores.every(a => porAutor[a] >= def.goal); }
+  else {
+    const acum = {}; autores.forEach(a => acum[a] = []);
+    [...es].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0)).forEach(e => {
+      if (winner) return;
+      acum[e.autor].push(e);
+      if (def.metric(acum[e.autor]) >= def.goal) winner = e.autor;
+    });
+    done = !!winner;
+  }
+  return { def, w, total, porAutor, done, winner };
+}
+function desafiosGanhos(autor) {
+  let n = 0;
+  for (let i = 0; i <= currentWeekIdx(); i++) {
+    const st = desafioDaSemana(i);
+    if (st.done && (st.def.tipo !== "corrida" || st.winner === autor)) n++;
+  }
+  return n;
+}
+function renderDesafio() {
+  const idx = currentWeekIdx(), st = desafioDaSemana(idx), d = st.def;
+  const f = v => d.fmt ? d.fmt(v) : fmt(v);
+  $("desafio-sem").textContent = `semana ${st.w.numero} · +${DESAFIO_XP} XP`;
+  const meter = (nome, v) => `<div class="meter"><div class="meter-top"><span>${nome ? esc(nome) : "Progresso da dupla"}</span><b>${f(Math.min(v, d.goal))} / ${f(d.goal)}</b></div>
+    <div class="track"><div class="fill ${v >= d.goal ? "ok" : ""}" style="width:${Math.min(100, v / d.goal * 100)}%"></div></div></div>`;
+  let corpo = `<p style="font-size:14px;font-weight:600;margin-bottom:12px">${esc(d.titulo)}</p>`;
+  corpo += d.tipo === "soma" ? meter("", st.total) : Object.entries(st.porAutor).map(([n, v]) => meter(n, v)).join("");
+  corpo += `<p class="tiny ${st.done ? "up" : "faint"}" style="margin-top:10px;font-weight:600">${
+    st.done ? (d.tipo === "corrida" ? `${esc(st.winner)} chegou primeiro! +${DESAFIO_XP} XP` : `Desafio cumprido! +${DESAFIO_XP} XP para os dois`) : "Em andamento"}</p>`;
+  $("desafio").innerHTML = corpo;
+}
+
+// ---------- ranking de interação (comentários = 2 pts, reações = 1 pt, só nos registros do outro) ----------
+function renderInteracao() {
+  const w = weekInfo(currentWeekIdx());
+  const t0 = new Date(w.inicioIso + "T00:00:00").getTime(), t1 = new Date(w.fimIso + "T00:00:00").getTime();
+  const dono = id => (allEntries.find(e => e.id === id) || {}).autor;
+  const pts = {}; allAuthors().forEach(a => pts[a] = 0);
+  const conta = (x, v) => { const d = dono(x.entryId); if (d && d !== x.autor && (x.criadoEm || 0) >= t0 && (x.criadoEm || 0) < t1) pts[x.autor] = (pts[x.autor] || 0) + v; };
+  allComments.forEach(c => conta(c, 2)); allReactions.forEach(r => conta(r, 1));
+  const lista = Object.entries(pts).sort((a, b) => b[1] - a[1]); const max = Math.max(1, ...lista.map(x => x[1]));
+  $("interacao").innerHTML = lista.map(([n, p], i) => `
+    <div class="rank-row"><div class="rank-pos ${i === 0 && p > 0 ? "first" : ""}">${i + 1}º</div>${avatarHtml(n, true)}
+      <div class="rank-body"><div class="rank-top" style="margin-bottom:6px"><span>${esc(n)}</span><span class="rank-pts">${p} pts</span></div>
+      <div class="track"><div class="fill ok" style="width:${p / max * 100}%"></div></div></div></div>`).join("");
+}
 
 // ---------- meta pessoal (fica só neste aparelho) ----------
 const metaPessoalKey = () => `meta_pessoal_${currentUser}`;
@@ -1298,7 +1371,7 @@ function renderFeed() {
 
 function render() {
   if (!currentUser) return;
-  renderHero(); renderAlerta(); renderMissoes(); renderDuelo(); renderRanking(); renderMetaCasal(); renderMetaPessoal();
+  renderHero(); renderAlerta(); renderMissoes(); renderDuelo(); renderDesafio(); renderInteracao(); renderRanking(); renderMetaCasal(); renderMetaPessoal();
   renderMedalhas(); renderLoja(); renderFeed(); renderHall(); renderPainel();
   checkNewBadges(); checkNewMissions();
 }
