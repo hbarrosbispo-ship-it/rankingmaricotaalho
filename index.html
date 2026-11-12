@@ -12,33 +12,40 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="icon" type="image/png" href="icons/icon-192.png" />
 <title>Maricota &amp; Alho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   /* ============================================================
-     Visual plano e sóbrio, inspirado em apps de estudo reais:
-     fundo cinza claro, cartões brancos com borda fina, verde-menta
-     como cor principal, roxo como apoio. Sem degradês nem vidro.
+     Visual no estilo de plataformas de estudo (referência: Estudei):
+     cinza muito claro, cartões brancos com sombra suave, verde-menta
+     como cor da marca, roxo nas ações, pastéis nas disciplinas.
   ============================================================ */
   :root {
-    --bg: #f5f6f8;
+    --bg: #f4f6f8;
     --card: #ffffff;
-    --line: #e6e8ee;
-    --text: #1f2430;
-    --muted: #667085;
-    --faint: #98a1b3;
-    --primary: #2fae84;
+    --line: #e9ecf1;
+    --text: #2a2f45;
+    --muted: #6b7285;
+    --faint: #9aa1b2;
+    --primary: #4cc9a0;
+    --primary-strong: #1f9f7b;
     --primary-ink: #ffffff;
-    --primary-soft: #e6f6f0;
-    --accent: #6d45d6;
+    --primary-soft: #e3f7f0;
+    --purple: #6a3fc4;
+    --purple-soft: #ece6fa;
     --gold: #d99a14;
-    --ok: #2a9d78;
-    --bad: #d65a5a;
-    --input: #f2f4f7;
-    --track: #e9ecf1;
+    --ok: #1f9f7b;
+    --bad: #e0564f;
+    --warn: #e08a1e;
+    --input: #f3f5f8;
+    --track: #e8ebf0;
     --nav: #ffffff;
-    --h1: #cdeee1; --h2: #98dcc2; --h3: #5cc7a0; --h4: #2a9d78;
-    --tier-bronze: #c27c3e; --tier-prata: #8f9bb0; --tier-ouro: #d99a14; --tier-platina: #3aa7c9;
-    --warn-bg: #fff6e0; --warn-line: #f1d48a;
-    --ok-bg: #e9f7f1; --ok-line: #bfe6d6;
+    --shadow: 0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05);
+    --h1: #d3f1e6; --h2: #a3e0c9; --h3: #6fd0ae; --h4: #35b48b;
+    --tier-bronze: #c98a4b; --tier-prata: #9aa6b8; --tier-ouro: #e2ad2a; --tier-platina: #4fb5d6;
+    --info-bg: #e6f7f1; --info-line: #c4ebdd;
+    --warn-bg: #fff4de; --warn-line: #f3d9a0;
+    --p1: #e6cdfa; --p2: #bfe0fb; --p3: #f6d9c4; --p4: #fbefb9; --p5: #bde5b6; --p6: #bfeae6; --p7: #bdacc2; --p8: #b3bdcc; --p9: #f5b8af; --p10: #b9c8f7;
     color-scheme: light;
   }
   :root[data-theme="dark"] {
@@ -48,133 +55,170 @@
     --text: #e8eaf2;
     --muted: #9aa0b4;
     --faint: #6d7388;
-    --primary: #4fc9a1;
+    --primary: #4fd1a5;
+    --primary-strong: #4fd1a5;
     --primary-ink: #0c1a15;
-    --primary-soft: rgba(79,201,161,.14);
-    --accent: #9a7cf5;
+    --primary-soft: rgba(79,209,165,.14);
+    --purple: #9a7cf5;
+    --purple-soft: rgba(154,124,245,.16);
     --gold: #e8b03a;
-    --ok: #4fc9a1;
+    --ok: #4fd1a5;
     --bad: #ef7b7b;
+    --warn: #eca24a;
     --input: #232537;
     --track: #2a2c3d;
     --nav: #181925;
-    --h1: rgba(79,201,161,.22); --h2: rgba(79,201,161,.45); --h3: rgba(79,201,161,.72); --h4: #4fc9a1;
-    --warn-bg: rgba(232,176,58,.12); --warn-line: rgba(232,176,58,.4);
-    --ok-bg: rgba(79,201,161,.12); --ok-line: rgba(79,201,161,.35);
+    --shadow: none;
+    --h1: rgba(79,209,165,.22); --h2: rgba(79,209,165,.45); --h3: rgba(79,209,165,.72); --h4: #4fd1a5;
+    --info-bg: rgba(79,209,165,.10); --info-line: rgba(79,209,165,.32);
+    --warn-bg: rgba(236,162,74,.12); --warn-line: rgba(236,162,74,.4);
+    --p1: #8c6fb0; --p2: #5f93bd; --p3: #b58a6a; --p4: #b8a85c; --p5: #6fa56a; --p6: #5fa8a2; --p7: #8c7a93; --p8: #7d8aa0; --p9: #bd7a72; --p10: #7a8fc9;
     color-scheme: dark;
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     background: var(--bg); color: var(--text); min-height: 100vh;
-    padding-top: env(safe-area-inset-top); -webkit-font-smoothing: antialiased; font-size: 15px;
+    padding-top: env(safe-area-inset-top); -webkit-font-smoothing: antialiased; font-size: 14.5px;
   }
+  h1, h2, h3, .brand-name, .kpi b, .big-num { font-family: "Nunito", "Open Sans", sans-serif; }
   .hidden { display: none !important; }
   button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
   input, select { font: inherit; color: var(--text); }
   h1, h2, h3, p { margin: 0; }
-  svg.ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
-  main.wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  main.wrap { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   .tab-panel > * { margin-bottom: 12px; }
+  .m-only { display: flex; } .d-only { display: none !important; }
 
   /* ---------- cartões ---------- */
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-  .card h2, .label {
-    font-size: 11px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase; color: var(--muted);
-  }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+  .card h2, .label { font-size: 10.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); font-family: "Open Sans", sans-serif; }
   .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
   .muted { color: var(--muted); } .faint { color: var(--faint); }
   .small { font-size: 12.5px; } .tiny { font-size: 11px; }
 
   /* ---------- topo ---------- */
-  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 6px; }
-  .brand-name { font-weight: 700; font-size: 19px; letter-spacing: -.3px; }
-  .brand-name i { font-style: normal; color: var(--primary); }
-  .brand-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 4px; }
+  .brand-name { font-weight: 800; font-size: 21px; letter-spacing: -.4px; color: var(--primary-strong); }
+  .brand-name i { font-style: normal; color: var(--purple); }
+  .brand-sub { font-size: 11px; color: var(--muted); margin-top: -2px; font-family: "Open Sans", sans-serif; }
   .top-actions { display: flex; align-items: center; gap: 8px; }
-  .icon-btn { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--card); border: 1px solid var(--line); color: var(--muted); }
-  .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; color: #fff; font-size: 14px; flex-shrink: 0; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+  .icon-btn:hover { background: var(--input); }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; font-size: 13.5px; flex-shrink: 0; border: 2px solid var(--card); box-shadow: 0 0 0 1px var(--line); }
   .avatar.sm { width: 30px; height: 30px; font-size: 12px; }
-  .brand-logo { display: none; }
+  .user-chip { align-items: center; gap: 10px; font-size: 12.5px; font-weight: 600; line-height: 1.2; }
+  .btn-add { padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; background: var(--primary); color: var(--primary-ink); }
 
-  .page-head { padding: 10px 0 14px; }
-  .page-head h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; }
-  .page-head p { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+  .page-head { padding: 12px 0 14px; }
+  .page-head h1 { font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
+  .page-head p { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
   /* ---------- indicadores ---------- */
   .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
-  .kpi .label { display: block; }
-  .kpi b { display: block; font-size: 24px; font-weight: 700; margin: 6px 0 2px; letter-spacing: -.5px; }
-  .kpi small { display: block; font-size: 11.5px; color: var(--muted); }
-  .kpi .bar { height: 5px; border-radius: 99px; background: var(--track); overflow: hidden; margin: 8px 0 4px; }
-  .kpi .bar div { height: 100%; background: var(--accent); border-radius: 99px; transition: width .5s; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; box-shadow: var(--shadow); }
+  .kpi-top { display: flex; justify-content: space-between; align-items: center; }
+  .kpi-ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary-strong); }
+  .kpi-ico svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .kpi b { display: block; font-size: 24px; font-weight: 800; margin: 8px 0 3px; letter-spacing: -.5px; }
+  .kpi small { display: block; font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+  .kpi .bar { height: 5px; border-radius: 99px; background: var(--track); overflow: hidden; margin: 8px 0 5px; }
+  .kpi .bar div { height: 100%; background: var(--purple); border-radius: 99px; transition: width .5s; }
+  .up { color: var(--ok); font-weight: 700; } .down { color: var(--bad); font-weight: 700; }
 
-  /* ---------- chips / botões ---------- */
+  /* ---------- chips / abas / botões ---------- */
   .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chip { padding: 5px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: var(--muted); border: 1px solid var(--line); background: var(--card); }
-  .chip.on { background: var(--text); color: var(--card); border-color: var(--text); }
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 11px 16px; border-radius: 10px; font-weight: 600; font-size: 14px;
-    background: var(--primary); color: var(--primary-ink);
-  }
+  .chip { padding: 5px 12px; border-radius: 99px; font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--input); }
+  .chip.on { background: var(--primary-soft); color: var(--primary-strong); }
+  .seg { display: inline-flex; background: var(--input); border-radius: 10px; padding: 3px; gap: 2px; }
+  .seg button { padding: 5px 12px; font-size: 12.5px; font-weight: 600; color: var(--muted); border-radius: 8px; }
+  .seg button.on { background: var(--card); color: var(--text); box-shadow: 0 0 0 1.5px var(--primary-soft), 0 1px 3px rgba(0,0,0,.08); }
+  .tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--line); margin-bottom: 14px; overflow-x: auto; }
+  .tabs button { padding: 8px 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); border-bottom: 2.5px solid transparent; white-space: nowrap; }
+  .tabs button.on { color: var(--primary-strong); border-bottom-color: var(--primary); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 16px; border-radius: 9px; font-weight: 700; font-size: 14px; background: var(--primary); color: var(--primary-ink); }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .btn.block { width: 100%; }
+  .btn.purple { background: var(--purple); color: #fff; }
   .btn.ghost { background: var(--card); color: var(--text); border: 1px solid var(--line); }
   .btn.sm { padding: 7px 12px; font-size: 12.5px; border-radius: 8px; }
   .link-btn { font-size: 12px; color: var(--faint); padding: 2px 4px; }
   .link-btn:hover { color: var(--text); }
+  .link-green { font-size: 12.5px; font-weight: 700; color: var(--primary-strong); }
 
   /* ---------- barras ---------- */
   .track { height: 7px; border-radius: 99px; background: var(--track); overflow: hidden; }
-  .fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .5s; }
+  .fill { height: 100%; border-radius: 99px; background: var(--purple); transition: width .5s; }
   .fill.gold { background: var(--gold); } .fill.ok { background: var(--primary); }
-  .meter { margin-bottom: 14px; }
-  .meter:last-child { margin-bottom: 0; }
+  .meter { margin-bottom: 14px; } .meter:last-child { margin-bottom: 0; }
   .meter-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; margin-bottom: 7px; }
-  .meter-top b { font-weight: 700; }
+  .meter-top b { font-weight: 700; color: var(--primary-strong); }
   .meter-sub { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
 
   /* ---------- constância ---------- */
+  .streak-line { font-size: 13px; margin: 2px 0 12px; display: flex; align-items: center; gap: 6px; }
+  .streak-line svg { width: 16px; height: 16px; stroke: var(--warn); fill: rgba(224,138,30,.18); }
   .days { display: flex; gap: 4px; }
-  .days i {
-    flex: 1; aspect-ratio: 1; border-radius: 6px; background: var(--track); display: grid; place-items: center;
-    font-style: normal; font-size: 10px; color: var(--faint);
-  }
+  .days i { flex: 1; aspect-ratio: 1; max-width: 30px; border-radius: 6px; background: var(--track); display: grid; place-items: center; font-style: normal; font-size: 0; }
   .days i.on { background: var(--primary); color: var(--primary-ink); }
-  .days i.on::after { content: "✓"; font-weight: 700; font-size: 11px; }
+  .days i.on::after { content: "✓"; font-weight: 800; font-size: 12px; }
   .days i.today { box-shadow: inset 0 0 0 1.5px var(--faint); }
   .days i.on.today { box-shadow: none; }
+  .days i.frz { background: var(--purple-soft); }
 
   /* ---------- ranking ---------- */
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 14px; padding: 6px 0 0; }
+  .pod { flex: 1; max-width: 170px; text-align: center; }
+  .pod .ring { width: 54px; height: 54px; margin: 0 auto 6px; border-radius: 50%; border: 3px solid var(--p8); display: grid; place-items: center; position: relative; }
+  .pod.p1 .ring { border-color: var(--gold); width: 62px; height: 62px; }
+  .pod .ring .avatar { width: 44px; height: 44px; border: 0; box-shadow: none; }
+  .pod.p1 .ring .avatar { width: 52px; height: 52px; }
+  .pod .crown { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font-size: 15px; }
+  .pod .nm { font-size: 13px; font-weight: 600; }
+  .pod .val { font-size: 17px; font-weight: 800; font-family: "Nunito", sans-serif; }
+  .pod .step { margin-top: 8px; border-radius: 10px 10px 0 0; background: var(--primary-soft); color: var(--primary-strong); font-weight: 800; padding: 8px 0; font-size: 15px; }
+  .pod.p1 .step { background: var(--primary); color: var(--primary-ink); padding: 22px 0 16px; }
   .rank-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
   .rank-row:first-child { padding-top: 0; } .rank-row:last-child { border-bottom: 0; padding-bottom: 0; }
-  .rank-pos { width: 22px; font-size: 13px; font-weight: 600; color: var(--faint); text-align: center; }
+  .rank-pos { width: 26px; font-size: 13px; font-weight: 700; color: var(--faint); text-align: center; }
   .rank-pos.first { color: var(--gold); }
   .rank-body { flex: 1; min-width: 0; }
   .rank-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-  .rank-pts { font-variant-numeric: tabular-nums; font-weight: 700; }
-  .poke { font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); color: var(--muted); background: var(--card); }
+  .rank-pts { font-variant-numeric: tabular-nums; font-weight: 800; font-family: "Nunito", sans-serif; }
+  .rank-delta { font-size: 11px; color: var(--faint); text-align: right; font-weight: 400; display: block; }
+  .poke { font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); color: var(--primary-strong); background: var(--card); }
   .poke:disabled { opacity: .45; }
+  .side-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+  .side-row.hl { background: var(--primary-soft); }
+  .side-row b { font-weight: 800; font-family: "Nunito", sans-serif; }
+  .side-row small { display: block; text-align: right; font-size: 10.5px; color: var(--faint); font-weight: 400; }
+  .banner-green { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 10px; background: var(--info-bg); border: 1px solid var(--info-line); font-size: 13px; }
+  .banner-green small { display: block; font-size: 11px; color: var(--muted); }
+  .evo { display: flex; align-items: flex-end; gap: 6px; height: 90px; margin: 6px 0 4px; }
+  .evo i { flex: 1; max-width: 38px; border-radius: 4px; background: var(--track); display: block; min-height: 4px; }
+  .evo i.cur { background: var(--primary); }
+  .evo-lab { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--faint); }
 
   /* ---------- avisos ---------- */
-  .alerta { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4;
-    background: var(--warn-bg); border: 1px solid var(--warn-line); }
-  .alerta.ok { background: var(--ok-bg); border-color: var(--ok-line); }
+  .alerta { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.4; background: var(--warn-bg); border: 1px solid var(--warn-line); }
+  #alerta:empty { display: none; }
 
   /* ---------- missões / duelo ---------- */
-  .mission { padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .mission { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); }
   .mission:first-of-type { padding-top: 0; } .mission:last-of-type { border-bottom: 0; }
-  .mission-top { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; font-weight: 500; margin-bottom: 7px; }
-  .mission.done .mission-top { color: var(--ok); }
+  .m-ico { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; font-size: 17px; flex-shrink: 0; }
+  .m-body { flex: 1; min-width: 0; }
+  .mission-top { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 7px; }
+  .mission-top span:last-child { color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  .mission.done .mission-top span:last-child { color: var(--ok); }
   .duel { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; text-align: center; }
-  .duel b { display: block; font-size: 24px; font-weight: 700; letter-spacing: -.5px; }
-  .duel .vs { font-weight: 600; color: var(--faint); font-size: 12px; }
+  .duel b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.5px; font-family: "Nunito", sans-serif; }
+  .duel .vs { font-weight: 700; color: var(--faint); font-size: 12px; }
   .duel-bar { display: flex; height: 8px; border-radius: 99px; overflow: hidden; margin: 14px 0 8px; background: var(--track); }
 
   /* ---------- feed ---------- */
@@ -183,7 +227,7 @@
   .feed-head { display: flex; gap: 10px; align-items: flex-start; }
   .feed-main { flex: 1; min-width: 0; font-size: 14px; line-height: 1.4; }
   .feed-photo { margin-top: 10px; width: 100%; max-height: 300px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); cursor: zoom-in; }
-  .pts-pos { color: var(--ok); font-weight: 600; } .pts-neg { color: var(--bad); font-weight: 600; }
+  .pts-pos { color: var(--ok); font-weight: 700; } .pts-neg { color: var(--bad); font-weight: 700; }
   .react-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; align-items: center; }
   .react-btn { font-size: 12px; padding: 3px 8px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); }
   .react-btn.mine { border-color: var(--primary); background: var(--primary-soft); }
@@ -194,75 +238,84 @@
   /* ---------- formulários ---------- */
   .field { display: block; margin-bottom: 12px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
   .field input[type=text], .field input[type=date], .field select, .inline-form input, .chat-input {
-    width: 100%; margin-top: 6px; padding: 11px 12px; border-radius: 10px; background: var(--card);
+    width: 100%; margin-top: 6px; padding: 11px 12px; border-radius: 9px; background: var(--card);
     border: 1px solid var(--line); font-size: 15px; outline: none; font-weight: 400;
   }
   .inline-form input { margin-top: 0; padding: 8px 10px; font-size: 13px; }
   .field input:focus, .field select:focus, .inline-form input:focus, .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
   .field select option { color: #111; }
 
-  /* ---------- medalhas ---------- */
-  .badge-cat { margin: 22px 0 10px; display: flex; justify-content: space-between; align-items: baseline; }
-  .badge-cat b { font-size: 15px; font-weight: 700; }
-  .badge-cat span { font-size: 12px; color: var(--muted); }
-  .badge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .badge { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 10px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-  .hex {
-    width: 58px; height: 64px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px;
-    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-    background: var(--track);
-  }
-  .badge.locked .hex { background: var(--track); color: var(--faint); }
+  /* ---------- conquistas ---------- */
+  .badge-cat { margin: 22px 0 4px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .badge-cat b { font-size: 16px; font-weight: 800; font-family: "Nunito", sans-serif; display: block; }
+  .badge-cat small { color: var(--muted); font-size: 12px; }
+  .badge-cat .cat-prog { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .badge-cat .cat-prog .track { width: 70px; height: 5px; }
+  .badge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+  .badge { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 10px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow); }
+  .badge:not(.locked) { background: linear-gradient(180deg, var(--primary-soft), var(--card) 55%); }
+  .hex { width: 56px; height: 62px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 15px; font-family: "Nunito", sans-serif; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: var(--track); }
+  .badge.locked .hex { background: #c7ccd6; color: #fff; }
+  :root[data-theme="dark"] .badge.locked .hex { background: #343650; color: var(--faint); }
   .badge.t1 .hex { background: var(--tier-bronze); } .badge.t2 .hex { background: var(--tier-prata); }
   .badge.t3 .hex { background: var(--tier-ouro); } .badge.t4 .hex { background: var(--tier-platina); }
-  .badge.sec .hex { background: var(--accent); font-size: 22px; }
+  .badge.sec .hex { background: var(--purple); font-size: 22px; }
   .badge-name { font-size: 13px; font-weight: 700; margin-top: 10px; line-height: 1.25; }
   .badge-desc { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.35; min-height: 30px; }
-  .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-top: 8px; background: var(--input); color: var(--faint); letter-spacing: .3px; }
-  .badge.t1 .tag { color: var(--tier-bronze); background: rgba(194,124,62,.12); }
-  .badge.t2 .tag { color: var(--tier-prata); background: rgba(143,155,176,.15); }
-  .badge.t3 .tag { color: var(--tier-ouro); background: rgba(217,154,20,.13); }
-  .badge.t4 .tag { color: var(--tier-platina); background: rgba(58,167,201,.13); }
-  .badge.sec:not(.locked) .tag { color: var(--accent); background: rgba(109,69,214,.12); }
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 5px; margin-top: 8px; background: var(--input); color: var(--faint); letter-spacing: .3px; }
+  .badge.t1 .tag { color: #b06f30; background: rgba(201,138,75,.16); }
+  .badge.t2 .tag { color: #6f7c91; background: rgba(154,166,184,.2); }
+  .badge.t3 .tag { color: #b8860b; background: rgba(226,173,42,.18); }
+  .badge.t4 .tag { color: #2b8bad; background: rgba(79,181,214,.18); }
+  .badge.sec:not(.locked) .tag { color: var(--purple); background: var(--purple-soft); }
   .badge .track { height: 4px; width: 100%; margin-top: 10px; }
   .badge-hint { font-size: 10.5px; color: var(--faint); margin-top: 5px; }
 
-  /* ---------- loja ---------- */
+  /* ---------- recompensas ---------- */
   .wallet { display: flex; gap: 10px; flex-wrap: wrap; }
   .wallet-item { flex: 1; min-width: 130px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
-  .wallet-item b { display: block; font-size: 19px; font-weight: 700; }
-  .shop-cat { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 4px; font-size: 14px; font-weight: 700; }
-  .shop-cat small { color: var(--faint); font-weight: 500; font-size: 12px; }
+  .wallet-item b { display: block; font-size: 19px; font-weight: 800; font-family: "Nunito", sans-serif; }
+  .shop-cat { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 4px; font-size: 14px; font-weight: 800; font-family: "Nunito", sans-serif; }
+  .shop-cat small { color: var(--faint); font-weight: 500; font-size: 12px; font-family: "Open Sans", sans-serif; }
   .reward { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
   .reward:last-child { border-bottom: 0; }
-  .reward-ico { font-size: 22px; width: 34px; text-align: center; }
-  .reward-body { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; }
-  .reward-cost { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px; }
-  .tag-leg { color: var(--accent); }
+  .reward-ico { font-size: 20px; width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; background: var(--input); }
+  .reward-body { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
+  .reward-cost { font-size: 12px; color: var(--primary-strong); font-weight: 700; margin-top: 2px; }
+  .tag-leg { color: var(--purple); }
   .vault { text-align: center; }
   .vault .big { font-size: 34px; }
   .chest-btn { font-size: 40px; }
 
-  details.card summary { cursor: pointer; font-size: 11px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase; color: var(--muted); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  details.card summary { cursor: pointer; font-size: 10.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); list-style: none; display: flex; justify-content: space-between; align-items: center; }
   details.card summary::-webkit-details-marker { display: none; }
   details.card summary::after { content: "▾"; color: var(--faint); transition: transform .2s; }
   details.card[open] summary::after { transform: rotate(180deg); }
   details.card .det-body { margin-top: 12px; }
   .rule-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 9px 0; border-bottom: 1px solid var(--line); }
   .rule-row:last-child { border-bottom: 0; }
+  .menu-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 14px 0; border-bottom: 1px solid var(--line); font-weight: 600; font-size: 15px; }
+  .menu-row:last-child { border-bottom: 0; }
+  .menu-row span.chev { margin-left: auto; color: var(--faint); }
 
-  /* ---------- navegação inferior ---------- */
-  .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; padding: 6px 12px calc(6px + env(safe-area-inset-bottom)); background: var(--nav); border-top: 1px solid var(--line); }
-  .nav-inner { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 56px 1fr 1fr 1fr; align-items: center; }
-  .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; color: var(--faint); font-size: 10.5px; font-weight: 600; }
-  .tab-btn.active { color: var(--primary); }
-  .fab-add { width: 46px; height: 46px; margin: 0 auto; border-radius: 14px; background: var(--primary); color: var(--primary-ink); display: grid; place-items: center; }
+  /* ---------- navegação ---------- */
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; padding: 6px 12px calc(6px + env(safe-area-inset-bottom)); background: var(--nav); border-top: 1px solid var(--line); }
+  .nav-brand { display: none; }
+  .nav-items { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 58px 1fr 1fr 1fr; align-items: center; }
+  .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; color: var(--faint); font-size: 10px; font-weight: 600; min-width: 0; white-space: nowrap; letter-spacing: -.2px; }
+  .tab-btn.active { color: var(--primary-strong); }
+  .fab-add { width: 46px; height: 46px; margin: -18px auto 0; border-radius: 50%; background: var(--primary); color: var(--primary-ink); display: grid; place-items: center; box-shadow: 0 4px 12px rgba(76,201,160,.45); border: 3px solid var(--nav); }
   .fab-add svg { width: 24px; height: 24px; stroke-width: 2.2; }
+  .nav-tag { display: none; }
 
-  /* ---------- bate-papo ---------- */
-  #chat-fab { position: fixed; right: 14px; bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 120; width: 46px; height: 46px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); color: var(--muted); display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-  #chat-fab-badge { position: absolute; top: -3px; right: -3px; width: 12px; height: 12px; border-radius: 50%; background: var(--bad); border: 2px solid var(--bg); }
-  #chat-widget { position: fixed; right: 12px; left: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 150; max-width: 380px; margin-left: auto; height: 60vh; max-height: 520px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.2); display: flex; flex-direction: column; overflow: hidden; }
+  /* botões flutuantes: caderno/bate-papo (branco) e cronômetro (verde) */
+  .float { position: fixed; right: 14px; z-index: 120; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; box-shadow: 0 3px 12px rgba(16,24,40,.18); }
+  #chat-fab { bottom: calc(138px + env(safe-area-inset-bottom)); background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+  #timer-fab { bottom: calc(82px + env(safe-area-inset-bottom)); background: var(--primary); color: var(--primary-ink); }
+  #chat-fab-badge { position: absolute; top: 0; right: 0; width: 11px; height: 11px; border-radius: 50%; background: var(--bad); border: 2px solid var(--card); }
+  #timer-fab.run::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--primary); opacity: .55; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0% { transform: scale(.95); opacity: .6 } 100% { transform: scale(1.25); opacity: 0 } }
+  #chat-widget { position: fixed; right: 12px; left: 12px; bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 150; max-width: 380px; margin-left: auto; height: 60vh; max-height: 520px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.2); display: flex; flex-direction: column; overflow: hidden; }
   .chat-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 14px; }
   #chat-messages { flex: 1; overflow-y: auto; padding: 12px; }
   .bubble-row { margin-bottom: 8px; display: flex; } .bubble-row.me { justify-content: flex-end; }
@@ -272,65 +325,97 @@
   .chat-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); }
   .chat-input { margin-top: 0 !important; }
 
-  /* ---------- sheet ---------- */
+  /* ---------- sheets ---------- */
   .overlay { position: fixed; inset: 0; z-index: 200; background: rgba(15,18,28,.5); display: flex; align-items: flex-end; justify-content: center; }
   .sheet { width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; background: var(--card); border-radius: 16px 16px 0 0; padding: 10px 18px calc(20px + env(safe-area-inset-bottom)); animation: up .22s ease-out; }
   @keyframes up { from { transform: translateY(30px); opacity: 0 } to { transform: none; opacity: 1 } }
   .grabber { width: 38px; height: 4px; border-radius: 99px; background: var(--line); margin: 4px auto 14px; }
-  .sheet h2 { font-size: 17px; font-weight: 700; margin-bottom: 14px; text-transform: none; letter-spacing: 0; color: var(--text); }
+  .sheet h2 { font-size: 18px; font-weight: 800; margin-bottom: 14px; text-transform: none; letter-spacing: 0; color: var(--text); font-family: "Nunito", sans-serif; }
   .preview-wrap { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
   .preview-wrap img { max-height: 90px; border-radius: 10px; border: 1px solid var(--line); }
 
   /* ---------- entrada ---------- */
   .gate { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
   .gate-card { max-width: 380px; width: 100%; }
-  .gate-card h1 { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
-  .gate-card h1 i { font-style: normal; color: var(--primary); }
+  .gate-card h1 { font-size: 28px; font-weight: 800; letter-spacing: -.5px; color: var(--primary-strong); }
+  .gate-card h1 i { font-style: normal; color: var(--purple); }
 
   #lightbox { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; }
   #lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; }
-  #app-toast { position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 400; background: var(--text); color: var(--card); padding: 11px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 500; max-width: 90vw; text-align: center; transition: opacity .3s, transform .3s; opacity: 0; pointer-events: none; }
+  #app-toast { position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 400; background: var(--text); color: var(--card); padding: 11px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 600; max-width: 90vw; text-align: center; transition: opacity .3s, transform .3s; opacity: 0; pointer-events: none; }
   @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0deg); opacity: .95; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
   .empty { text-align: center; padding: 18px 8px; color: var(--muted); font-size: 14px; }
 
-  /* ---------- painel ---------- */
+  /* ---------- estatísticas ---------- */
   .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
   .stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  .stat b { display: block; font-size: 20px; font-weight: 700; margin-top: 4px; letter-spacing: -.3px; }
-  .stat span { font-size: 10.5px; color: var(--muted); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+  .stat b { display: block; font-size: 20px; font-weight: 800; margin-top: 4px; letter-spacing: -.3px; font-family: "Nunito", sans-serif; }
+  .stat span { font-size: 10.5px; color: var(--muted); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
   .stat small { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; }
-  .up { color: var(--ok); } .down { color: var(--bad); }
   .chart { display: flex; align-items: flex-end; gap: 4px; }
   .chart-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .chart-bars { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 96px; width: 100%; }
+  .chart-bars { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 100px; width: 100%; }
   .chart-bar { width: 42%; max-width: 16px; min-height: 2px; border-radius: 4px 4px 1px 1px; transition: height .5s; }
   .chart-label { font-size: 9.5px; color: var(--faint); }
   .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
   .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; }
-  .heat { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 3px; }
+  .pie-wrap { display: flex; justify-content: center; margin: 8px 0 6px; }
+  .pie-total { text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 14px; font-family: "Nunito", sans-serif; }
+  .pie-leg { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; }
+  .pie-leg i { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+  .pie-leg span.dots { flex: 1; border-bottom: 1px dotted var(--line); transform: translateY(3px); }
+  .pie-leg b { font-weight: 600; font-size: 12.5px; color: var(--muted); }
+  .heat-months { display: grid; grid-template-columns: 24px repeat(17, 1fr); gap: 3px; height: 16px; font-size: 9.5px; color: var(--faint); }
+  .heat { display: grid; grid-template-rows: repeat(7, 1fr); grid-template-columns: 24px repeat(17, 1fr); grid-auto-flow: column; gap: 3px; }
+  .heat .lab { font-size: 9.5px; color: var(--faint); display: flex; align-items: center; font-style: normal; font-weight: 400; }
   .heat i { aspect-ratio: 1; border-radius: 3px; background: var(--track); display: block; }
   .heat i.l1 { background: var(--h1); } .heat i.l2 { background: var(--h2); } .heat i.l3 { background: var(--h3); } .heat i.l4 { background: var(--h4); }
   .heat i.fut { opacity: 0; }
   .heat-legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 8px; font-size: 10.5px; color: var(--faint); }
   .heat-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; background: var(--track); }
   .heat-legend i.l1 { background: var(--h1); } .heat-legend i.l2 { background: var(--h2); } .heat-legend i.l3 { background: var(--h3); } .heat-legend i.l4 { background: var(--h4); }
-  .timer-display { font-size: 48px; font-weight: 700; text-align: center; letter-spacing: 1px; font-variant-numeric: tabular-nums; margin: 8px 0 12px; }
-  .timer-btns { display: flex; gap: 8px; } .timer-btns .btn { flex: 1; }
-  .timer-pill { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 4px; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: var(--primary); color: var(--primary-ink); cursor: pointer; }
   .retro { white-space: pre-wrap; font-size: 13.5px; line-height: 1.55; background: var(--input); border-radius: 10px; padding: 14px; margin: 12px 0; }
 
-  /* ---------- telas largas: duas colunas ---------- */
+  /* ---------- cronômetro (sheet + anel) ---------- */
+  .timer-ring { position: relative; width: 210px; height: 210px; margin: 6px auto 14px; }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring .tr-bg { stroke: var(--track); } .timer-ring .tr-fg { stroke: var(--primary); transition: stroke-dashoffset .9s linear; }
+  .timer-display { position: absolute; inset: 0; display: grid; place-items: center; font-size: 38px; font-weight: 800; letter-spacing: 1px; font-variant-numeric: tabular-nums; font-family: "Nunito", sans-serif; }
+  .timer-btns { display: flex; gap: 8px; } .timer-btns .btn { flex: 1; }
+  .timer-pill { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 4px; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; background: var(--primary); color: var(--primary-ink); cursor: pointer; }
+
+  /* ---------- telas largas: barra lateral + duas colunas ---------- */
   @media (min-width: 900px) {
-    .wrap, .nav-inner { max-width: 920px; }
-    .tab-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+    .m-only { display: none !important; } .d-only { display: flex !important; }
+    .nav { top: 0; bottom: 0; right: auto; width: 236px; padding: 22px 14px; border-top: 0; border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+    .nav-brand { display: block; padding: 0 10px 22px; }
+    .nav-items { display: flex; flex-direction: column; gap: 2px; max-width: none; margin: 0; }
+    .tab-btn { flex-direction: row; gap: 12px; padding: 10px 12px; font-size: 14px; border-radius: 9px; justify-content: flex-start; color: var(--muted); width: 100%; position: relative; }
+    .tab-btn:hover { background: var(--input); }
+    .tab-btn.active { background: var(--primary-soft); color: var(--primary-strong); }
+    .tab-btn.active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--primary); }
+    .fab-add { display: none !important; }
+    .shell { margin-left: 236px; position: relative; }
+    .wrap { max-width: 1040px; padding: 0 28px; }
+    .topbar { position: absolute; top: 16px; right: 28px; padding: 0; z-index: 20; }
+    .topbar .brand { display: none; }
+    main.wrap { padding-top: 14px; padding-bottom: 60px; }
+    .page-head { padding: 20px 0 18px; }
+    .page-head h1 { font-size: 24px; }
+    .tab-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
     .tab-panel > * { margin-bottom: 0; }
     .tab-panel > .full { grid-column: 1 / -1; }
     .kpis { grid-template-columns: repeat(4, 1fr); }
-    .badge-grid { grid-template-columns: repeat(4, 1fr); }
+    .badge-grid { grid-template-columns: repeat(5, 1fr); }
+    .float { right: 24px; } #timer-fab { bottom: 24px; } #chat-fab { bottom: 80px; }
+    #chat-widget { bottom: 24px; right: 84px; margin-left: 0; }
+    .days i:nth-child(-n+0) { display: none; }
+    .stat-grid { grid-template-columns: repeat(4, 1fr); }
+    .rank-layout { display: grid; grid-template-columns: 1.7fr 1fr; gap: 14px; align-items: start; grid-column: 1 / -1; }
+    .rank-layout > * { margin-bottom: 0; }
   }
-  #alerta:empty { display: none; }
-  .days i.on { font-size: 0; }
-  .goal-mini { margin-top: 14px; }
+  @media (max-width: 899px) { .days i:nth-child(-n+14) { display: none; } .rank-layout > * { margin-bottom: 12px; } }
+  .m-ico.p1 { background: var(--p1); } .m-ico.p2 { background: var(--p2); } .m-ico.p3 { background: var(--p3); } .m-ico.p4 { background: var(--p4); } .m-ico.p5 { background: var(--p5); } .m-ico.p6 { background: var(--p6); }
 </style>
 </head>
 <body>
@@ -353,190 +438,247 @@
 
 <!-- ===================== APP ===================== -->
 <div id="app" class="hidden">
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <div>
+
+  <nav class="nav" id="nav">
+    <div class="nav-brand"><div class="brand-name">Maricota <i>&amp;</i> Alho</div></div>
+    <div class="nav-items">
+      <button class="tab-btn active" data-tab="home"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Início</button>
+      <button class="tab-btn" data-tab="ranking"><svg class="ic" viewBox="0 0 24 24"><path d="M8 21V11M16 21V7M12 21v-6M4 21h16"/></svg>Ranking</button>
+      <button id="fab-add" class="fab-add m-only" aria-label="Registrar atividade"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="tab-btn" data-tab="painel"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>Estatísticas</button>
+      <button class="tab-btn" data-tab="medalhas"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>Conquistas</button>
+      <button class="tab-btn d-only" data-tab="loja"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v8h14v-8M12 8c-2-4-6-3-5 0M12 8c2-4 6-3 5 0"/></svg>Recompensas</button>
+      <button class="tab-btn d-only" data-tab="feed"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Histórico</button>
+      <button class="tab-btn m-only" data-tab="mais" data-also="feed,loja"><svg class="ic" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>Mais</button>
+    </div>
+  </nav>
+
+  <div class="shell">
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand m-only" style="flex-direction:column;align-items:flex-start">
           <div class="brand-name">Maricota <i>&amp;</i> Alho</div>
           <div class="brand-sub" id="brand-season"></div>
         </div>
+        <div class="top-actions">
+          <button id="header-add" class="btn-add d-only">+ Registrar</button>
+          <button id="theme-toggle" class="icon-btn" title="Alternar tema claro/escuro"></button>
+          <span class="user-chip d-only"><span id="user-name"></span></span>
+          <button id="switch-user" class="avatar" title="Trocar de usuário"></button>
+        </div>
       </div>
-      <div class="top-actions">
-        <button id="theme-toggle" class="icon-btn" title="Alternar tema claro/escuro"></button>
-        <button id="switch-user" class="avatar" title="Trocar de usuário"></button>
-      </div>
+      <div id="timer-pill" class="timer-pill hidden"></div>
     </div>
-    <div id="timer-pill" class="timer-pill hidden"></div>
-  </div>
 
-  <main class="wrap">
+    <main class="wrap">
 
-    <!-- ===== INÍCIO ===== -->
-    <section id="tab-home" class="tab-panel">
-      <div class="page-head full">
-        <h1 id="hero-title"></h1>
-        <p id="hero-eyebrow"></p>
-      </div>
+      <!-- ===== INÍCIO ===== -->
+      <section id="tab-home" class="tab-panel">
+        <div class="page-head full">
+          <h1 id="hero-title"></h1>
+          <p id="hero-eyebrow"></p>
+        </div>
 
-      <div class="kpis full">
-        <div class="kpi"><span class="label">Pontos hoje</span><b id="hero-today">0</b><small>na temporada</small></div>
-        <div class="kpi"><span class="label">Sequência</span><b id="hero-streak">0</b><small id="hero-freeze"></small></div>
-        <div class="kpi"><span class="label">Saldo</span><b id="hero-saldo">0</b><small>pontos para gastar</small></div>
-        <div class="kpi"><span class="label" id="hl-nome"></span><b id="hl-xp"></b><div class="bar"><div id="hl-fill"></div></div><small id="hl-sub"></small></div>
-      </div>
+        <div class="kpis full">
+          <div class="kpi"><div class="kpi-top"><span class="label">Pontos na semana</span><span class="kpi-ico"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span></div><b id="kpi-pts">0</b><small id="kpi-pts-sub"></small></div>
+          <div class="kpi"><div class="kpi-top"><span class="label">Sequência</span><span class="kpi-ico" style="background:var(--warn-bg);color:var(--warn)"><svg viewBox="0 0 24 24"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/></svg></span></div><b id="kpi-seq">0</b><small id="kpi-seq-sub"></small></div>
+          <div class="kpi"><div class="kpi-top"><span class="label">Saldo</span><span class="kpi-ico" style="background:var(--purple-soft);color:var(--purple)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v10M9.5 9.5h3.5a1.7 1.7 0 0 1 0 3.4h-3a1.7 1.7 0 0 0 0 3.4h3.8"/></svg></span></div><b id="kpi-saldo">0</b><small id="kpi-saldo-sub"></small></div>
+          <div class="kpi"><div class="kpi-top"><span class="label" id="kpi-nivel-l">Nível</span><span class="kpi-ico" style="background:var(--p4);color:#8a6d00"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span></div><b id="kpi-nivel">0</b><div class="bar"><div id="hl-fill"></div></div><small id="kpi-nivel-sub"></small></div>
+        </div>
 
-      <div id="alerta" class="full"></div>
+        <div id="alerta" class="full"></div>
 
-      <div class="card full">
-        <div class="card-head"><h2>Constância nos estudos</h2><span class="small muted" id="const-sub"></span></div>
-        <div class="days" id="constancia"></div>
-      </div>
+        <div class="card full">
+          <div class="card-head"><h2>Constância nos estudos</h2><span class="small muted" id="const-sub"></span></div>
+          <div class="streak-line" id="streak-line"></div>
+          <div class="days" id="constancia"></div>
+        </div>
 
-      <div class="card">
-        <div class="card-head"><h2>Missões da semana</h2><span class="small muted" id="missoes-sem"></span></div>
-        <div id="missoes"></div>
-      </div>
+        <div class="card">
+          <div class="card-head"><h2>Missões da semana</h2><span class="small muted" id="missoes-sem"></span></div>
+          <div id="missoes"></div>
+        </div>
 
-      <div class="card">
-        <div class="card-head"><h2>Duelo da semana</h2><span class="small muted" id="duelo-sem"></span></div>
-        <div id="duelo"></div>
-      </div>
+        <div class="card">
+          <div class="card-head"><h2>Desafio da semana</h2><span class="small muted" id="desafio-sem"></span></div>
+          <div id="desafio"></div>
+        </div>
 
-      <div class="card">
-        <div class="card-head"><h2>Desafio da semana</h2><span class="small muted" id="desafio-sem"></span></div>
-        <div id="desafio"></div>
-      </div>
+        <div class="card">
+          <div class="card-head"><h2>Metas semanais</h2><span class="small muted" id="meta-sem"></span></div>
+          <div id="meta-casal"></div>
+          <div id="meta-pessoal" class="goal-mini"></div>
+        </div>
 
-      <div class="card">
-        <div class="card-head">
-          <h2>Ranking</h2>
-          <div class="chips" id="period-chips">
-            <button class="chip period-btn" data-period="today">Hoje</button>
-            <button class="chip period-btn on" data-period="7">7 dias</button>
-            <button class="chip period-btn" data-period="30">30 dias</button>
-            <button class="chip period-btn" data-period="all">Temporada</button>
+        <div class="card">
+          <div class="card-head"><h2>Duelo da semana</h2><span class="small muted" id="duelo-sem"></span></div>
+          <div id="duelo"></div>
+        </div>
+
+        <div class="card full">
+          <div class="card-head"><h2>Ranking da semana</h2><button class="link-green" data-go="ranking">Ver ranking</button></div>
+          <div id="ranking"></div>
+        </div>
+
+        <details class="card">
+          <summary>Como pontuar</summary>
+          <div class="det-body" id="regras-list"></div>
+        </details>
+
+        <details class="card">
+          <summary>Hall da fama</summary>
+          <div class="det-body" id="hall"></div>
+        </details>
+      </section>
+
+      <!-- ===== RANKING ===== -->
+      <section id="tab-ranking" class="tab-panel hidden">
+        <div class="page-head full">
+          <h1>Ranking</h1>
+          <p>Veja sua posição entre vocês dois</p>
+        </div>
+        <div class="card full" style="padding:12px 16px">
+          <div class="card-head" style="margin:0;flex-wrap:wrap">
+            <span class="small" id="rk-periodo" style="font-weight:600"></span>
+            <div class="seg" id="rk-periods">
+              <button data-period="today">Hoje</button>
+              <button data-period="7" class="on">7 dias</button>
+              <button data-period="30">30 dias</button>
+              <button data-period="all">Temporada</button>
+            </div>
           </div>
         </div>
-        <div id="ranking"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-head"><h2>Metas semanais</h2><span class="small muted" id="meta-sem"></span></div>
-        <div id="meta-casal"></div>
-        <div id="meta-pessoal" class="goal-mini"></div>
-      </div>
-
-      <details class="card">
-        <summary>Como pontuar</summary>
-        <div class="det-body" id="regras-list"></div>
-      </details>
-
-      <details class="card">
-        <summary>Hall da fama</summary>
-        <div class="det-body" id="hall"></div>
-      </details>
-    </section>
-
-    <!-- ===== FEED ===== -->
-    <section id="tab-feed" class="tab-panel hidden">
-      <div class="card full">
-        <div class="card-head"><h2>Interação da semana</h2><span class="small muted">comentários e reações nos registros do outro</span></div>
-        <div id="interacao"></div>
-      </div>
-      <div class="card full">
-        <div class="card-head"><h2>Feed de atividades</h2><span class="small muted">temporada atual</span></div>
-        <div id="entries-list"></div>
-      </div>
-    </section>
-
-    <!-- ===== PAINEL ===== -->
-    <section id="tab-painel" class="tab-panel hidden">
-      <div class="card">
-        <div class="card-head"><h2>Foco</h2><span class="small muted">cronômetro de estudo</span></div>
-        <div id="timer"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Estatísticas</h2><span class="small muted">temporada atual</span></div>
-        <div class="chips" id="stat-people"></div>
-        <div class="stat-grid" id="stat-grid"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Pontos por dia</h2><span class="small muted">últimos 14 dias</span></div>
-        <div id="chart-dias"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Pontos por semana</h2><span class="small muted">temporada</span></div>
-        <div id="chart-semanas"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Onde os pontos vêm</h2><span class="small muted" id="ativ-quem"></span></div>
-        <div id="stat-ativ"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Mapa de calor</h2><span class="small muted">últimas 17 semanas</span></div>
-        <div id="heatmap"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Retrospectiva</h2></div>
-        <div class="chips" id="retro-chips">
-          <button class="chip on" data-retro="atual">Esta semana</button>
-          <button class="chip" data-retro="passada">Semana passada</button>
-          <button class="chip" data-retro="mes">Este mês</button>
+        <div class="tabs full" id="rk-tabs">
+          <button data-m="pontos" class="on">Pontos</button>
+          <button data-m="questoes">Questões</button>
+          <button data-m="flash">Flashcards</button>
+          <button data-m="estudo">Tempo de estudo</button>
         </div>
-        <div class="retro" id="retro-text"></div>
-        <button id="retro-share" class="btn block">Compartilhar resumo</button>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Seus dados</h2></div>
-        <p class="small muted" style="margin-bottom:12px">Baixe uma cópia de segurança. As fotos não entram no arquivo, só a informação de que existem.</p>
-        <div class="timer-btns">
-          <button id="export-json" class="btn ghost">Backup (JSON)</button>
-          <button id="export-csv" class="btn ghost">Registros (CSV)</button>
+        <div class="rank-layout">
+          <div>
+            <div class="card" style="margin-bottom:12px"><div id="rk-podium"></div></div>
+            <div class="card"><div id="rk-list"></div></div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:12px"><div class="card-head"><h2>Sua semana</h2><span class="small muted" id="rk-sem"></span></div><div id="rk-week"></div></div>
+            <div class="card" style="margin-bottom:12px"><div class="card-head"><h2>Sua evolução</h2><span class="small muted">pontos por semana</span></div><div id="rk-evo"></div></div>
+            <div id="rk-banner"></div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ===== MEDALHAS ===== -->
-    <section id="tab-medalhas" class="tab-panel hidden">
-      <div class="card full">
-        <div class="card-head"><h2>Conquistas</h2><span class="small muted" id="badge-count"></span></div>
-        <div class="chips" id="badge-people"></div>
-        <p class="tiny faint" style="margin-top:10px">Cada medalha tem 4 níveis: bronze, prata, ouro e platina. As secretas aparecem quando você conquista.</p>
-      </div>
-      <div id="badges" class="full"></div>
-    </section>
+      <!-- ===== ESTATÍSTICAS ===== -->
+      <section id="tab-painel" class="tab-panel hidden">
+        <div class="page-head full">
+          <h1>Estatísticas</h1>
+          <p>Acompanhe sua evolução nos estudos</p>
+        </div>
+        <div class="card full">
+          <div class="card-head"><h2>Resumo da temporada</h2></div>
+          <div class="chips" id="stat-people"></div>
+          <div class="stat-grid" id="stat-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Pontos por atividade</h2></div>
+          <div class="seg" id="stat-periods" style="margin-bottom:6px">
+            <button data-p="hoje">Hoje</button><button data-p="semana">Semana</button><button data-p="mes">Mês</button><button data-p="total" class="on">Total</button>
+          </div>
+          <div id="stat-ativ"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Pontos por dia</h2><span class="small muted">últimos 14 dias</span></div>
+          <div id="chart-dias"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Pontos por semana</h2><span class="small muted">temporada</span></div>
+          <div id="chart-semanas"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Retrospectiva</h2></div>
+          <div class="chips" id="retro-chips">
+            <button class="chip on" data-retro="atual">Esta semana</button>
+            <button class="chip" data-retro="passada">Semana passada</button>
+            <button class="chip" data-retro="mes">Este mês</button>
+          </div>
+          <div class="retro" id="retro-text"></div>
+          <button id="retro-share" class="btn purple block">Compartilhar resumo</button>
+        </div>
+        <div class="card full">
+          <div class="card-head"><h2>Heatmap de estudos</h2><span class="small muted">últimas 17 semanas</span></div>
+          <div id="heatmap"></div>
+        </div>
+        <div class="card full">
+          <div class="card-head"><h2>Seus dados</h2></div>
+          <p class="small muted" style="margin-bottom:12px">Baixe uma cópia de segurança. As fotos não entram no arquivo, só a informação de que existem.</p>
+          <div class="timer-btns" style="max-width:420px">
+            <button id="export-json" class="btn ghost">Backup (JSON)</button>
+            <button id="export-csv" class="btn ghost">Registros (CSV)</button>
+          </div>
+        </div>
+      </section>
 
-    <!-- ===== LOJA ===== -->
-    <section id="tab-loja" class="tab-panel hidden">
-      <div class="card">
-        <div class="card-head"><h2>Carteira</h2><span class="small muted">saldo da temporada</span></div>
-        <div class="wallet" id="wallet"></div>
-      </div>
-      <div class="card vault" id="cofre"></div>
-      <div class="card vault" id="bau"></div>
-      <div class="card">
-        <div class="card-head"><h2>Recompensas</h2></div>
-        <div id="loja-itens"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Resgates recentes</h2></div>
-        <div id="resgates-hist"></div>
-      </div>
-    </section>
+      <!-- ===== CONQUISTAS ===== -->
+      <section id="tab-medalhas" class="tab-panel hidden">
+        <div class="page-head full">
+          <h1>Conquistas</h1>
+          <p>As medalhas que você desbloqueou estudando</p>
+        </div>
+        <div class="card full" style="padding:12px 16px">
+          <div class="card-head" style="margin:0"><div class="chips" id="badge-people"></div><span class="small muted" id="badge-count"></span></div>
+        </div>
+        <div id="badges" class="full"></div>
+      </section>
 
-  </main>
+      <!-- ===== RECOMPENSAS ===== -->
+      <section id="tab-loja" class="tab-panel hidden">
+        <div class="page-head full">
+          <h1>Recompensas</h1>
+          <p>Troque seus pontos por mimos e programas a dois</p>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Carteira</h2><span class="small muted">saldo da temporada</span></div>
+          <div class="wallet" id="wallet"></div>
+        </div>
+        <div class="card vault" id="cofre"></div>
+        <div class="card vault" id="bau"></div>
+        <div class="card full">
+          <div class="card-head"><h2>Recompensas</h2></div>
+          <div id="loja-itens"></div>
+        </div>
+        <div class="card full">
+          <div class="card-head"><h2>Resgates recentes</h2></div>
+          <div id="resgates-hist"></div>
+        </div>
+      </section>
 
-  <!-- navegação inferior -->
-  <nav class="bottom-nav">
-    <div class="nav-inner">
-      <button class="tab-btn active" data-tab="home"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Início</button>
-      <button class="tab-btn" data-tab="feed"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Feed</button>
-      <button id="fab-add" class="fab-add" aria-label="Registrar atividade"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-      <button class="tab-btn" data-tab="painel"><svg class="ic" viewBox="0 0 24 24"><path d="M5 20v-7M12 20V5M19 20V9"/></svg>Painel</button>
-      <button class="tab-btn" data-tab="medalhas"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>Medalhas</button>
-      <button class="tab-btn" data-tab="loja"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v8h14v-8M12 8c-2-4-6-3-5 0M12 8c2-4 6-3 5 0"/></svg>Loja</button>
-    </div>
-  </nav>
+      <!-- ===== HISTÓRICO ===== -->
+      <section id="tab-feed" class="tab-panel hidden">
+        <div class="page-head full">
+          <h1>Histórico</h1>
+          <p>O que cada um registrou nesta temporada</p>
+        </div>
+        <div class="card full">
+          <div class="card-head"><h2>Interação da semana</h2><span class="small muted">comentários e reações no registro do outro</span></div>
+          <div id="interacao"></div>
+        </div>
+        <div class="card full">
+          <div class="card-head"><h2>Atividades</h2><span class="small muted">temporada atual</span></div>
+          <div id="entries-list"></div>
+        </div>
+      </section>
+
+      <!-- ===== MAIS (menu do celular) ===== -->
+      <section id="tab-mais" class="tab-panel hidden">
+        <div class="page-head full"><h1>Mais</h1><p>Outras áreas do app</p></div>
+        <div class="card full" style="padding:4px 16px">
+          <button class="menu-row" data-go="feed"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Histórico<span class="chev">&rsaquo;</span></button>
+          <button class="menu-row" data-go="loja"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v8h14v-8M12 8c-2-4-6-3-5 0M12 8c2-4 6-3 5 0"/></svg>Recompensas<span class="chev">&rsaquo;</span></button>
+          <button class="menu-row" id="menu-troca"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Trocar de usuário<span class="chev">&rsaquo;</span></button>
+        </div>
+      </section>
+
+    </main>
+  </div>
 </div>
 
 <!-- ===================== REGISTRAR ATIVIDADE (sheet) ===================== -->
@@ -572,8 +714,20 @@
   </div>
 </div>
 
-<!-- ===================== BATE-PAPO ===================== -->
-<button id="chat-fab" class="hidden" aria-label="Bate-papo"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span id="chat-fab-badge" class="hidden"></span></button>
+<!-- ===================== CRONÔMETRO (sheet) ===================== -->
+<div id="timer-sheet" class="overlay hidden">
+  <div class="sheet">
+    <div class="grabber"></div>
+    <h2>Foco</h2>
+    <div id="timer"></div>
+    <button type="button" id="timer-close" class="btn ghost block" style="margin-top:10px">Fechar</button>
+  </div>
+</div>
+
+<!-- ===================== BOTÕES FLUTUANTES ===================== -->
+<button id="chat-fab" class="float hidden" aria-label="Bate-papo"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span id="chat-fab-badge" class="hidden"></span></button>
+<button id="timer-fab" class="float hidden" aria-label="Cronômetro de estudo"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2h5"/></svg></button>
+
 <div id="chat-widget" class="hidden">
   <div class="chat-head"><span>Bate-papo</span><button id="chat-close" style="font-size:16px;color:var(--muted)">✕</button></div>
   <div id="chat-messages"></div>
@@ -585,15 +739,6 @@
 
 <div id="lightbox" class="hidden"><img id="lightbox-img" src="" alt="" /></div>
 <div id="app-toast"></div>
-
-<!-- gradiente do anel de progresso -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#7c5cff" /><stop offset="100%" stop-color="#ff5fa2" />
-    </linearGradient>
-  </defs>
-</svg>
 
 <script type="module">
 const firebaseConfig = {
@@ -706,7 +851,7 @@ const pad = n => String(n).padStart(2, "0");
 function localIso(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
 function todayIso() { return localIso(new Date()); }
 function startOfToday() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
-const PALETA = ["#6d45d6", "#2fae84", "#e08a3c", "#d65a8a", "#3a8fd6", "#8a6d3b"];
+const PALETA = ["#6a3fc4", "#2fae84", "#e08a3c", "#d65a8a", "#3a8fd6", "#8a6d3b"];
 function avatarColor(nome) {
   let lista = [];
   try { lista = JSON.parse(localStorage.getItem("autores_cache")) || []; } catch (e) {}
@@ -1023,7 +1168,7 @@ function renderMedalhas() {
     const doCat = list.filter(b => b.cat === cat);
     const ok = doCat.reduce((s, b) => s + b.tier, 0), tot = doCat.reduce((s, b) => s + (b.secret ? 1 : 4), 0);
     return `
-    <div class="badge-cat"><b>${esc(cat)}</b><span>${ok} de ${tot}</span></div>
+    <div class="badge-cat"><div><b>${esc(cat)}</b><small>Medalhas de ${esc(cat.toLowerCase())}</small></div><div class="cat-prog">${ok} de ${tot}<div class="track"><div class="fill ok" style="width:${tot ? ok / tot * 100 : 0}%"></div></div></div></div>
     <div class="badge-grid">
       ${doCat.map(b => {
         if (b.secret) {
@@ -1098,32 +1243,48 @@ function renderHero() {
   const diaN = Math.max(1, Math.floor((startOfToday() - new Date(SEASON.inicio + "T00:00:00")) / DAY) + 1);
   $("brand-season").textContent = `${SEASON.nome} · dia ${diaN}`;
   $("hero-title").textContent = `De volta, ${currentUser}`;
-  $("hero-eyebrow").textContent = "Pronto para mais um dia?";
-  const hoje = todayIso();
-  $("hero-today").textContent = fmt(seasonEntries().filter(e => e.autor === currentUser && e.data === hoje).reduce((s, e) => s + calcPoints(e), 0));
+  $("hero-eyebrow").textContent = `Pronto para mais um dia? · ${SEASON.nome}, dia ${diaN}`;
+  const idx = currentWeekIdx(), w = weekInfo(idx);
+  const mine = seasonEntries().filter(e => e.autor === currentUser);
+  const pw = x => mine.filter(e => e.data >= x.inicioIso && e.data < x.fimIso).reduce((s, e) => s + calcPoints(e), 0);
+  const a = pw(w);
+  $("kpi-pts").textContent = fmt(a);
+  let sub = "nesta semana";
+  if (idx > 0) {
+    const pr = pw(weekInfo(idx - 1));
+    if (pr > 0) { const dl = Math.round((a - pr) / pr * 100); sub = `Semana passada: ${fmt(pr)} <span class="${dl >= 0 ? "up" : "down"}">${dl >= 0 ? "▲" : "▼"} ${Math.abs(dl)}%</span>`; }
+    else sub = "Semana passada: 0";
+  }
+  $("kpi-pts-sub").innerHTML = sub;
   const si = streakInfo(currentUser);
-  $("hero-streak").textContent = si.atual;
-  $("hero-freeze").textContent = `${si.atual === 1 ? "dia seguido" : "dias seguidos"} · ${si.freezes} congelador${si.freezes === 1 ? "" : "es"}`;
-  $("hero-saldo").textContent = fmt(saldoDe(currentUser));
+  $("kpi-seq").textContent = `${si.atual} ${si.atual === 1 ? "dia" : "dias"}`;
+  $("kpi-seq-sub").textContent = `Recorde: ${si.melhor} · ${si.freezes} congelador${si.freezes === 1 ? "" : "es"}`;
+  const hoje = todayIso();
+  $("kpi-saldo").textContent = fmt(saldoDe(currentUser));
+  $("kpi-saldo-sub").textContent = `Hoje: ${fmt(mine.filter(e => e.data === hoje).reduce((s, e) => s + calcPoints(e), 0))} pts`;
   const xp = xpDe(currentUser), lv = levelInfo(xp);
-  $("hl-nome").textContent = `Nível ${lv.nivel} · ${lv.nome}`;
-  $("hl-xp").textContent = lv.prox ? `${xp} XP` : `${xp} XP`;
+  $("kpi-nivel-l").textContent = `Nível ${lv.nivel}`;
+  $("kpi-nivel").textContent = lv.nome;
   $("hl-fill").style.width = (lv.prox ? Math.min(100, (xp - lv.base) / (lv.prox - lv.base) * 100) : 100) + "%";
-  $("hl-sub").textContent = lv.prox ? `faltam ${lv.prox - xp} para ${lv.proxNome}` : "nível máximo";
+  $("kpi-nivel-sub").textContent = `${xp} XP${lv.prox ? ` · faltam ${lv.prox - xp}` : ""}`;
   renderConstancia(si);
 }
 
 function renderConstancia(si) {
   const dias = new Set(seasonEntries().filter(e => e.autor === currentUser).map(e => e.data));
   const hoje = startOfToday();
-  const ini = "DSTQQSS";
   let html = "";
-  for (let i = 13; i >= 0; i--) {
-    const d = addDias(hoje, -i), iso = localIso(d);
-    html += `<i class="${dias.has(iso) ? "on" : ""} ${i === 0 ? "today" : ""}" title="${ddmm(iso)}">${ini[d.getDay()]}</i>`;
+  for (let i = 27; i >= 0; i--) {
+    const iso = localIso(addDias(hoje, -i));
+    html += `<i class="${dias.has(iso) ? "on" : ""} ${i === 0 ? "today" : ""}" title="${ddmm(iso)}"></i>`;
   }
   $("constancia").innerHTML = html;
-  $("const-sub").textContent = `melhor sequência: ${si.melhor} dia${si.melhor === 1 ? "" : "s"}`;
+  const n = matchMedia("(min-width: 900px)").matches ? 28 : 14;
+  $("const-sub").textContent = `${ddmm(localIso(addDias(hoje, -(n - 1))))} – ${ddmm(localIso(hoje))}`;
+  const flame = '<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/></svg>';
+  $("streak-line").innerHTML = si.atual === 0
+    ? `${flame}<span class="muted">Sem sequência no momento. Registre algo hoje para começar!</span>`
+    : `${flame}<span><b>${si.atual} ${si.atual === 1 ? "dia seguido" : "dias seguidos"}.</b> ${si.atual >= si.melhor ? "É o seu recorde." : `Seu recorde é ${si.melhor}.`}</span>`;
 }
 
 function renderAlerta() {
@@ -1148,14 +1309,17 @@ function renderMissoes() {
   const prog = missionProgress(currentUser, idx);
   const feitas = prog.filter(m => m.done).length;
   const outros = allAuthors().filter(a => a !== currentUser);
-  $("missoes").innerHTML = prog.map(m => {
+  $("missoes").innerHTML = prog.map((m, i) => {
     const v = m.fmt ? m.fmt(Math.min(m.value, m.goal)) : fmt(Math.min(m.value, m.goal));
     const g = m.fmt ? m.fmt(m.goal) : m.goal;
     return `<div class="mission ${m.done ? "done" : ""}">
-      <div class="mission-top"><span>${m.emoji} ${esc(m.label)}</span><span>${m.done ? "✅" : `${v} / ${g}`}</span></div>
-      <div class="track"><div class="fill ${m.done ? "ok" : ""}" style="width:${Math.min(100, m.value / m.goal * 100)}%"></div></div>
+      <div class="m-ico p${(i * 2 + idx) % 6 + 1}">${m.emoji}</div>
+      <div class="m-body">
+        <div class="mission-top"><span>${esc(m.label)}</span><span>${m.done ? "Feita ✓" : `${v} / ${g}`}</span></div>
+        <div class="track"><div class="fill ${m.done ? "ok" : ""}" style="width:${Math.min(100, m.value / m.goal * 100)}%"></div></div>
+      </div>
     </div>`;
-  }).join("") + `<p class="tiny faint" style="margin-top:10px">${feitas === 3 ? `🏅 As 3 missões feitas! Bônus de +${MISSION_BONUS_XP} XP.` : `Faça as 3 para ganhar +${MISSION_BONUS_XP} XP de bônus.`}
+  }).join("") + `<p class="tiny faint" style="margin-top:12px">${feitas === 3 ? `As 3 missões feitas! Bônus de +${MISSION_BONUS_XP} XP.` : `Faça as 3 para ganhar +${MISSION_BONUS_XP} XP de bônus.`}
     ${outros.map(o => ` · ${esc(o)}: ${missionProgress(o, idx).filter(m => m.done).length}/3`).join("")}</p>`;
 }
 
@@ -1213,15 +1377,12 @@ function checkNewMissions() {
 }
 
 function renderRanking() {
-  const filtered = seasonEntries().filter(e => withinPeriod(e.data, currentPeriod));
   const totals = {};
   allAuthors().forEach(a => totals[a] = 0);
-  filtered.forEach(e => { totals[e.autor] = (totals[e.autor] || 0) + calcPoints(e); });
+  seasonEntries().filter(e => withinPeriod(e.data, "7")).forEach(e => { totals[e.autor] = (totals[e.autor] || 0) + calcPoints(e); });
   const ranking = Object.entries(totals).sort((a, b) => b[1] - a[1]);
   const max = Math.max(...ranking.map(r => r[1]), 1);
-  const el = $("ranking");
-  if (!ranking.length) { el.innerHTML = `<div class="empty"><div class="big">🌱</div>Nenhum registro ainda. Toque no + para começar!</div>`; return; }
-  el.innerHTML = ranking.map(([nome, pts], i) => `
+  $("ranking").innerHTML = ranking.map(([nome, pts], i) => `
     <div class="rank-row">
       <div class="rank-pos ${i === 0 && pts > 0 ? "first" : ""}">${i + 1}º</div>
       ${avatarHtml(nome)}
@@ -1231,6 +1392,72 @@ function renderRanking() {
       </div>
       ${nome !== currentUser ? `<button class="poke" data-nome="${esc(nome)}" title="Mandar uma cutucada gentil" ${jaCutucou(nome) ? "disabled" : ""}>Cutucar</button>` : ""}
     </div>`).join("");
+}
+
+// ---------- página Ranking (pódio, lista, sua semana, evolução) ----------
+let rkMetric = "pontos", rkPeriod = "7";
+const RK_METRICAS = {
+  pontos: { f: es => es.reduce((s, e) => s + calcPoints(e), 0), t: v => `${fmt(v)} pts` },
+  questoes: { f: es => sumBy(es, "questoes"), t: v => fmt(v) },
+  flash: { f: es => sumBy(es, "flashcards"), t: v => fmt(v) },
+  estudo: { f: es => sumBy(es, "videoAula") + sumBy(es, "leituraPdf"), t: v => horasFmt(v) }
+};
+function renderRankPage() {
+  const M = RK_METRICAS[rkMetric];
+  const hoje = startOfToday();
+  const dias = rkPeriod === "today" ? 1 : rkPeriod === "all" ? null : parseInt(rkPeriod, 10);
+  $("rk-periodo").textContent = rkPeriod === "all" ? SEASON.nome : dias === 1 ? `Hoje · ${ddmm(localIso(hoje))}` : `Últimos ${dias} dias · ${ddmm(localIso(addDias(hoje, -(dias - 1))))} – ${ddmm(localIso(hoje))}`;
+  const es = seasonEntries().filter(e => withinPeriod(e.data, rkPeriod));
+  const tot = allAuthors().map(a => [a, M.f(es.filter(e => e.autor === a))]).sort((a, b) => b[1] - a[1]);
+
+  // pódio: 2º à esquerda, 1º ao centro, 3º à direita
+  const ordem = tot.length >= 3 ? [1, 0, 2] : tot.length === 2 ? [1, 0] : [0];
+  $("rk-podium").innerHTML = `<div class="podium">${ordem.map(i => {
+    const [n, v] = tot[i];
+    return `<div class="pod ${i === 0 ? "p1" : ""}">
+      <div class="ring">${i === 0 && v > 0 ? '<span class="crown">👑</span>' : ""}${avatarHtml(n)}</div>
+      <div class="nm">${esc(n)}</div><div class="val">${M.t(v)}</div>
+      <div class="step">${i + 1}º</div></div>`;
+  }).join("")}</div>`;
+
+  $("rk-list").innerHTML = tot.map(([n, v], i) => {
+    const dif = tot[0][1] - v;
+    return `<div class="rank-row">
+      <div class="rank-pos ${i === 0 && v > 0 ? "first" : ""}">${i + 1}º</div>${avatarHtml(n, true)}
+      <div class="rank-body"><div class="rank-top" style="margin:0"><span>${esc(n)}${n === currentUser ? ' <span class="tiny faint">(você)</span>' : ""}</span><span class="rank-pts">${M.t(v)}</span></div>
+        <span class="rank-delta">${i === 0 ? (tot.length > 1 && v > 0 ? `lidera por ${M.t(v - tot[1][1])}` : "") : `a ${M.t(dif)} do 1º`}</span></div>
+      ${n !== currentUser ? `<button class="poke" data-nome="${esc(n)}" ${jaCutucou(n) ? "disabled" : ""}>Cutucar</button>` : ""}
+    </div>`;
+  }).join("");
+
+  // sua semana vs semana passada
+  const idx = currentWeekIdx(), w = weekInfo(idx), wp = idx > 0 ? weekInfo(idx - 1) : null;
+  $("rk-sem").textContent = `${ddmm(w.inicioIso)} – ${ddmm(localIso(addDias(new Date(w.fimIso + "T00:00:00"), -1)))}`;
+  const mine = seasonEntries().filter(e => e.autor === currentUser);
+  const em = x => mine.filter(e => e.data >= x.inicioIso && e.data < x.fimIso);
+  const linhas = [["Pontos", RK_METRICAS.pontos], ["Questões", RK_METRICAS.questoes], ["Flashcards", RK_METRICAS.flash], ["Tempo de estudo", RK_METRICAS.estudo]];
+  $("rk-week").innerHTML = linhas.map(([nome, m], i) => {
+    const a = m.f(em(w)), b = wp ? m.f(em(wp)) : null;
+    let d = '<small>–</small>';
+    if (b !== null && b > 0) { const dl = Math.round((a - b) / b * 100); d = dl === 0 ? "<small>mantém</small>" : `<small class="${dl > 0 ? "up" : "down"}">${dl > 0 ? "▲" : "▼"} ${Math.abs(dl)}%</small>`; }
+    return `<div class="side-row ${i === 0 ? "hl" : ""}"><span>${nome}</span><span style="text-align:right"><b>${m.t(a)}</b>${d}</span></div>`;
+  }).join("");
+
+  // evolução (8 semanas)
+  const ini = Math.max(0, idx - 7);
+  const vals = Array.from({ length: idx - ini + 1 }, (_, i) => RK_METRICAS.pontos.f(em(weekInfo(ini + i))));
+  const mx = Math.max(1, ...vals);
+  $("rk-evo").innerHTML = `<div class="evo">${vals.map((v, i) => `<i class="${i === vals.length - 1 ? "cur" : ""}" title="${fmt(v)} pts" style="height:${Math.max(6, v / mx * 100)}%"></i>`).join("")}</div>
+    <div class="evo-lab"><span>${vals.length > 1 ? `há ${vals.length - 1} sem.` : ""}</span><span>esta semana</span></div>`;
+
+  // banner
+  const sem = Object.fromEntries(allAuthors().map(a => [a, RK_METRICAS.pontos.f(seasonEntries().filter(e => e.autor === a && e.data >= w.inicioIso && e.data < w.fimIso))]));
+  const ord = Object.entries(sem).sort((a, b) => b[1] - a[1]);
+  const falta = Math.max(0, Math.round((new Date(w.fimIso + "T00:00:00") - hoje) / DAY));
+  let b = "";
+  if (ord.length > 1 && ord[0][0] !== currentUser) b = `<div class="banner-green"><span>Mais <b>${fmt(ord[0][1] - sem[currentUser] + 0.1)} pts</b> e você passa ${esc(ord[0][0])}<small>Ainda dá tempo: a semana fecha em ${falta} dia${falta === 1 ? "" : "s"}</small></span></div>`;
+  else if (ord.length > 1 && ord[0][1] > 0) b = `<div class="banner-green"><span>Você lidera a semana por <b>${fmt(ord[0][1] - ord[1][1])} pts</b><small>Mantenha o ritmo!</small></span></div>`;
+  $("rk-banner").innerHTML = b;
 }
 
 function renderMetaCasal() {
@@ -1371,7 +1598,7 @@ function renderFeed() {
 
 function render() {
   if (!currentUser) return;
-  renderHero(); renderAlerta(); renderMissoes(); renderDuelo(); renderDesafio(); renderInteracao(); renderRanking(); renderMetaCasal(); renderMetaPessoal();
+  renderHero(); renderAlerta(); renderRankPage(); renderMissoes(); renderDuelo(); renderDesafio(); renderInteracao(); renderRanking(); renderMetaCasal(); renderMetaPessoal();
   renderMedalhas(); renderLoja(); renderFeed(); renderHall(); renderPainel();
   checkNewBadges(); checkNewMissions();
 }
@@ -1380,6 +1607,7 @@ function render() {
 // PAINEL: estatísticas, gráficos, mapa de calor, retrospectiva
 // ============================================================
 let statPerson = "";
+let statP = "total";
 let retroModo = "atual";
 const hueOf = nome => { let h = 0; for (const c of nome) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
 const solid = nome => avatarColor(nome);
@@ -1404,7 +1632,6 @@ function renderPainel() {
   const autores = allAuthors();
   if (!statPerson || !autores.includes(statPerson)) statPerson = currentUser;
   $("stat-people").innerHTML = autores.map(n => `<button class="chip ${n === statPerson ? "on" : ""}" data-person="${esc(n)}">${esc(n)}</button>`).join("");
-  $("ativ-quem").textContent = statPerson;
 
   // --- números da temporada ---
   const mine = seasonEntries().filter(e => e.autor === statPerson);
@@ -1443,27 +1670,48 @@ function renderPainel() {
     nome: a, vals: sems.map(w => seasonEntries().filter(e => e.autor === a && e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0))
   }))) + `<p class="tiny faint" style="margin-top:10px">Meta da dupla nesta semana: ${fmt(wA.meta)} pts (soma dos dois).</p>`;
 
-  // --- por atividade ---
-  const porAtiv = Object.entries(ACTIVITIES).map(([k, a]) => [a, mine.filter(e => e.atividade === k).reduce((s, e) => s + calcPoints(e), 0)]);
-  const maxA = Math.max(1, ...porAtiv.map(x => x[1]));
-  $("stat-ativ").innerHTML = total === 0 && mine.length === 0
-    ? `<p class="small muted">Sem registros nesta temporada ainda.</p>`
-    : porAtiv.sort((a, b) => b[1] - a[1]).map(([a, p]) => `
-      <div style="margin-bottom:12px"><div class="rank-top" style="margin-bottom:5px;font-weight:600;font-size:13px"><span>${a.emoji} ${a.label}</span><span>${fmt(p)} pts</span></div>
-      <div class="track" style="height:8px"><div class="fill" style="width:${Math.max(0, p / maxA * 100)}%"></div></div></div>`).join("");
+  // --- pontos por atividade (pizza) ---
+  const hojeIso = todayIso(), mesPref = hojeIso.slice(0, 7);
+  const dosPer = mine.filter(e => statP === "total" ? true : statP === "hoje" ? e.data === hojeIso : statP === "semana" ? (e.data >= wA.inicioIso && e.data < wA.fimIso) : e.data.startsWith(mesPref));
+  const fatias = Object.entries(ACTIVITIES).map(([k, a], i) => ({ a, v: dosPer.filter(e => e.atividade === k).reduce((s, e) => s + calcPoints(e), 0), c: `var(--p${i % 10 + 1})` }))
+    .filter(x => x.v > 0).sort((x, y) => y.v - x.v);
+  const somaF = fatias.reduce((s, x) => s + x.v, 0);
+  document.querySelectorAll("#stat-periods button").forEach(b => b.classList.toggle("on", b.dataset.p === statP));
+  if (!fatias.length) $("stat-ativ").innerHTML = `<p class="small muted" style="padding:14px 0">Sem registros neste período.</p>`;
+  else {
+    let ang = -Math.PI / 2, paths = "";
+    fatias.forEach(f => {
+      const frac = f.v / somaF;
+      if (frac >= 0.999) { paths += `<circle cx="80" cy="80" r="78" fill="${f.c}" stroke="var(--card)" stroke-width="1.5" />`; return; }
+      const a2 = ang + frac * 2 * Math.PI, large = frac > 0.5 ? 1 : 0;
+      const x1 = 80 + 78 * Math.cos(ang), y1 = 80 + 78 * Math.sin(ang), x2 = 80 + 78 * Math.cos(a2), y2 = 80 + 78 * Math.sin(a2);
+      paths += `<path d="M80 80 L${x1.toFixed(2)} ${y1.toFixed(2)} A78 78 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z" fill="${f.c}" stroke="var(--card)" stroke-width="1.5" />`;
+      ang = a2;
+    });
+    $("stat-ativ").innerHTML = `<div class="pie-wrap"><svg width="160" height="160" viewBox="0 0 160 160">${paths}</svg></div>
+      <div class="pie-total">${fmt(somaF)} pts</div>
+      ${fatias.map(f => `<div class="pie-leg"><i style="background:${f.c}"></i><span>${f.a.emoji} ${f.a.label}</span><span class="dots"></span><b>${fmt(f.v)} pts</b></div>`).join("")}`;
+  }
 
   // --- mapa de calor (17 semanas, de segunda a domingo, usa todo o histórico) ---
   const mp = mapas[statPerson] || {};
   const seg = addDias(hoje, -((hoje.getDay() + 6) % 7));
   const inicioH = addDias(seg, -16 * 7);
-  let cel = "";
-  for (let i = 0; i < 17 * 7; i++) {
-    const d = addDias(inicioH, i), iso = localIso(d), p = mp[iso] || 0;
-    const lv = d > hoje ? "fut" : p <= 0 ? "" : p < 5 ? "l1" : p < 10 ? "l2" : p < 20 ? "l3" : "l4";
-    cel += `<i class="${lv}" title="${ddmm(iso)}: ${fmt(p)} pts"></i>`;
+  const MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  const diasLab = ["", "Seg", "", "Qua", "", "Sex", ""];
+  let cel = "", meses = "<span></span>", mesAnt = -1;
+  for (let c = 0; c < 17; c++) {
+    const m = addDias(inicioH, c * 7).getMonth();
+    meses += `<span>${m !== mesAnt ? MES[m] : ""}</span>`; mesAnt = m;
   }
-  $("heatmap").innerHTML = `<div class="heat">${cel}</div>
-    <div class="heat-legend">menos <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> mais</div>`;
+  for (let r = 0; r < 7; r++) cel += `<b class="lab">${diasLab[r]}</b>`;
+  for (let i = 0; i < 17 * 7; i++) {
+    const d = addDias(inicioH, i), iso = localIso(d), pp = mp[iso] || 0;
+    const lv = d > hoje ? "fut" : pp <= 0 ? "" : pp < 5 ? "l1" : pp < 10 ? "l2" : pp < 20 ? "l3" : "l4";
+    cel += `<i class="${lv}" title="${ddmm(iso)}: ${fmt(pp)} pts"></i>`;
+  }
+  $("heatmap").innerHTML = `<div class="heat-months">${meses}</div><div class="heat">${cel}</div>
+    <div class="heat-legend">Menos <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> Mais</div>`;
 
   renderRetro();
 }
@@ -1518,6 +1766,10 @@ $("retro-share").addEventListener("click", async () => {
     await navigator.clipboard.writeText(text); mostrarToast("📋 Resumo copiado!");
   } catch (e) { if (e && e.name !== "AbortError") mostrarToast("Não consegui compartilhar, copie o texto manualmente."); }
 });
+$("stat-periods").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-p]"); if (!b) return;
+  statP = b.dataset.p; renderPainel();
+});
 $("stat-people").addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-person]"); if (!b) return;
   statPerson = b.dataset.person; renderPainel();
@@ -1560,7 +1812,7 @@ function relogio(ms) {
   const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
   return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
-function goTab(nome) { document.querySelector(`.tab-btn[data-tab="${nome}"]`).click(); }
+function goTab(nome) { irPara(nome); }
 
 function initTimer() {
   const opcoes = Object.entries(ACTIVITIES).filter(([, a]) => a.campo === "minutos")
@@ -1568,7 +1820,7 @@ function initTimer() {
   $("timer").innerHTML = `
     <label class="field" style="margin-bottom:0">O que você vai fazer?
       <select id="timer-ativ">${opcoes}</select></label>
-    <div class="timer-display" id="timer-display">00:00</div>
+    <div class="timer-ring"><svg width="210" height="210" viewBox="0 0 210 210"><circle class="tr-bg" cx="105" cy="105" r="96" fill="none" stroke-width="10"/><circle class="tr-fg" id="tr-fg" cx="105" cy="105" r="96" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="603.2" stroke-dashoffset="603.2"/></svg><div class="timer-display" id="timer-display">00:00</div></div>
     <label class="small muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;justify-content:center">
       <input type="checkbox" id="timer-pomo" /> Modo pomodoro (aviso de pausa a cada 25 min)</label>
     <div class="timer-btns">
@@ -1593,10 +1845,14 @@ function initTimer() {
     }
     const minutos = Math.max(1, Math.round(ms / 60000));
     timerSet({ ...TIMER_PADRAO, ativ: x.ativ, pomo: x.pomo }); tick();
+    $("timer-sheet").classList.add("hidden");
     resetForm(); atividadeSelect.value = x.ativ; updateValorField(); valorInput.value = String(minutos); abrirSheet();
     mostrarToast(`⏱️ ${minutos} min prontos para registrar. Confira e salve!`);
   });
-  $("timer-pill").addEventListener("click", () => goTab("painel"));
+  $("timer-pill").addEventListener("click", () => $("timer-sheet").classList.remove("hidden"));
+  $("timer-fab").addEventListener("click", () => $("timer-sheet").classList.remove("hidden"));
+  $("timer-close").addEventListener("click", () => $("timer-sheet").classList.add("hidden"));
+  $("timer-sheet").addEventListener("click", (ev) => { if (ev.target === $("timer-sheet")) $("timer-sheet").classList.add("hidden"); });
   tick();
   setInterval(tick, 1000);
 }
@@ -1604,6 +1860,8 @@ function tick() {
   const s = timerGet(), ms = timerElapsed(s), rodando = !!s.start;
   const disp = $("timer-display"); if (!disp) return;
   disp.textContent = relogio(ms);
+  $("tr-fg").style.strokeDashoffset = 603.2 * (1 - (ms % 3600000) / 3600000);
+  $("timer-fab").classList.toggle("run", rodando);
   $("timer-toggle").textContent = rodando ? "Pausar" : (ms > 0 ? "Continuar" : "Iniciar");
   const pill = $("timer-pill");
   if (ms > 0) {
@@ -1624,14 +1882,15 @@ function tick() {
 // ---------- cutucada gentil (vai pro bate-papo, 1 por dia por pessoa) ----------
 const pokeKey = nome => `cutucou_${currentUser}_${nome}_${todayIso()}`;
 const jaCutucou = nome => !!localStorage.getItem(pokeKey(nome));
-$("ranking").addEventListener("click", async (ev) => {
+$("ranking").addEventListener("click", (ev) => { if (ev.target.closest(".poke")) cutucar(ev); });
+async function cutucar(ev) {
   const b = ev.target.closest(".poke"); if (!b || b.disabled) return;
   const nome = b.dataset.nome;
   b.disabled = true;
   localStorage.setItem(pokeKey(nome), "1");
   await addDoc(messagesRef, { autor: currentUser, texto: `👋 ${currentUser} cutucou ${nome}: bora registrar alguma coisa hoje?`, criadoEm: Date.now() });
   mostrarToast(`👋 Cutucada enviada para ${nome}!`);
-});
+}
 $("meta-pessoal").addEventListener("click", (ev) => {
   if (!ev.target.closest("#edit-meta-pessoal")) return;
   const v = parseFloat(String(prompt("Quantos pontos você quer fazer por semana? (só você vê)", getMetaPessoal()) || "").replace(",", "."));
@@ -1816,18 +2075,34 @@ entryForm.addEventListener("submit", async (ev) => {
 // ============================================================
 // ABAS, PERÍODO, TEMA
 // ============================================================
-document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {
-  currentTab = btn.dataset.tab;
-  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+function irPara(nome) {
+  if (!$("tab-" + nome)) return;
+  currentTab = nome;
+  document.querySelectorAll(".tab-btn").forEach(b => {
+    const tambem = (b.dataset.also || "").split(",");
+    b.classList.toggle("active", b.dataset.tab === nome || tambem.includes(nome));
+  });
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
-  $("tab-" + currentTab).classList.remove("hidden");
+  $("tab-" + nome).classList.remove("hidden");
   window.scrollTo({ top: 0 });
-}));
-document.querySelectorAll(".period-btn").forEach(btn => btn.addEventListener("click", () => {
-  currentPeriod = btn.dataset.period;
-  document.querySelectorAll(".period-btn").forEach(b => b.classList.toggle("on", b === btn));
-  renderRanking();
-}));
+}
+document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => irPara(btn.dataset.tab)));
+document.addEventListener("click", (ev) => { const g = ev.target.closest("[data-go]"); if (g) irPara(g.dataset.go); });
+$("header-add").addEventListener("click", () => { resetForm(); abrirSheet(); });
+$("menu-troca").addEventListener("click", () => trocarUsuario());
+$("rk-periods").addEventListener("click", (ev) => {
+  const bt = ev.target.closest("button"); if (!bt) return;
+  rkPeriod = bt.dataset.period;
+  document.querySelectorAll("#rk-periods button").forEach(x => x.classList.toggle("on", x === bt));
+  renderRankPage();
+});
+$("rk-tabs").addEventListener("click", (ev) => {
+  const bt = ev.target.closest("button"); if (!bt) return;
+  rkMetric = bt.dataset.m;
+  document.querySelectorAll("#rk-tabs button").forEach(x => x.classList.toggle("on", x === bt));
+  renderRankPage();
+});
+$("rk-list").addEventListener("click", (ev) => { if (ev.target.closest(".poke")) cutucar(ev); });
 
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
@@ -1902,14 +2177,15 @@ onSnapshot(query(messagesRef, orderBy("criadoEm", "asc")), snap => {
 function setupUser() {
   $("switch-user").outerHTML = `<button id="switch-user" class="avatar" title="Trocar de usuário" style="background:${avatarColor(currentUser)}">${esc(currentUser.charAt(0).toUpperCase())}</button>`;
   $("switch-user").addEventListener("click", trocarUsuario);
-  $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("chat-fab").classList.remove("hidden");
+  $("user-name").textContent = currentUser;
+  $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("chat-fab").classList.remove("hidden"); $("timer-fab").classList.remove("hidden");
   badgePerson = currentUser;
   render();
 }
 function trocarUsuario() {
   if (!confirm("Trocar de usuário neste aparelho?")) return;
   localStorage.removeItem("ranking_user"); currentUser = "";
-  $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("chat-fab").classList.add("hidden"); fecharChat();
+  $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("chat-fab").classList.add("hidden"); $("timer-fab").classList.add("hidden"); fecharChat();
 }
 $("name-form").addEventListener("submit", (ev) => {
   ev.preventDefault();

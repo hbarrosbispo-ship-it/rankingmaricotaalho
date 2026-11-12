@@ -83,3 +83,16 @@ O visual "Aurora" (degradês e vidro) foi trocado por um mais sóbrio: fundo cin
 - **Interação da semana** (aba Feed): comentário vale 2 pontos e reação 1, só nos registros do outro.
 - **Missão com foto**: "Registrar 2 atividades com foto" entrou no sorteio de missões.
 - Ainda não feito: "Estudando agora" (mostrar o cronômetro do outro ao vivo) e desafios criados por vocês. Precisam de novos dados no Firebase e, portanto, de mudar as regras.
+
+## Visual v3: mais fiel à plataforma de referência (Estudei)
+
+Reconstruído a partir das telas públicas do Estudei (site, App Store e páginas de divulgação):
+
+- **Barra lateral** no computador (Início, Ranking, Estatísticas, Conquistas, Recompensas, Histórico) e **barra inferior com botão + central** no celular (Início, Ranking, +, Estatísticas, Conquistas, Mais).
+- **Cabeçalho de página** com título e subtítulo, botão verde "+ Registrar" e nome do usuário no canto.
+- **Início**: 4 indicadores com ícone em quadradinho colorido (pontos da semana com ▲▼ vs semana passada, sequência, saldo, nível), faixa de **Constância** com caixinhas ✓, missões com ícones pastel.
+- **Ranking** (página própria): abas Pontos / Questões / Flashcards / Tempo de estudo, pódio com coroa, lista com "a X do 1º", cartão "Sua semana", "Sua evolução" e aviso verde "Mais X pts e você passa…".
+- **Estatísticas**: gráfico de pizza com cores pastel e legenda pontilhada, período Hoje/Semana/Mês/Total, heatmap com meses e dias.
+- **Conquistas**: hexágonos com o número da meta, título de categoria com "X de Y" e barrinha.
+- **Botões flutuantes**: bate-papo (branco) e **cronômetro (verde)**, que abre o foco com anel de progresso.
+- Fontes Nunito (títulos) e Open Sans (texto). Versões anteriores em `backup_pre_rebranding/` (`index_aurora.html`, `index_sobrio.html`).
