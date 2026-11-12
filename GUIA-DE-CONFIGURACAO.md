@@ -50,3 +50,13 @@ Arquivos do PWA: `manifest.webmanifest`, `sw.js` (service worker) e a pasta `ico
 - **Loja nova** com categorias (Mimos, Programinhas, Grandes prêmios, Lendárias), **Cofre da temporada** (meta da dupla, `COFRE`) e **Baú da semana** (sorteio grátis semanal, `BAU_PREMIOS`; o resultado aparece no bate-papo).
 - Backup da versão anterior em `backup_pre_rebranding/`.
 - Não precisa mudar as regras do Firestore.
+
+## Pacote 2 (engajamento)
+
+- **Sequência com congelador** 🧊: cada semana fechada com 4+ dias ativos dá 1 congelador (máx. 2). Um dia sem registro gasta um congelador em vez de zerar a sequência. Calculado a partir dos registros, sem salvar nada.
+- **XP e nível**: 1 ponto = 10 XP, mais 40 XP por missão e 60 XP de bônus por semana com as 3 missões. 11 níveis, de Novato a Imortal (`LEVELS`).
+- **Missões semanais**: 3 por semana, giram sozinhas (`MISSION_POOL`). Cada pessoa tem as suas.
+- **Duelo da semana**: placar entre os dois, com histórico de vitórias na temporada.
+- **Meta pessoal**: só você vê, fica salva neste aparelho (botão "editar").
+- **Cutucada** 👋 no ranking (vai para o bate-papo, 1 por dia por pessoa) e **aviso gentil** na tela inicial (depois das 17h sem registro, ou quando falta pouco para a meta da dupla).
+- Duas medalhas novas: Missionário e Duelista.

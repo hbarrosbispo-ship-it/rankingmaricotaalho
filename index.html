@@ -328,6 +328,27 @@
     0% { transform: translateY(0) rotate(0deg); opacity: .95; }
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
+  /* ---------- pacote 2: nível, missões, duelo, alerta ---------- */
+  .hero-level { margin-top: 14px; position: relative; z-index: 1; }
+  .hl-top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .hl-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,.25); overflow: hidden; }
+  .hl-track div { height: 100%; border-radius: 999px; background: #fff; transition: width .6s; }
+  .hl-sub { font-size: 11px; opacity: .9; margin-top: 6px; }
+  .alerta { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 18px; margin-bottom: 14px;
+    background: rgba(255,200,87,.14); border: 1px solid rgba(255,200,87,.45); font-size: 13px; font-weight: 600; }
+  .alerta .ico { font-size: 22px; }
+  .mission { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .mission:last-of-type { border-bottom: 0; }
+  .mission-top { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .mission.done .mission-top { color: var(--ok); }
+  .duel { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; text-align: center; }
+  .duel b { display: block; font-size: 22px; font-weight: 800; }
+  .duel .vs { font-weight: 800; color: var(--faint); font-size: 13px; }
+  .duel-bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; margin: 14px 0 8px; background: var(--track); }
+  .duel-bar div { transition: width .6s; }
+  .poke { font-size: 16px; padding: 4px 8px; border-radius: 10px; background: var(--input); border: 1px solid var(--line); }
+  .poke:disabled { opacity: .4; }
+  .goal-mini { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
   .empty { text-align: center; padding: 18px 8px; color: var(--muted); font-size: 14px; }
   .empty .big { font-size: 34px; margin-bottom: 6px; }
 </style>
@@ -381,6 +402,23 @@
           <div class="hero-stat"><b id="hero-streak">0🔥</b><span>dias seguidos</span></div>
           <div class="hero-stat"><b id="hero-saldo">0</b><span>para gastar</span></div>
         </div>
+        <div class="hero-level">
+          <div class="hl-top"><span id="hl-nome"></span><span id="hl-xp"></span></div>
+          <div class="hl-track"><div id="hl-fill"></div></div>
+          <div class="hl-sub" id="hl-sub"></div>
+        </div>
+      </div>
+
+      <div id="alerta"></div>
+
+      <div class="card">
+        <div class="card-head"><h2>🎯 Missões da semana</h2><span class="small muted" id="missoes-sem"></span></div>
+        <div id="missoes"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>⚔️ Duelo da semana</h2><span class="small muted" id="duelo-sem"></span></div>
+        <div id="duelo"></div>
       </div>
 
       <div class="card">
@@ -399,6 +437,7 @@
       <div class="card">
         <div class="card-head"><h2>💪 Meta da dupla</h2><span class="small muted" id="meta-sem"></span></div>
         <div id="meta-casal"></div>
+        <div id="meta-pessoal" class="goal-mini"></div>
       </div>
 
       <details class="card">
@@ -708,23 +747,83 @@ function semanasMetaBatida() {
   for (let i = 0; i <= currentWeekIdx(); i++) { const w = weekInfo(i); if (weekTotal(w) >= w.meta) n++; }
   return n;
 }
-function currentStreak(autor) {
+// Sequência com congelador: a cada semana fechada com 4+ dias ativos você ganha
+// 1 congelador (máx. 2). Um dia sem registro gasta um congelador em vez de
+// zerar a sequência. Tudo é recalculado a partir dos registros (sem salvar nada).
+function streakInfo(autor) {
   const dias = new Set(seasonEntries().filter(e => e.autor === autor).map(e => e.data));
-  const d = startOfToday();
-  if (!dias.has(localIso(d))) d.setDate(d.getDate() - 1); // hoje ainda não registrou: conta a partir de ontem
-  let n = 0;
-  while (dias.has(localIso(d)) && localIso(d) >= SEASON.inicio) { n++; d.setDate(d.getDate() - 1); }
-  return n;
-}
-function bestStreak(mine) {
-  const dias = [...new Set(mine.map(e => e.data))].sort();
-  let best = 0, run = 0, prev = null;
-  for (const dia of dias) {
-    if (prev && (new Date(dia + "T00:00:00") - new Date(prev + "T00:00:00")) === DAY) run++; else run = 1;
-    best = Math.max(best, run); prev = dia;
+  const hoje = todayIso();
+  const d = new Date(SEASON.inicio + "T00:00:00");
+  let streak = 0, melhor = 0, freezes = 0, usados = 0, ativosSemana = 0, i = 0;
+  while (localIso(d) <= hoje) {
+    const iso = localIso(d);
+    if (dias.has(iso)) { streak++; ativosSemana++; melhor = Math.max(melhor, streak); }
+    else if (iso !== hoje) { if (freezes > 0) { freezes--; usados++; } else streak = 0; }
+    if (i % 7 === 6) { if (ativosSemana >= 4) freezes = Math.min(2, freezes + 1); ativosSemana = 0; }
+    d.setDate(d.getDate() + 1); i++;
   }
-  return best;
+  return { atual: streak, melhor, freezes, usados };
 }
+
+// ---------- missões semanais (3 por semana, giram automaticamente) ----------
+const diasAtivos = es => new Set(es.map(e => e.data)).size;
+const diasCheios = es => { const m = {}; es.forEach(e => (m[e.data] = m[e.data] || new Set()).add(e.atividade)); return Object.values(m).filter(s => s.size >= 3).length; };
+const MISSION_POOL = [
+  { id: "q50", emoji: "❓", label: "Resolver 50 questões", goal: 50, metric: es => sumBy(es, "questoes") },
+  { id: "treino3", emoji: "🏋️", label: "Treinar 3 vezes", goal: 3, metric: es => sumBy(es, "atividadeFisica") },
+  { id: "dias5", emoji: "📆", label: "Registrar em 5 dias diferentes", goal: 5, metric: diasAtivos },
+  { id: "flash300", emoji: "🗂️", label: "Revisar 300 flashcards", goal: 300, metric: es => sumBy(es, "flashcards") },
+  { id: "video120", emoji: "🎥", label: "Assistir 2h de vídeo-aula", goal: 120, fmt: x => horasFmt(x), metric: es => sumBy(es, "videoAula") },
+  { id: "sono4", emoji: "😴", label: "Dormir bem em 4 noites", goal: 4, metric: es => es.filter(e => e.atividade === "sono" && e.valor >= 7 && e.valor <= 9).length },
+  { id: "pdf90", emoji: "📄", label: "Ler 1h30 de PDF", goal: 90, fmt: x => horasFmt(x), metric: es => sumBy(es, "leituraPdf") },
+  { id: "sim1", emoji: "📝", label: "Fazer 1 simulado", goal: 1, metric: es => sumBy(es, "simulado") },
+  { id: "cheio1", emoji: "💎", label: "Ter 1 dia 100% (3+ atividades)", goal: 1, metric: diasCheios },
+  { id: "q100", emoji: "🎯", label: "Resolver 100 questões", goal: 100, metric: es => sumBy(es, "questoes") }
+];
+const MISSION_XP = 40, MISSION_BONUS_XP = 60;
+function missionsOfWeek(idx) { const n = MISSION_POOL.length; return [0, 1, 2].map(k => MISSION_POOL[(idx * 3 + k) % n]); }
+function missionProgress(autor, idx) {
+  const w = weekInfo(idx);
+  const es = seasonEntries().filter(e => e.autor === autor && e.data >= w.inicioIso && e.data < w.fimIso);
+  return missionsOfWeek(idx).map(m => { const value = m.metric(es); return { ...m, value, done: value >= m.goal }; });
+}
+function missionTotals(autor) {
+  let feitas = 0, semanasCheias = 0;
+  for (let i = 0; i <= currentWeekIdx(); i++) {
+    const p = missionProgress(autor, i), n = p.filter(m => m.done).length;
+    feitas += n; if (n === 3) semanasCheias++;
+  }
+  return { feitas, semanasCheias };
+}
+
+// ---------- XP e nível ----------
+const LEVELS = [
+  [0, "Novato"], [100, "Aprendiz"], [300, "Dedicado"], [600, "Focado"], [1000, "Veterano"], [1600, "Expert"],
+  [2400, "Mestre"], [3500, "Grão-mestre"], [5000, "Lenda"], [7500, "Mito"], [10000, "Imortal"]
+];
+function xpDe(autor) {
+  const t = missionTotals(autor);
+  return Math.max(0, Math.round(ganhoDe(autor) * 10)) + t.feitas * MISSION_XP + t.semanasCheias * MISSION_BONUS_XP;
+}
+function levelInfo(xp) {
+  let i = 0; while (i + 1 < LEVELS.length && xp >= LEVELS[i + 1][0]) i++;
+  const prox = LEVELS[i + 1];
+  return { nivel: i + 1, nome: LEVELS[i][1], base: LEVELS[i][0], prox: prox ? prox[0] : null, proxNome: prox ? prox[1] : null };
+}
+
+// ---------- duelo da semana ----------
+function duelTotals(idx) {
+  const w = weekInfo(idx);
+  const t = {}; allAuthors().forEach(a => t[a] = 0);
+  seasonEntries().filter(e => e.data >= w.inicioIso && e.data < w.fimIso).forEach(e => { t[e.autor] = (t[e.autor] || 0) + calcPoints(e); });
+  return Object.entries(t).sort((a, b) => b[1] - a[1]);
+}
+function duelWinner(idx) { const r = duelTotals(idx); return r.length > 1 && r[0][1] > 0 && r[0][1] > r[1][1] ? r[0][0] : null; }
+function duelWins(autor) { let n = 0; for (let i = 0; i < currentWeekIdx(); i++) if (duelWinner(i) === autor) n++; return n; }
+
+// ---------- meta pessoal (fica só neste aparelho) ----------
+const metaPessoalKey = () => `meta_pessoal_${currentUser}`;
+function getMetaPessoal() { const v = parseFloat(localStorage.getItem(metaPessoalKey())); return v > 0 ? v : 30; }
 
 // ============================================================
 // MEDALHAS — 4 níveis (bronze, prata, ouro, platina) + secretas
@@ -751,6 +850,8 @@ const BADGE_DEFS = [
   { id: "dupla", cat: "Dupla e social", emoji: "💞", label: "Dupla imbatível", desc: "semanas com a meta da dupla batida", unit: "sem.", tiers: [1, 2, 4, 8], metric: c => c.semanasMeta },
   { id: "fotos", cat: "Dupla e social", emoji: "📸", label: "Documentado", desc: "atividades com foto", unit: "", tiers: [3, 10, 25, 50], metric: c => c.fotos },
   { id: "papo", cat: "Dupla e social", emoji: "💬", label: "Comunicativo", desc: "comentários no feed", unit: "", tiers: [5, 15, 40, 100], metric: c => c.comentarios },
+  { id: "missoes", cat: "Constância", emoji: "🎯", label: "Missionário", desc: "missões semanais cumpridas", unit: "", tiers: [3, 10, 25, 50], metric: c => c.missoes },
+  { id: "duelos", cat: "Dupla e social", emoji: "⚔️", label: "Duelista", desc: "duelos semanais vencidos", unit: "", tiers: [1, 3, 6, 10], metric: c => c.duelos },
   // Secretas (nível único)
   { id: "madrugador", cat: "Segredos", emoji: "🌅", label: "Madrugador", secret: true, hint: "Registre uma atividade antes das 7h da manhã.", check: c => c.madrugador },
   { id: "coruja", cat: "Segredos", emoji: "🦉", label: "Coruja", secret: true, hint: "Registre uma atividade depois das 23h.", check: c => c.coruja },
@@ -766,7 +867,9 @@ function badgeContext(autor) {
   const hora = e => e.criadoEm ? new Date(e.criadoEm).getHours() : null;
   return {
     registros: mine.length,
-    bestStreak: bestStreak(mine),
+    bestStreak: streakInfo(autor).melhor,
+    missoes: missionTotals(autor).feitas,
+    duelos: duelWins(autor),
     diasCompletos: dias.filter(d => d.set.size >= 3).length,
     pontos: mine.reduce((s, e) => s + calcPoints(e), 0),
     questoes: sumBy(mine, "questoes"),
@@ -888,8 +991,100 @@ function renderHero() {
   $("hero-title").textContent = `${saud}, ${currentUser}!`;
   const hoje = todayIso();
   $("hero-today").textContent = fmt(seasonEntries().filter(e => e.autor === currentUser && e.data === hoje).reduce((s, e) => s + calcPoints(e), 0));
-  $("hero-streak").textContent = `${currentStreak(currentUser)}🔥`;
+  const si = streakInfo(currentUser);
+  $("hero-streak").textContent = `${si.atual}🔥`;
   $("hero-saldo").textContent = fmt(saldoDe(currentUser));
+  const xp = xpDe(currentUser), lv = levelInfo(xp);
+  $("hl-nome").textContent = `Nível ${lv.nivel} · ${lv.nome}`;
+  $("hl-xp").textContent = lv.prox ? `${xp} / ${lv.prox} XP` : `${xp} XP`;
+  $("hl-fill").style.width = (lv.prox ? Math.min(100, (xp - lv.base) / (lv.prox - lv.base) * 100) : 100) + "%";
+  $("hl-sub").textContent = `🧊 ${si.freezes} congelador${si.freezes === 1 ? "" : "es"} de sequência` +
+    (lv.prox ? ` · faltam ${lv.prox - xp} XP para ${lv.proxNome}` : " · nível máximo!");
+}
+
+function renderAlerta() {
+  const el = $("alerta");
+  const hoje = todayIso();
+  const fezHoje = seasonEntries().some(e => e.autor === currentUser && e.data === hoje);
+  const si = streakInfo(currentUser);
+  const w = weekInfo(currentWeekIdx());
+  const pct = weekTotal(w) / w.meta * 100;
+  let html = "";
+  if (!fezHoje && new Date().getHours() >= 17) {
+    html = `<span class="ico">⏰</span><span>Você ainda não registrou nada hoje.${si.atual > 0 ? ` Sua sequência de ${si.atual} dia${si.atual === 1 ? "" : "s"} está em jogo!` : " Bora começar uma sequência?"}</span>`;
+  } else if (pct >= 70 && pct < 100) {
+    html = `<span class="ico">🔥</span><span>Falta pouco! Só ${fmt(w.meta - weekTotal(w))} pts para a dupla bater a meta da semana.</span>`;
+  }
+  el.innerHTML = html ? `<div class="alerta">${html}</div>` : "";
+}
+
+function renderMissoes() {
+  const idx = currentWeekIdx(), w = weekInfo(idx);
+  $("missoes-sem").textContent = `semana ${w.numero} · +${MISSION_XP} XP cada`;
+  const prog = missionProgress(currentUser, idx);
+  const feitas = prog.filter(m => m.done).length;
+  const outros = allAuthors().filter(a => a !== currentUser);
+  $("missoes").innerHTML = prog.map(m => {
+    const v = m.fmt ? m.fmt(Math.min(m.value, m.goal)) : fmt(Math.min(m.value, m.goal));
+    const g = m.fmt ? m.fmt(m.goal) : m.goal;
+    return `<div class="mission ${m.done ? "done" : ""}">
+      <div class="mission-top"><span>${m.emoji} ${esc(m.label)}</span><span>${m.done ? "✅" : `${v} / ${g}`}</span></div>
+      <div class="track"><div class="fill ${m.done ? "ok" : ""}" style="width:${Math.min(100, m.value / m.goal * 100)}%"></div></div>
+    </div>`;
+  }).join("") + `<p class="tiny faint" style="margin-top:10px">${feitas === 3 ? `🏅 As 3 missões feitas! Bônus de +${MISSION_BONUS_XP} XP.` : `Faça as 3 para ganhar +${MISSION_BONUS_XP} XP de bônus.`}
+    ${outros.map(o => ` · ${esc(o)}: ${missionProgress(o, idx).filter(m => m.done).length}/3`).join("")}</p>`;
+}
+
+function renderDuelo() {
+  const idx = currentWeekIdx(), w = weekInfo(idx);
+  const tot = duelTotals(idx);
+  const falta = Math.max(0, Math.round((new Date(w.fimIso + "T00:00:00") - startOfToday()) / DAY));
+  $("duelo-sem").textContent = `semana ${w.numero} · ${falta} dia${falta === 1 ? "" : "s"} restante${falta === 1 ? "" : "s"}`;
+  if (tot.length < 2) { $("duelo").innerHTML = `<p class="small muted">O duelo começa quando a outra pessoa entrar no app.</p>`; return; }
+  const [a, b] = tot;
+  const soma = Math.max(0.0001, Math.max(0, a[1]) + Math.max(0, b[1]));
+  const pa = Math.max(0, a[1]) / soma * 100;
+  const dif = a[1] - b[1];
+  const placar = {}; allAuthors().forEach(n => placar[n] = duelWins(n));
+  $("duelo").innerHTML = `
+    <div class="duel">
+      <div><div style="display:flex;justify-content:center;margin-bottom:4px">${avatarHtml(a[0])}</div><span class="small muted">${esc(a[0])}</span><b>${fmt(a[1])}</b></div>
+      <div class="vs">VS</div>
+      <div><div style="display:flex;justify-content:center;margin-bottom:4px">${avatarHtml(b[0])}</div><span class="small muted">${esc(b[0])}</span><b>${fmt(b[1])}</b></div>
+    </div>
+    <div class="duel-bar"><div style="width:${a[1] <= 0 && b[1] <= 0 ? 50 : pa}%;background:var(--grad)"></div><div style="flex:1;background:#ffc857"></div></div>
+    <p class="small" style="text-align:center;font-weight:700">${dif > 0.05 ? `${esc(a[0])} lidera por ${fmt(dif)} pts` : "Empate técnico!"}</p>
+    <p class="tiny faint" style="text-align:center;margin-top:6px">Quem perder a semana paga um mimo pro outro 😉 · Placar da temporada: ${Object.entries(placar).map(([n, v]) => `${esc(n)} ${v}`).join(" × ")}</p>`;
+}
+
+function renderMetaPessoal() {
+  const w = weekInfo(currentWeekIdx());
+  const meu = seasonEntries().filter(e => e.autor === currentUser && e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0);
+  const meta = getMetaPessoal();
+  const pct = Math.max(0, Math.min(100, meu / meta * 100));
+  $("meta-pessoal").innerHTML = `
+    <div class="card-head" style="margin-bottom:8px"><span style="font-weight:700;font-size:14px">🎯 Sua meta pessoal</span>
+      <button id="edit-meta-pessoal" class="link-btn">editar</button></div>
+    <div class="track"><div class="fill ${pct >= 100 ? "ok" : ""}" style="width:${pct}%"></div></div>
+    <p class="small muted" style="margin-top:6px">${fmt(meu)} / ${fmt(meta)} pts esta semana${pct >= 100 ? " · ✅ batida!" : ""} · só você vê esta meta</p>`;
+}
+
+// comemora missões novas (1ª vez só memoriza)
+function checkNewMissions() {
+  if (!currentUser || !loaded.entries) return;
+  const key = `missoes_vistas_${SEASON.numero}_${currentUser}`;
+  const idx = currentWeekIdx();
+  const feitas = missionProgress(currentUser, idx).filter(m => m.done);
+  const agora = feitas.map(m => `${idx}:${m.id}`);
+  const salvo = localStorage.getItem(key);
+  if (salvo === null) { localStorage.setItem(key, JSON.stringify(agora)); return; }
+  const vistas = new Set(JSON.parse(salvo));
+  const novas = feitas.filter(m => !vistas.has(`${idx}:${m.id}`));
+  if (novas.length) {
+    localStorage.setItem(key, JSON.stringify([...new Set([...vistas, ...agora])]));
+    launchFireworks();
+    mostrarToast(feitas.length === 3 ? `🏅 Três missões cumpridas! +${MISSION_BONUS_XP} XP de bônus` : `🎯 Missão cumprida: ${novas[0].label} (+${MISSION_XP} XP)`, 4200);
+  }
 }
 
 function renderRanking() {
@@ -909,6 +1104,7 @@ function renderRanking() {
         <div class="rank-top"><span>${esc(nome)}${nome === currentUser ? ' <span class="tiny faint">(você)</span>' : ""}</span><span class="rank-pts">${fmt(pts)} pts</span></div>
         <div class="track"><div class="fill ${i === 0 && pts > 0 ? "gold" : ""}" style="width:${Math.max(0, pts / max * 100)}%"></div></div>
       </div>
+      ${nome !== currentUser ? `<button class="poke" data-nome="${esc(nome)}" title="Mandar uma cutucada gentil" ${jaCutucou(nome) ? "disabled" : ""}>👋</button>` : ""}
     </div>`).join("");
 }
 
@@ -1062,9 +1258,27 @@ function renderFeed() {
 
 function render() {
   if (!currentUser) return;
-  renderHero(); renderRanking(); renderMetaCasal(); renderMedalhas(); renderLoja(); renderFeed(); renderHall();
-  checkNewBadges();
+  renderHero(); renderAlerta(); renderMissoes(); renderDuelo(); renderRanking(); renderMetaCasal(); renderMetaPessoal();
+  renderMedalhas(); renderLoja(); renderFeed(); renderHall();
+  checkNewBadges(); checkNewMissions();
 }
+
+// ---------- cutucada gentil (vai pro bate-papo, 1 por dia por pessoa) ----------
+const pokeKey = nome => `cutucou_${currentUser}_${nome}_${todayIso()}`;
+const jaCutucou = nome => !!localStorage.getItem(pokeKey(nome));
+$("ranking").addEventListener("click", async (ev) => {
+  const b = ev.target.closest(".poke"); if (!b || b.disabled) return;
+  const nome = b.dataset.nome;
+  b.disabled = true;
+  localStorage.setItem(pokeKey(nome), "1");
+  await addDoc(messagesRef, { autor: currentUser, texto: `👋 ${currentUser} cutucou ${nome}: bora registrar alguma coisa hoje?`, criadoEm: Date.now() });
+  mostrarToast(`👋 Cutucada enviada para ${nome}!`);
+});
+$("meta-pessoal").addEventListener("click", (ev) => {
+  if (!ev.target.closest("#edit-meta-pessoal")) return;
+  const v = parseFloat(String(prompt("Quantos pontos você quer fazer por semana? (só você vê)", getMetaPessoal()) || "").replace(",", "."));
+  if (v > 0) { localStorage.setItem(metaPessoalKey(), String(v)); renderMetaPessoal(); }
+});
 
 // ---------- eventos do feed (delegação) ----------
 $("entries-list").addEventListener("click", async (ev) => {
