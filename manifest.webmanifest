@@ -1,13 +1,13 @@
 {
-  "name": "Ranking de Metas",
-  "short_name": "Ranking",
-  "description": "Ranking de metas do casal",
+  "name": "Maricota & Alho",
+  "short_name": "Maricota",
+  "description": "Metas, estudos e hábitos a dois",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f1f5f9",
-  "theme_color": "#4f46e5",
+  "background_color": "#0a0e1f",
+  "theme_color": "#0a0e1f",
   "lang": "pt-BR",
   "icons": [
     {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},

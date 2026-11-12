@@ -41,3 +41,12 @@ O projeto está ligado a um repositório GitHub. Para pedir uma mudança, é só
 No Android (Chrome): menu ⋮ > **Instalar app**.
 
 Arquivos do PWA: `manifest.webmanifest`, `sw.js` (service worker) e a pasta `icons/`. Se mudar o `index.html`, o app pega a versão nova sozinho quando está online.
+
+## Rebranding "Maricota & Alho" (Temporada 1, 12/11/2026)
+
+- **Novo visual "Aurora"**: tema escuro e claro (botão 🌙/☀️ no topo), cartões com vidro, avatares coloridos, anel de progresso da meta, barra de abas embaixo e botão **+** central para registrar atividade.
+- **Reset por temporada**: nada foi apagado. O app só conta registros e resgates feitos depois do `SEASON.corte` (constante no começo do script do `index.html`). O que veio antes aparece em Início > Hall da fama. Para um novo reset no futuro, é só mudar `numero`, `nome`, `inicio` e `corte` (timestamp em ms do momento do reset).
+- **Medalhas em 4 níveis** (bronze, prata, ouro, platina) em 4 categorias, mais 4 medalhas secretas. Definidas em `BADGE_DEFS`.
+- **Loja nova** com categorias (Mimos, Programinhas, Grandes prêmios, Lendárias), **Cofre da temporada** (meta da dupla, `COFRE`) e **Baú da semana** (sorteio grátis semanal, `BAU_PREMIOS`; o resultado aparece no bate-papo).
+- Backup da versão anterior em `backup_pre_rebranding/`.
+- Não precisa mudar as regras do Firestore.

@@ -3,37 +3,521 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#4f46e5" />
+<meta name="theme-color" content="#0a0e1f" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="Ranking" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Maricota & Alho" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="icon" type="image/png" href="icons/icon-192.png" />
-<title>Ranking de Metas</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>Maricota &amp; Alho</title>
 <style>
-  body { font-family: 'Segoe UI', system-ui, sans-serif; }
-  .bar-fill { transition: width 0.4s ease; }
-  .tab-btn.active { border-color: #4f46e5; color: #4f46e5; }
-  .react-btn.mine { background: #eef2ff; border-color: #6366f1; }
-  @keyframes confetti-fall {
-    0% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
-    100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
+  /* ============================================================
+     TEMA "AURORA" — variáveis de cor (escuro por padrão, claro opcional)
+  ============================================================ */
+  :root {
+    --bg: #0a0e1f;
+    --bg-glow-1: rgba(124, 92, 255, .28);
+    --bg-glow-2: rgba(255, 95, 162, .18);
+    --card: rgba(255,255,255,.06);
+    --card-solid: #151a33;
+    --line: rgba(255,255,255,.10);
+    --text: #eef0ff;
+    --muted: #9aa3c7;
+    --faint: #6b7399;
+    --primary: #7c5cff;
+    --primary-2: #ff5fa2;
+    --grad: linear-gradient(135deg, #7c5cff 0%, #ff5fa2 100%);
+    --gold: #ffc857;
+    --ok: #34d399;
+    --bad: #fb7185;
+    --input: rgba(255,255,255,.07);
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+    --nav: rgba(14,18,40,.82);
+    --track: rgba(255,255,255,.10);
+    --tier-bronze: #cd7f32; --tier-prata: #c0c8d8; --tier-ouro: #ffc857; --tier-platina: #7be3ff;
+    color-scheme: dark;
   }
-  #chat-widget { transition: opacity 0.15s ease, transform 0.15s ease; }
-  /* PWA no iOS: respeitar notch e barra inferior */
-  body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); -webkit-tap-highlight-color: transparent; }
-  #chat-fab, #chat-widget { bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
+  :root[data-theme="light"] {
+    --bg: #f3f1ff;
+    --bg-glow-1: rgba(124, 92, 255, .20);
+    --bg-glow-2: rgba(255, 95, 162, .14);
+    --card: #ffffff;
+    --card-solid: #ffffff;
+    --line: #e6e2ff;
+    --text: #1b1740;
+    --muted: #6b6892;
+    --faint: #9a97b8;
+    --input: #f6f4ff;
+    --shadow: 0 8px 24px rgba(80,60,160,.12);
+    --nav: rgba(255,255,255,.90);
+    --track: #e9e5ff;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body {
+    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(600px 380px at 10% -5%, var(--bg-glow-1), transparent 70%),
+      radial-gradient(520px 360px at 100% 0%, var(--bg-glow-2), transparent 70%);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    -webkit-font-smoothing: antialiased;
+  }
+  .hidden { display: none !important; }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  input, select { font: inherit; color: var(--text); }
+  h1, h2, h3, p { margin: 0; }
+
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+  main.wrap { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+
+  /* ---------- cartões ---------- */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .card h2 { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+  .muted { color: var(--muted); }
+  .faint { color: var(--faint); }
+  .small { font-size: 12px; }
+  .tiny { font-size: 11px; }
+  .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* ---------- topo ---------- */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 8px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 12px; background: var(--grad);
+    display: grid; place-items: center; font-size: 20px; box-shadow: 0 6px 18px rgba(124,92,255,.45);
+  }
+  .brand-name { font-weight: 800; font-size: 17px; letter-spacing: -.2px; line-height: 1.1; }
+  .brand-sub { font-size: 11px; color: var(--muted); }
+  .top-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
+    background: var(--card); border: 1px solid var(--line); font-size: 17px;
+  }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+    font-weight: 800; color: #fff; font-size: 15px; flex-shrink: 0;
+  }
+  .avatar.sm { width: 32px; height: 32px; font-size: 13px; }
+
+  /* ---------- hero ---------- */
+  .hero {
+    background: var(--grad); border: 0; color: #fff; position: relative; overflow: hidden;
+    box-shadow: 0 14px 34px rgba(124,92,255,.40);
+  }
+  .hero::after {
+    content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px;
+    border-radius: 50%; background: rgba(255,255,255,.14);
+  }
+  .hero .eyebrow { font-size: 12px; opacity: .85; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; }
+  .hero h1 { font-size: 24px; font-weight: 800; margin: 4px 0 12px; letter-spacing: -.3px; }
+  .hero-stats { display: flex; gap: 10px; position: relative; z-index: 1; }
+  .hero-stat { flex: 1; background: rgba(255,255,255,.18); border-radius: 16px; padding: 10px 12px; backdrop-filter: blur(6px); }
+  .hero-stat b { display: block; font-size: 22px; font-weight: 800; }
+  .hero-stat span { font-size: 11px; opacity: .9; }
+
+  /* ---------- chips / pílulas ---------- */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    background: var(--input); border: 1px solid var(--line); color: var(--muted);
+  }
+  .chip.on { background: var(--grad); color: #fff; border-color: transparent; }
+
+  /* ---------- ranking ---------- */
+  .rank-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .rank-row:last-child { margin-bottom: 0; }
+  .rank-body { flex: 1; min-width: 0; }
+  .rank-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font-weight: 700; font-size: 14px; }
+  .rank-pts { font-variant-numeric: tabular-nums; }
+  .track { height: 10px; border-radius: 999px; background: var(--track); overflow: hidden; }
+  .fill { height: 100%; border-radius: 999px; background: var(--grad); transition: width .5s cubic-bezier(.2,.8,.2,1); }
+  .fill.gold { background: linear-gradient(90deg, #ffc857, #ff9f43); }
+  .fill.ok { background: linear-gradient(90deg, #34d399, #22d3ee); }
+  .medal { font-size: 20px; width: 26px; text-align: center; }
+
+  /* ---------- meta do casal (anel) ---------- */
+  .goal { display: flex; align-items: center; gap: 16px; }
+  .ring { position: relative; width: 112px; height: 112px; flex-shrink: 0; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .ring-bg { stroke: var(--track); }
+  .ring .ring-fg { stroke: url(#ringGrad); transition: stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1); }
+  .ring-center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .ring-center b { font-size: 22px; font-weight: 800; line-height: 1; }
+  .ring-center span { font-size: 10px; color: var(--muted); }
+
+  /* ---------- feed ---------- */
+  .feed-item { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .feed-item:last-child { border-bottom: 0; padding-bottom: 0; }
+  .feed-item:first-child { padding-top: 0; }
+  .feed-head { display: flex; gap: 10px; align-items: flex-start; }
+  .feed-main { flex: 1; min-width: 0; font-size: 14px; }
+  .feed-photo { margin-top: 10px; width: 100%; max-height: 300px; object-fit: cover; border-radius: 16px; border: 1px solid var(--line); cursor: zoom-in; }
+  .pts-pos { color: var(--ok); font-weight: 700; }
+  .pts-neg { color: var(--bad); font-weight: 700; }
+  .link-btn { font-size: 12px; color: var(--faint); padding: 2px 4px; }
+  .link-btn:hover { color: var(--text); }
+  .react-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+  .react-btn { font-size: 12px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--input); }
+  .react-btn.mine { border-color: var(--primary); background: rgba(124,92,255,.22); }
+  .comments { margin-top: 10px; padding-left: 12px; border-left: 2px solid var(--line); }
+  .comment { font-size: 13px; margin-bottom: 4px; }
+  .inline-form { display: flex; gap: 6px; margin-top: 8px; }
+
+  /* ---------- formulários ---------- */
+  .field { display: block; margin-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .field input[type=text], .field input[type=date], .field select, .inline-form input, .chat-input {
+    width: 100%; margin-top: 6px; padding: 12px 14px; border-radius: 14px;
+    background: var(--input); border: 1px solid var(--line); font-size: 15px; outline: none;
+  }
+  .inline-form input { margin-top: 0; padding: 9px 12px; font-size: 13px; }
+  .field input:focus, .field select:focus, .inline-form input:focus, .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124,92,255,.25); }
+  .field select option { color: #111; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 18px; border-radius: 14px; font-weight: 700; font-size: 14px;
+    background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(124,92,255,.35);
+  }
+  .btn:disabled { opacity: .5; box-shadow: none; cursor: not-allowed; }
+  .btn.block { width: 100%; }
+  .btn.ghost { background: var(--input); color: var(--text); box-shadow: none; border: 1px solid var(--line); }
+  .btn.sm { padding: 8px 14px; font-size: 12px; border-radius: 12px; }
+
+  /* ---------- medalhas ---------- */
+  .badge-cat { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .6px; text-transform: uppercase; margin: 18px 0 10px; }
+  .badge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .badge {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px;
+    display: flex; gap: 10px; align-items: flex-start; box-shadow: var(--shadow);
+  }
+  .badge-ico {
+    width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 23px; flex-shrink: 0;
+    background: var(--input); border: 3px solid var(--line);
+  }
+  .badge.locked .badge-ico { filter: grayscale(1); opacity: .45; }
+  .badge.t1 .badge-ico { border-color: var(--tier-bronze); box-shadow: 0 0 14px rgba(205,127,50,.45); }
+  .badge.t2 .badge-ico { border-color: var(--tier-prata);  box-shadow: 0 0 14px rgba(192,200,216,.45); }
+  .badge.t3 .badge-ico { border-color: var(--tier-ouro);   box-shadow: 0 0 16px rgba(255,200,87,.55); }
+  .badge.t4 .badge-ico { border-color: var(--tier-platina);box-shadow: 0 0 18px rgba(123,227,255,.65); }
+  .badge-body { flex: 1; min-width: 0; }
+  .badge-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
+  .badge-tier { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin: 2px 0 6px; }
+  .badge.t1 .badge-tier { color: var(--tier-bronze); }
+  .badge.t2 .badge-tier { color: var(--tier-prata); }
+  .badge.t3 .badge-tier { color: var(--tier-ouro); }
+  .badge.t4 .badge-tier { color: var(--tier-platina); }
+  .badge.locked .badge-tier { color: var(--faint); }
+  .badge .track { height: 6px; }
+  .badge-hint { font-size: 10.5px; color: var(--faint); margin-top: 4px; line-height: 1.3; }
+
+  /* ---------- loja ---------- */
+  .wallet { display: flex; gap: 10px; flex-wrap: wrap; }
+  .wallet-item { flex: 1; min-width: 120px; background: var(--input); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .wallet-item b { display: block; font-size: 18px; font-weight: 800; }
+  .shop-cat { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; font-size: 13px; font-weight: 800; }
+  .shop-cat small { color: var(--faint); font-weight: 600; }
+  .reward {
+    display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line);
+  }
+  .reward:last-child { border-bottom: 0; }
+  .reward-ico { font-size: 26px; width: 40px; text-align: center; }
+  .reward-body { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
+  .reward-cost { font-size: 12px; color: var(--gold); font-weight: 700; }
+  .tag-leg { background: linear-gradient(135deg,#ffc857,#ff5fa2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .vault { text-align: center; }
+  .vault .big { font-size: 40px; }
+  .chest-btn { font-size: 46px; animation: bob 2.4s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+
+  /* ---------- regras / hall ---------- */
+  details.card summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  details.card summary::-webkit-details-marker { display: none; }
+  details.card summary::after { content: "▾"; color: var(--faint); transition: transform .2s; }
+  details.card[open] summary::after { transform: rotate(180deg); }
+  details.card .det-body { margin-top: 12px; }
+  .rule-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .rule-row:last-child { border-bottom: 0; }
+
+  /* ---------- navegação inferior ---------- */
+  .bottom-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    background: var(--nav); border-top: 1px solid var(--line);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  }
+  .nav-inner { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 72px 1fr 1fr; align-items: center; }
+  .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; color: var(--faint); font-size: 10.5px; font-weight: 700; }
+  .tab-btn .ico { font-size: 21px; filter: grayscale(1); opacity: .7; transition: all .2s; }
+  .tab-btn.active { color: var(--text); }
+  .tab-btn.active .ico { filter: none; opacity: 1; transform: translateY(-2px) scale(1.1); }
+  .fab-add {
+    width: 58px; height: 58px; margin: -26px auto 0; border-radius: 50%; background: var(--grad); color: #fff;
+    font-size: 30px; font-weight: 300; display: grid; place-items: center;
+    box-shadow: 0 10px 26px rgba(124,92,255,.55); border: 4px solid var(--bg);
+  }
+
+  /* ---------- chat ---------- */
+  #chat-fab {
+    position: fixed; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 120;
+    width: 50px; height: 50px; border-radius: 50%; background: var(--card-solid); border: 1px solid var(--line);
+    box-shadow: var(--shadow); font-size: 22px; display: grid; place-items: center;
+  }
+  #chat-fab-badge { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%; background: var(--bad); border: 2px solid var(--bg); }
+  #chat-widget {
+    position: fixed; right: 12px; left: 12px; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 150;
+    max-width: 380px; margin-left: auto; height: 60vh; max-height: 520px;
+    background: var(--card-solid); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .chat-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--grad); color: #fff; font-weight: 700; font-size: 14px; }
+  #chat-messages { flex: 1; overflow-y: auto; padding: 12px; }
+  .bubble-row { margin-bottom: 8px; display: flex; }
+  .bubble-row.me { justify-content: flex-end; }
+  .bubble { max-width: 80%; padding: 8px 12px; border-radius: 18px; font-size: 14px; background: var(--input); border: 1px solid var(--line); }
+  .bubble-row.me .bubble { background: var(--grad); color: #fff; border: 0; }
+  .bubble small { display: block; font-size: 10px; opacity: .7; }
+  .chat-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); }
+  .chat-input { margin-top: 0 !important; }
+
+  /* ---------- sheet (registrar atividade) ---------- */
+  .overlay { position: fixed; inset: 0; z-index: 200; background: rgba(5,8,20,.65); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; }
+  .sheet {
+    width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
+    background: var(--card-solid); border: 1px solid var(--line); border-radius: 26px 26px 0 0;
+    padding: 10px 18px calc(22px + env(safe-area-inset-bottom)); animation: up .28s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes up { from { transform: translateY(40px); opacity: 0 } to { transform: none; opacity: 1 } }
+  .grabber { width: 42px; height: 5px; border-radius: 999px; background: var(--line); margin: 4px auto 14px; }
+  .sheet h2 { font-size: 18px; font-weight: 800; margin-bottom: 14px; }
+  .preview-wrap { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .preview-wrap img { max-height: 90px; border-radius: 12px; border: 1px solid var(--line); }
+
+  /* ---------- entrada ---------- */
+  .gate { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+  .gate-card { max-width: 400px; width: 100%; text-align: center; }
+  .gate-card .brand-logo { width: 72px; height: 72px; font-size: 36px; border-radius: 24px; margin: 0 auto 16px; }
+  .gate-card h1 { font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+
+  #lightbox { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; }
+  #lightbox img { max-width: 100%; max-height: 100%; border-radius: 14px; }
+
+  #app-toast {
+    position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 400;
+    background: var(--card-solid); border: 1px solid var(--line); color: var(--text); box-shadow: var(--shadow);
+    padding: 12px 18px; border-radius: 16px; font-size: 14px; font-weight: 600; max-width: 90vw; text-align: center;
+    transition: opacity .3s, transform .3s; opacity: 0; pointer-events: none;
+  }
+  @keyframes confetti-fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: .95; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+  .empty { text-align: center; padding: 18px 8px; color: var(--muted); font-size: 14px; }
+  .empty .big { font-size: 34px; margin-bottom: 6px; }
 </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800">
+<body>
 
-<!-- ============================================================
-     PASSO 1: cole aqui a configuração do seu projeto Firebase.
-     Veja o GUIA-DE-CONFIGURACAO.md para saber onde encontrar isso.
-============================================================= -->
+<!-- ===================== ENTRADA ===================== -->
+<div id="gate" class="gate">
+  <div class="card gate-card">
+    <div class="brand-logo">🏆</div>
+    <h1 class="grad-text">Maricota &amp; Alho</h1>
+    <p class="muted" style="margin:6px 0 20px">Metas, estudos e hábitos a dois. Quem pontua mais na temporada?</p>
+    <form id="name-form">
+      <label class="field" style="text-align:left">
+        Como você quer aparecer no ranking?
+        <input id="name-input" type="text" placeholder="Seu nome" required autocomplete="off" />
+      </label>
+      <button class="btn block">Entrar</button>
+    </form>
+    <p class="tiny faint" style="margin-top:12px">O nome fica salvo só neste aparelho. Cada pessoa entra com o próprio nome no seu celular.</p>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-logo">🏆</div>
+        <div>
+          <div class="brand-name">Maricota &amp; Alho</div>
+          <div class="brand-sub" id="brand-season"></div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="theme-toggle" class="icon-btn" title="Alternar tema claro/escuro">🌙</button>
+        <button id="switch-user" class="avatar" title="Trocar de usuário"></button>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+
+    <!-- ===== INÍCIO ===== -->
+    <section id="tab-home" class="tab-panel">
+      <div class="card hero">
+        <div class="eyebrow" id="hero-eyebrow"></div>
+        <h1 id="hero-title"></h1>
+        <div class="hero-stats">
+          <div class="hero-stat"><b id="hero-today">0</b><span>pontos hoje</span></div>
+          <div class="hero-stat"><b id="hero-streak">0🔥</b><span>dias seguidos</span></div>
+          <div class="hero-stat"><b id="hero-saldo">0</b><span>para gastar</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Ranking</h2>
+          <div class="chips" id="period-chips">
+            <button class="chip period-btn" data-period="today">Hoje</button>
+            <button class="chip period-btn on" data-period="7">7 dias</button>
+            <button class="chip period-btn" data-period="30">30 dias</button>
+            <button class="chip period-btn" data-period="all">Temporada</button>
+          </div>
+        </div>
+        <div id="ranking"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>💪 Meta da dupla</h2><span class="small muted" id="meta-sem"></span></div>
+        <div id="meta-casal"></div>
+      </div>
+
+      <details class="card">
+        <summary>📋 Como pontuar</summary>
+        <div class="det-body" id="regras-list"></div>
+      </details>
+
+      <details class="card">
+        <summary>🏛️ Hall da fama</summary>
+        <div class="det-body" id="hall"></div>
+      </details>
+    </section>
+
+    <!-- ===== FEED ===== -->
+    <section id="tab-feed" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>Feed de atividades</h2><span class="small muted">temporada atual</span></div>
+        <div id="entries-list"></div>
+      </div>
+    </section>
+
+    <!-- ===== MEDALHAS ===== -->
+    <section id="tab-medalhas" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>🏅 Conquistas</h2><span class="small muted" id="badge-count"></span></div>
+        <div class="chips" id="badge-people"></div>
+        <p class="tiny faint" style="margin-top:10px">Cada medalha tem 4 níveis: bronze, prata, ouro e platina. As secretas aparecem quando você conquista.</p>
+      </div>
+      <div id="badges"></div>
+    </section>
+
+    <!-- ===== LOJA ===== -->
+    <section id="tab-loja" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>💰 Carteira</h2><span class="small muted">saldo da temporada</span></div>
+        <div class="wallet" id="wallet"></div>
+      </div>
+      <div class="card vault" id="cofre"></div>
+      <div class="card vault" id="bau"></div>
+      <div class="card">
+        <div class="card-head"><h2>🎁 Recompensas</h2></div>
+        <div id="loja-itens"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>🧾 Resgates recentes</h2></div>
+        <div id="resgates-hist"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- navegação inferior -->
+  <nav class="bottom-nav">
+    <div class="nav-inner">
+      <button class="tab-btn active" data-tab="home"><span class="ico">🏠</span>Início</button>
+      <button class="tab-btn" data-tab="feed"><span class="ico">📰</span>Feed</button>
+      <button id="fab-add" class="fab-add" aria-label="Registrar atividade">+</button>
+      <button class="tab-btn" data-tab="medalhas"><span class="ico">🏅</span>Medalhas</button>
+      <button class="tab-btn" data-tab="loja"><span class="ico">🎁</span>Loja</button>
+    </div>
+  </nav>
+</div>
+
+<!-- ===================== REGISTRAR ATIVIDADE (sheet) ===================== -->
+<div id="sheet" class="overlay hidden">
+  <div class="sheet">
+    <div class="grabber"></div>
+    <h2 id="form-titulo">Registrar atividade</h2>
+    <form id="entry-form">
+      <label class="field">
+        Atividade
+        <select id="atividade"></select>
+      </label>
+      <label class="field">
+        <span id="valor-label">Valor</span>
+        <input id="valor" type="text" inputmode="decimal" required autocomplete="off" />
+      </label>
+      <label class="field">
+        Data
+        <input id="data" type="date" required />
+      </label>
+      <div class="field">
+        Foto (opcional)
+        <input id="foto" type="file" accept="image/*" style="display:block;margin-top:6px;font-size:12px;color:var(--muted)" />
+        <span class="tiny faint" style="display:block;margin-top:4px;font-weight:500">Dica: no computador, cole um print com Ctrl+V / Cmd+V em qualquer campo.</span>
+        <div id="foto-preview-wrap" class="preview-wrap hidden">
+          <img id="foto-preview-img" />
+          <button type="button" id="foto-preview-remover" class="link-btn" style="color:var(--bad)">remover foto</button>
+        </div>
+      </div>
+      <button type="submit" id="submit-btn" class="btn block">Salvar</button>
+      <button type="button" id="cancelar-edicao" class="btn ghost block" style="margin-top:8px">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== BATE-PAPO ===================== -->
+<button id="chat-fab" class="hidden" aria-label="Bate-papo">💬<span id="chat-fab-badge" class="hidden"></span></button>
+<div id="chat-widget" class="hidden">
+  <div class="chat-head"><span>💬 Bate-papo</span><button id="chat-close" style="color:#fff;font-size:18px">✕</button></div>
+  <div id="chat-messages"></div>
+  <form id="chat-form" class="chat-form">
+    <input id="chat-input" class="chat-input" type="text" placeholder="Escreva uma mensagem..." required autocomplete="off" />
+    <button class="btn sm">Enviar</button>
+  </form>
+</div>
+
+<div id="lightbox" class="hidden"><img id="lightbox-img" src="" alt="" /></div>
+<div id="app-toast"></div>
+
+<!-- gradiente do anel de progresso -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c5cff" /><stop offset="100%" stop-color="#ff5fa2" />
+    </linearGradient>
+  </defs>
+</svg>
+
 <script type="module">
 const firebaseConfig = {
   apiKey: "AIzaSyCrs2ntIdduqo3Jv2e4peCuWActEI7cqGI",
@@ -45,76 +529,77 @@ const firebaseConfig = {
 };
 
 // ============================================================
-// PASSO 2 (opcional): ajuste as atividades e os pontos aqui.
-// campo pode ser "quantidade" (ex: flashcards, questões),
-// "horas" (ex: sono), "minutos" (ex: vídeo-aula, leitura de PDF)
-// ou "ocorrencia" (ex: simulado).
+// TEMPORADA — o "reset" de pontos.
+// Nada é apagado: o app só conta registros com data >= SEASON.inicio
+// (e resgates feitos a partir dessa data). Tudo que veio antes vira o
+// "Hall da fama" da temporada anterior. Para fazer um novo reset no futuro,
+// é só trocar numero, nome e inicio abaixo.
+// ============================================================
+// "corte" (momento exato do reset, em ms): registros criados antes dele ficam
+// na temporada anterior, mesmo que a data deles seja a de hoje.
+const SEASON = { numero: 1, nome: "Temporada 1", inicio: "2026-11-12", corte: 1794505842180, anterior: "Temporada Zero" };
+
+// ============================================================
+// ATIVIDADES E PONTOS
+// campo: "quantidade" (flashcards, questões), "horas" (sono),
+// "minutos" (vídeo-aula, PDF) ou "ocorrencia" (simulado, atividade física).
 // ============================================================
 const ACTIVITIES = {
-  flashcards: {
-    emoji: "🗂️", label: "Flashcards",
-    campo: "quantidade", campoLabel: "Quantidade de flashcards",
-    bloco: 100, pontosPorBloco: 1
-  },
-  questoes: {
-    emoji: "❓", label: "Questões",
-    campo: "quantidade", campoLabel: "Quantidade de questões",
-    bloco: 10, pontosPorBloco: 1
-  },
-  videoAula: {
-    emoji: "🎥", label: "Vídeo-aula",
-    campo: "minutos", campoLabel: "Minutos de vídeo-aula",
-    pontosPorHora: 1
-  },
-  leituraPdf: {
-    emoji: "📄", label: "Leitura de PDF",
-    campo: "minutos", campoLabel: "Minutos lendo PDF",
-    pontosPorHora: 2
-  },
-  simulado: {
-    emoji: "📝", label: "Simulado",
-    campo: "ocorrencia", campoLabel: "Quantos simulados",
-    pontosPorOcorrencia: 4
-  },
-  atividadeFisica: {
-    emoji: "🏋️", label: "Atividade física",
-    campo: "ocorrencia", campoLabel: "Quantas atividades",
-    pontosPorOcorrencia: 2
-  },
-  sono: {
-    emoji: "😴", label: "Sono",
-    campo: "horas", campoLabel: "Horas dormidas",
-    minHoras: 7, maxHoras: 9, penalidade: -1 // só perde ponto se dormir menos de 7h ou mais de 9h
-  }
+  flashcards: { emoji: "🗂️", label: "Flashcards", campo: "quantidade", campoLabel: "Quantidade de flashcards", bloco: 100, pontosPorBloco: 1 },
+  questoes:   { emoji: "❓", label: "Questões", campo: "quantidade", campoLabel: "Quantidade de questões", bloco: 10, pontosPorBloco: 1 },
+  videoAula:  { emoji: "🎥", label: "Vídeo-aula", campo: "minutos", campoLabel: "Minutos de vídeo-aula", pontosPorHora: 1 },
+  leituraPdf: { emoji: "📄", label: "Leitura de PDF", campo: "minutos", campoLabel: "Minutos lendo PDF", pontosPorHora: 2 },
+  simulado:   { emoji: "📝", label: "Simulado", campo: "ocorrencia", campoLabel: "Quantos simulados", pontosPorOcorrencia: 4 },
+  atividadeFisica: { emoji: "🏋️", label: "Atividade física", campo: "ocorrencia", campoLabel: "Quantas atividades", pontosPorOcorrencia: 2 },
+  sono:       { emoji: "😴", label: "Sono", campo: "horas", campoLabel: "Horas dormidas", minHoras: 7, maxHoras: 9, penalidade: -1 }
 };
 
-// Meta cooperativa do casal: progressiva, aumenta a cada semana.
-// META_CASAL_DATA_INICIO marca o início da "semana 1". Ajuste os números
-// abaixo para mudar o ritmo de progressão.
-const META_CASAL_DATA_INICIO = "2026-07-27";
+// Meta cooperativa da dupla: progressiva, recomeça na semana 1 a cada temporada.
+const META_CASAL_DATA_INICIO = SEASON.inicio;
 const META_CASAL_PONTOS_INICIAL = 20;
 const META_CASAL_INCREMENTO_SEMANAL = 20;
 
-// Loja: pontos acumulados (histórico total, menos o que já foi resgatado)
-// podem ser trocados por esses prêmios. Ajuste itens e custos à vontade.
+// Cofre da temporada: soma dos pontos da dupla até a temporada inteira.
+const COFRE = { meta: 2500, emoji: "🏝️", premio: "Fim de semana especial a dois" };
+
+// Loja de recompensas (pontos da temporada, menos o que já foi resgatado).
+const STORE_CATS = [
+  { id: "pequena", nome: "Mimos", emoji: "🍬", sub: "pequenas alegrias" },
+  { id: "media", nome: "Programinhas", emoji: "🎈", sub: "momentos a dois" },
+  { id: "grande", nome: "Grandes prêmios", emoji: "🌟", sub: "pra comemorar" },
+  { id: "lendaria", nome: "Lendárias", emoji: "👑", sub: "só pra quem manda muito bem", lendaria: true }
+];
 const STORE_ITEMS = [
-  { id: "filme", emoji: "🎬", label: "Escolher o filme", custo: 60 },
-  { id: "serie", emoji: "📺", label: "Escolher a série pra maratonar", custo: 100 },
-  { id: "sobremesa", emoji: "🍦", label: "Sobremesa especial", custo: 120 },
-  { id: "jantar", emoji: "🍽️", label: "Jantar escolhido pelo vencedor", custo: 150 },
-  { id: "cafe", emoji: "☕", label: "Café pago pelo outro", custo: 250 },
-  { id: "massagem", emoji: "💆", label: "Massagem com as duas mãos de 10 minutos", custo: 200 },
-  { id: "passeio", emoji: "🎡", label: "Passeio à escolha do vencedor", custo: 350 },
-  { id: "presente", emoji: "🎁", label: "Presente surpresa", custo: 500 }
+  { id: "playlist", cat: "pequena", emoji: "🎵", label: "Dono da playlist por um dia", custo: 40 },
+  { id: "filme", cat: "pequena", emoji: "🎬", label: "Escolher o filme da noite", custo: 60 },
+  { id: "doce", cat: "pequena", emoji: "🍫", label: "Doce favorito comprado pelo outro", custo: 80 },
+  { id: "louca", cat: "pequena", emoji: "🧽", label: "Folga da louça por um dia", custo: 100 },
+  { id: "cafe", cat: "pequena", emoji: "☕", label: "Café pago pelo outro", custo: 120 },
+  { id: "serie", cat: "media", emoji: "📺", label: "Escolher a série pra maratonar", custo: 150 },
+  { id: "massagem", cat: "media", emoji: "💆", label: "Massagem de 20 minutos", custo: 200 },
+  { id: "delivery", cat: "media", emoji: "🍕", label: "Delivery escolhido por você", custo: 220 },
+  { id: "jantar", cat: "media", emoji: "🍽️", label: "Jantar em casa escolhido por você", custo: 300 },
+  { id: "passeio", cat: "grande", emoji: "🎡", label: "Passeio à escolha do vencedor", custo: 450 },
+  { id: "compra", cat: "grande", emoji: "🛍️", label: "Uma comprinha de até R$ 100", custo: 600 },
+  { id: "restaurante", cat: "grande", emoji: "🍷", label: "Jantar especial em restaurante", custo: 700 },
+  { id: "presente", cat: "lendaria", emoji: "🎁", label: "Presente surpresa", custo: 900 },
+  { id: "viagem", cat: "lendaria", emoji: "🧳", label: "Escapada de um dia inteiro, tudo por conta do outro", custo: 1500 }
+];
+
+// Baú da semana: 1 sorteio grátis por pessoa a cada semana (precisa ter registrado algo na semana).
+const BAU_PREMIOS = [
+  "Escolher o filme da noite 🎬", "Um elogio bem caprichado 💌", "Folga de uma tarefa da casa 🧺",
+  "Cafuné de 10 minutos 💆", "Escolher o jantar de hoje 🍝", "Dono da playlist por um dia 🎵",
+  "Um bilhete de amor escondido 💘", "Sobremesa por conta do outro 🍨", "Escolher o passeio do fim de semana 🌳",
+  "Uma música dedicada 🎶"
 ];
 
 // ============================================================
-// A partir daqui é lógica do app. Não precisa editar.
+// A partir daqui é lógica do app.
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, doc, onSnapshot, query, orderBy,
-  deleteDoc, updateDoc
+  getFirestore, collection, addDoc, doc, onSnapshot, query, orderBy, deleteDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig);
@@ -125,489 +610,532 @@ const reactionsRef = collection(db, "reactions");
 const commentsRef = collection(db, "comments");
 const resgatesRef = collection(db, "resgates");
 
-let allEntries = [];
-let allReactions = [];
-let allComments = [];
-let allMessages = [];
-let allResgates = [];
+let allEntries = [], allReactions = [], allComments = [], allMessages = [], allResgates = [];
+const loaded = { entries: false, comments: false };
 let currentUser = localStorage.getItem("ranking_user") || "";
 let currentPeriod = "7";
-let currentTab = "ranking";
+let currentTab = "home";
+let badgePerson = "";
 const openComments = new Set();
 const REACTION_EMOJIS = ["👍", "❤️", "🔥", "👏", "😂", "😮", "🎉", "💪"];
+const SEASON_TS = SEASON.corte;
+const DAY = 86400000;
 
+// ---------- utilidades ----------
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => (Math.round(n * 10) / 10).toString().replace(".", ",");
+const pad = n => String(n).padStart(2, "0");
+function localIso(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+function todayIso() { return localIso(new Date()); }
+function startOfToday() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+function avatarColor(nome) {
+  let h = 0; for (const c of nome) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `linear-gradient(135deg, hsl(${h} 75% 58%), hsl(${(h + 40) % 360} 75% 52%))`;
+}
+function avatarHtml(nome, sm) {
+  return `<div class="avatar ${sm ? "sm" : ""}" style="background:${avatarColor(nome)}">${esc((nome || "?").trim().charAt(0).toUpperCase())}</div>`;
+}
+
+// ---------- pontos ----------
 function calcPoints(e) {
   const a = ACTIVITIES[e.atividade];
   if (!a) return 0;
-  const valor = e.valor || 0;
-  if (a.campo === "quantidade") {
-    return (valor / a.bloco) * a.pontosPorBloco;
-  }
-  if (a.campo === "horas" && a.pontosPorHora !== undefined) {
-    return valor * a.pontosPorHora;
-  }
-  if (a.campo === "minutos" && a.pontosPorHora !== undefined) {
-    return (valor / 60) * a.pontosPorHora;
-  }
-  if (a.campo === "horas" && a.minHoras !== undefined && a.maxHoras !== undefined) {
-    return (valor >= a.minHoras && valor <= a.maxHoras) ? 0 : a.penalidade;
-  }
-  if (a.campo === "ocorrencia") {
-    return valor * a.pontosPorOcorrencia;
-  }
+  const v = e.valor || 0;
+  if (a.campo === "quantidade") return (v / a.bloco) * a.pontosPorBloco;
+  if (a.campo === "horas" && a.pontosPorHora !== undefined) return v * a.pontosPorHora;
+  if (a.campo === "minutos" && a.pontosPorHora !== undefined) return (v / 60) * a.pontosPorHora;
+  if (a.campo === "horas" && a.minHoras !== undefined) return (v >= a.minHoras && v <= a.maxHoras) ? 0 : a.penalidade;
+  if (a.campo === "ocorrencia") return v * a.pontosPorOcorrencia;
   return 0;
 }
-
-function fmt(n) {
-  return (Math.round(n * 10) / 10).toString();
-}
-
 function describeValue(e) {
-  const a = ACTIVITIES[e.atividade];
-  if (!a) return "";
+  const a = ACTIVITIES[e.atividade]; if (!a) return "";
   if (a.campo === "quantidade") return `${e.valor} ${a.label.toLowerCase()}`;
   if (a.campo === "horas") return `${e.valor}h`;
   if (a.campo === "minutos") return `${e.valor}min`;
-  if (a.campo === "ocorrencia") return `${e.valor}x`;
-  return "";
+  return `${e.valor}x`;
 }
-
 function describeRule(a) {
-  if (a.campo === "quantidade") {
-    return `${a.pontosPorBloco} ponto${a.pontosPorBloco === 1 ? "" : "s"} a cada ${a.bloco} ${a.label.toLowerCase()}`;
-  }
-  if (a.campo === "horas" && a.pontosPorHora !== undefined) {
-    return `${a.pontosPorHora} ponto${a.pontosPorHora === 1 ? "" : "s"} por hora`;
-  }
-  if (a.campo === "minutos" && a.pontosPorHora !== undefined) {
-    return `${a.pontosPorHora} ponto${a.pontosPorHora === 1 ? "" : "s"} por hora (${Math.round(a.pontosPorHora / 60 * 100) / 100} por minuto)`;
-  }
-  if (a.campo === "horas" && a.minHoras !== undefined && a.maxHoras !== undefined) {
-    return `${a.penalidade} ponto se dormir menos de ${a.minHoras}h ou mais de ${a.maxHoras}h`;
-  }
-  if (a.campo === "ocorrencia") {
-    return `${a.pontosPorOcorrencia} pontos por vez`;
-  }
+  const p = n => `${n} ponto${n === 1 ? "" : "s"}`;
+  if (a.campo === "quantidade") return `${p(a.pontosPorBloco)} a cada ${a.bloco}`;
+  if (a.campo === "minutos") return `${p(a.pontosPorHora)} por hora`;
+  if (a.campo === "horas" && a.pontosPorHora !== undefined) return `${p(a.pontosPorHora)} por hora`;
+  if (a.campo === "horas") return `${a.penalidade} ponto se dormir menos de ${a.minHoras}h ou mais de ${a.maxHoras}h`;
+  if (a.campo === "ocorrencia") return `${p(a.pontosPorOcorrencia)} por vez`;
   return "";
 }
 
-function renderRegras() {
-  const el = document.getElementById("regras-list");
-  el.innerHTML = Object.values(ACTIVITIES).map(a => `
-    <div class="flex justify-between text-sm py-2 border-b border-slate-100 last:border-0">
-      <span>${a.emoji} ${a.label}</span>
-      <span class="text-slate-500">${describeRule(a)}</span>
-    </div>
-  `).join("");
+// ---------- temporada ----------
+const isSeasonEntry = e => e.data >= SEASON.inicio && (e.criadoEm || 0) >= SEASON.corte;
+const seasonEntries = () => allEntries.filter(isSeasonEntry);
+const seasonResgates = () => allResgates.filter(r => (r.criadoEm || 0) >= SEASON_TS);
+const oldEntries = () => allEntries.filter(e => !isSeasonEntry(e));
+const allAuthors = () => {
+  const s = new Set(allEntries.map(e => e.autor));
+  if (currentUser) s.add(currentUser);
+  return [...s];
+};
+function ganhoDe(autor, entries = seasonEntries()) {
+  return entries.filter(e => e.autor === autor).reduce((s, e) => s + calcPoints(e), 0);
 }
-
+function saldoDe(autor) {
+  return ganhoDe(autor) - seasonResgates().filter(r => r.autor === autor).reduce((s, r) => s + r.custo, 0);
+}
 function withinPeriod(dateStr, period) {
-  if (period === "all") return true;
+  if (period === "all") return true; // a lista já vem filtrada pela temporada
   const days = period === "today" ? 1 : parseInt(period, 10);
   const d = new Date(dateStr + "T00:00:00");
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const diff = (today - d) / (1000 * 60 * 60 * 24);
+  const diff = (startOfToday() - d) / DAY;
   return diff >= 0 && diff < days;
 }
-
-// ---------- Badges (calculados a partir do histórico, sem dados extras) ----------
-function somaValor(entries, atividade) {
-  return entries.filter(e => e.atividade === atividade).reduce((s, e) => s + (e.valor || 0), 0);
+function weekInfo(idx) {
+  const inicio = new Date(META_CASAL_DATA_INICIO + "T00:00:00");
+  const ini = new Date(inicio); ini.setDate(ini.getDate() + idx * 7);
+  const fim = new Date(ini); fim.setDate(fim.getDate() + 7);
+  return { numero: idx + 1, inicioIso: localIso(ini), fimIso: localIso(fim),
+           meta: META_CASAL_PONTOS_INICIAL + META_CASAL_INCREMENTO_SEMANAL * idx };
+}
+function currentWeekIdx() {
+  const inicio = new Date(META_CASAL_DATA_INICIO + "T00:00:00");
+  return Math.max(0, Math.floor((startOfToday() - inicio) / DAY / 7));
+}
+function weekTotal(w) {
+  return seasonEntries().filter(e => e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0);
+}
+function semanasMetaBatida() {
+  let n = 0;
+  for (let i = 0; i <= currentWeekIdx(); i++) { const w = weekInfo(i); if (weekTotal(w) >= w.meta) n++; }
+  return n;
+}
+function currentStreak(autor) {
+  const dias = new Set(seasonEntries().filter(e => e.autor === autor).map(e => e.data));
+  const d = startOfToday();
+  if (!dias.has(localIso(d))) d.setDate(d.getDate() - 1); // hoje ainda não registrou: conta a partir de ontem
+  let n = 0;
+  while (dias.has(localIso(d)) && localIso(d) >= SEASON.inicio) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function bestStreak(mine) {
+  const dias = [...new Set(mine.map(e => e.data))].sort();
+  let best = 0, run = 0, prev = null;
+  for (const dia of dias) {
+    if (prev && (new Date(dia + "T00:00:00") - new Date(prev + "T00:00:00")) === DAY) run++; else run = 1;
+    best = Math.max(best, run); prev = dia;
+  }
+  return best;
 }
 
-// Todas as medalhas possíveis. Cada uma fica cinza até ser conquistada,
-// quando então ganha cor (veja renderBadges).
+// ============================================================
+// MEDALHAS — 4 níveis (bronze, prata, ouro, platina) + secretas
+// ============================================================
+const TIER_NAMES = ["", "Bronze", "Prata", "Ouro", "Platina"];
+const sumBy = (arr, at) => arr.filter(e => e.atividade === at).reduce((s, e) => s + (e.valor || 0), 0);
+const horasFmt = min => min >= 60 ? `${Math.round(min / 6) / 10}h` : `${min}min`;
+
 const BADGE_DEFS = [
-  { emoji: "🔥", label: "Pegando o ritmo", desc: "3+ dias seguidos estudando", check: ctx => ctx.streak >= 3 },
-  { emoji: "📚", label: "Maratonista", desc: "7+ dias seguidos estudando", check: ctx => ctx.streak >= 7 },
-  { emoji: "🏅", label: "Lenda da sequência", desc: "14+ dias seguidos estudando", check: ctx => ctx.streak >= 14 },
-  { emoji: "🏆", label: "Centena", desc: "100+ pontos acumulados", check: ctx => ctx.totalPontos >= 100 },
-  { emoji: "🚀", label: "Milhar", desc: "1000+ pontos acumulados", check: ctx => ctx.totalPontos >= 1000 },
-  { emoji: "💎", label: "100%", desc: "3+ atividades num mesmo dia", check: ctx => ctx.diaCompleto },
-  { emoji: "❓", label: "Mestre das questões", desc: "500+ questões respondidas", check: ctx => ctx.somaQuestoes >= 500 },
-  { emoji: "🎥", label: "Maratona de vídeo-aulas", desc: "10+ horas de vídeo-aula", check: ctx => ctx.somaVideo >= 10 },
-  { emoji: "📄", label: "Leitor voraz", desc: "20+ horas de leitura de PDF", check: ctx => ctx.somaPdf >= 20 },
-  { emoji: "📸", label: "Documentado", desc: "5+ atividades com foto", check: ctx => ctx.fotos >= 5 },
-  { emoji: "💬", label: "Comunicativo", desc: "10+ comentários no feed", check: ctx => ctx.comentarios >= 10 }
+  // Constância
+  { id: "streak", cat: "Constância", emoji: "🔥", label: "Em chamas", desc: "dias seguidos registrando", unit: "dias", tiers: [3, 7, 14, 30], metric: c => c.bestStreak },
+  { id: "diacheio", cat: "Constância", emoji: "💎", label: "Dia 100%", desc: "dias com 3+ atividades diferentes", unit: "dias", tiers: [1, 5, 15, 30], metric: c => c.diasCompletos },
+  { id: "pontos", cat: "Constância", emoji: "🏆", label: "Colecionador", desc: "pontos acumulados na temporada", unit: "pts", tiers: [50, 150, 400, 1000], metric: c => c.pontos },
+  // Estudo
+  { id: "questoes", cat: "Estudo", emoji: "❓", label: "Mestre das questões", desc: "questões respondidas", unit: "", tiers: [100, 300, 700, 1500], metric: c => c.questoes },
+  { id: "flash", cat: "Estudo", emoji: "🗂️", label: "Memória de ferro", desc: "flashcards revisados", unit: "", tiers: [300, 1000, 2500, 5000], metric: c => c.flashcards },
+  { id: "video", cat: "Estudo", emoji: "🎥", label: "Maratonista de aulas", desc: "de vídeo-aula assistida", fmt: horasFmt, tiers: [120, 600, 1500, 3000], metric: c => c.videoMin },
+  { id: "pdf", cat: "Estudo", emoji: "📄", label: "Devorador de PDFs", desc: "de leitura de PDF", fmt: horasFmt, tiers: [120, 600, 1500, 3000], metric: c => c.pdfMin },
+  { id: "simulado", cat: "Estudo", emoji: "📝", label: "Hora da prova", desc: "simulados feitos", unit: "", tiers: [1, 3, 6, 12], metric: c => c.simulados },
+  // Corpo e mente
+  { id: "fisica", cat: "Corpo e mente", emoji: "🏋️", label: "Corpo são", desc: "atividades físicas", unit: "", tiers: [3, 10, 20, 40], metric: c => c.fisica },
+  { id: "sono", cat: "Corpo e mente", emoji: "😴", label: "Sono de campeão", desc: "noites dormindo entre 7h e 9h", unit: "noites", tiers: [3, 7, 14, 30], metric: c => c.sonoOk },
+  // Dupla e social
+  { id: "dupla", cat: "Dupla e social", emoji: "💞", label: "Dupla imbatível", desc: "semanas com a meta da dupla batida", unit: "sem.", tiers: [1, 2, 4, 8], metric: c => c.semanasMeta },
+  { id: "fotos", cat: "Dupla e social", emoji: "📸", label: "Documentado", desc: "atividades com foto", unit: "", tiers: [3, 10, 25, 50], metric: c => c.fotos },
+  { id: "papo", cat: "Dupla e social", emoji: "💬", label: "Comunicativo", desc: "comentários no feed", unit: "", tiers: [5, 15, 40, 100], metric: c => c.comentarios },
+  // Secretas (nível único)
+  { id: "madrugador", cat: "Segredos", emoji: "🌅", label: "Madrugador", secret: true, hint: "Registre uma atividade antes das 7h da manhã.", check: c => c.madrugador },
+  { id: "coruja", cat: "Segredos", emoji: "🦉", label: "Coruja", secret: true, hint: "Registre uma atividade depois das 23h.", check: c => c.coruja },
+  { id: "ouro", cat: "Segredos", emoji: "⚡", label: "Dia de ouro", secret: true, hint: "Faça 20 pontos ou mais em um único dia.", check: c => c.diaDeOuro },
+  { id: "largada", cat: "Segredos", emoji: "🚦", label: "Largada", secret: true, hint: "Faça o primeiro registro da temporada.", check: c => c.registros >= 1 }
 ];
 
-function computeBadges(autor) {
-  const mine = allEntries.filter(e => e.autor === autor);
-
-  // Sequência de dias seguidos com pelo menos 1 registro
-  const dias = new Set(mine.map(e => e.data));
-  let streak = 0;
-  for (let i = 0; i < 400; i++) {
-    const d = new Date();
-    d.setHours(0,0,0,0);
-    d.setDate(d.getDate() - i);
-    const iso = d.toISOString().slice(0,10);
-    if (dias.has(iso)) streak++;
-    else break;
-  }
-
-  // 100%: algum dia com 3+ atividades diferentes registradas
+function badgeContext(autor) {
+  const mine = seasonEntries().filter(e => e.autor === autor);
   const porDia = {};
-  mine.forEach(e => {
-    porDia[e.data] = porDia[e.data] || new Set();
-    porDia[e.data].add(e.atividade);
-  });
-  const diaCompleto = Object.values(porDia).some(s => s.size >= 3);
-
-  const ctx = {
-    streak,
-    diaCompleto,
-    totalPontos: mine.reduce((s, e) => s + calcPoints(e), 0),
-    somaQuestoes: somaValor(mine, "questoes"),
-    somaVideo: somaValor(mine, "videoAula"),
-    somaPdf: somaValor(mine, "leituraPdf"),
-    fotos: mine.filter(e => e.fotoUrl).length,
-    comentarios: allComments.filter(c => c.autor === autor).length
-  };
-
-  return BADGE_DEFS.map(def => ({ ...def, earned: !!def.check(ctx) }));
-}
-
-function renderBadges() {
-  const el = document.getElementById("badges");
-  const autores = [...new Set(allEntries.map(e => e.autor))];
-  if (autores.length === 0) {
-    el.innerHTML = `<p class="text-slate-500 text-sm">Sem conquistas ainda.</p>`;
-    return;
-  }
-  el.innerHTML = autores.map(nome => {
-    const badges = computeBadges(nome);
-    return `
-      <div class="mb-4 last:mb-0">
-        <p class="text-sm font-medium mb-1">${nome}</p>
-        <div class="flex flex-wrap gap-2">
-          ${badges.map(b => `
-            <span title="${b.desc}" class="text-xs rounded-full px-2 py-1 border transition
-              ${b.earned
-                ? 'bg-amber-50 border-amber-200 text-slate-800'
-                : 'bg-slate-100 border-slate-200 text-slate-400 grayscale opacity-60'}">
-              ${b.emoji} ${b.label}
-            </span>
-          `).join("")}
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-function getCasalSemanaInfo() {
-  const inicio = new Date(META_CASAL_DATA_INICIO + "T00:00:00");
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
-  const diffDias = Math.floor((hoje - inicio) / (1000*60*60*24));
-  const semanaIndex = Math.max(0, Math.floor(diffDias / 7));
-  const semanaInicio = new Date(inicio);
-  semanaInicio.setDate(semanaInicio.getDate() + semanaIndex * 7);
-  const semanaFim = new Date(semanaInicio);
-  semanaFim.setDate(semanaFim.getDate() + 7);
-  const meta = META_CASAL_PONTOS_INICIAL + META_CASAL_INCREMENTO_SEMANAL * semanaIndex;
+  mine.forEach(e => { (porDia[e.data] = porDia[e.data] || { set: new Set(), pts: 0 }); porDia[e.data].set.add(e.atividade); porDia[e.data].pts += calcPoints(e); });
+  const dias = Object.values(porDia);
+  const hora = e => e.criadoEm ? new Date(e.criadoEm).getHours() : null;
   return {
-    numero: semanaIndex + 1,
-    inicioIso: semanaInicio.toISOString().slice(0,10),
-    fimIso: semanaFim.toISOString().slice(0,10),
-    meta
+    registros: mine.length,
+    bestStreak: bestStreak(mine),
+    diasCompletos: dias.filter(d => d.set.size >= 3).length,
+    pontos: mine.reduce((s, e) => s + calcPoints(e), 0),
+    questoes: sumBy(mine, "questoes"),
+    flashcards: sumBy(mine, "flashcards"),
+    videoMin: sumBy(mine, "videoAula"),
+    pdfMin: sumBy(mine, "leituraPdf"),
+    simulados: sumBy(mine, "simulado"),
+    fisica: sumBy(mine, "atividadeFisica"),
+    sonoOk: mine.filter(e => e.atividade === "sono" && e.valor >= 7 && e.valor <= 9).length,
+    semanasMeta: semanasMetaBatida(),
+    fotos: mine.filter(e => e.fotoUrl).length,
+    comentarios: allComments.filter(c => c.autor === autor && (c.criadoEm || 0) >= SEASON_TS).length,
+    madrugador: mine.some(e => { const h = hora(e); return h !== null && h < 7; }),
+    coruja: mine.some(e => { const h = hora(e); return h !== null && h >= 23; }),
+    diaDeOuro: dias.some(d => d.pts >= 20)
   };
 }
+function computeBadges(autor) {
+  const ctx = badgeContext(autor);
+  return BADGE_DEFS.map(def => {
+    if (def.secret) return { ...def, tier: def.check(ctx) ? 1 : 0, value: 0, secret: true };
+    const value = def.metric(ctx);
+    const tier = def.tiers.filter(t => value >= t).length;
+    return { ...def, value, tier };
+  });
+}
+const showVal = (def, v) => def.fmt ? def.fmt(v) : `${fmt(v)}${def.unit ? " " + def.unit : ""}`;
 
+function renderMedalhas() {
+  const autores = allAuthors();
+  if (!badgePerson || !autores.includes(badgePerson)) badgePerson = currentUser || autores[0] || "";
+  $("badge-people").innerHTML = autores.map(n =>
+    `<button class="chip ${n === badgePerson ? "on" : ""}" data-person="${esc(n)}">${esc(n)}</button>`).join("");
+
+  const list = computeBadges(badgePerson);
+  const feitas = list.reduce((s, b) => s + b.tier, 0);
+  const total = list.reduce((s, b) => s + (b.secret ? 1 : 4), 0);
+  $("badge-count").textContent = `${feitas} de ${total} níveis`;
+
+  const cats = [...new Set(list.map(b => b.cat))];
+  $("badges").innerHTML = cats.map(cat => `
+    <div class="badge-cat">${esc(cat)}</div>
+    <div class="badge-grid">
+      ${list.filter(b => b.cat === cat).map(b => {
+        if (b.secret) {
+          return `<div class="badge ${b.tier ? "t3" : "locked"}">
+            <div class="badge-ico">${b.tier ? b.emoji : "❔"}</div>
+            <div class="badge-body">
+              <div class="badge-name">${b.tier ? esc(b.label) : "Medalha secreta"}</div>
+              <div class="badge-tier">${b.tier ? "Conquistada" : "Secreta"}</div>
+              <div class="badge-hint">${b.tier ? esc(b.hint) : "Descubra como desbloquear."}</div>
+            </div></div>`;
+        }
+        const next = b.tiers[b.tier];
+        const prev = b.tier > 0 ? b.tiers[b.tier - 1] : 0;
+        const pct = next ? Math.min(100, ((b.value - prev) / (next - prev)) * 100) : 100;
+        return `<div class="badge ${b.tier ? "t" + b.tier : "locked"}">
+          <div class="badge-ico">${b.emoji}</div>
+          <div class="badge-body">
+            <div class="badge-name">${esc(b.label)}</div>
+            <div class="badge-tier">${b.tier ? TIER_NAMES[b.tier] : "Bloqueada"}</div>
+            <div class="track"><div class="fill ${b.tier === 4 ? "gold" : ""}" style="width:${pct}%"></div></div>
+            <div class="badge-hint">${next ? `${showVal(b, b.value)} / ${showVal(b, next)} ${esc(b.desc)}` : `Nível máximo! ${showVal(b, b.value)} ${esc(b.desc)}`}</div>
+          </div></div>`;
+      }).join("")}
+    </div>`).join("");
+}
+
+// comemora medalhas novas (só depois de carregar tudo; a 1ª vez só memoriza)
+function checkNewBadges() {
+  if (!currentUser || !loaded.entries || !loaded.comments) return;
+  const key = `badges_vistas_${SEASON.numero}_${currentUser}`;
+  const agora = computeBadges(currentUser).filter(b => b.tier > 0).map(b => `${b.id}:${b.tier}`);
+  const salvo = localStorage.getItem(key);
+  if (salvo === null) { localStorage.setItem(key, JSON.stringify(agora)); return; }
+  const vistas = new Set(JSON.parse(salvo));
+  const novas = computeBadges(currentUser).filter(b => b.tier > 0 && !vistas.has(`${b.id}:${b.tier}`));
+  if (novas.length) {
+    localStorage.setItem(key, JSON.stringify(agora));
+    const b = novas[0];
+    launchFireworks();
+    mostrarToast(`🏅 Nova medalha: ${b.emoji} ${b.label}${b.secret ? "" : " · " + TIER_NAMES[b.tier]}!`, 4200);
+  }
+}
+
+// ============================================================
+// RENDER
+// ============================================================
 function launchFireworks() {
   const overlay = document.createElement("div");
-  overlay.className = "fixed inset-0 pointer-events-none z-[200] overflow-hidden";
+  overlay.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:350;overflow:hidden";
   document.body.appendChild(overlay);
-  const cores = ["#f43f5e","#f59e0b","#10b981","#6366f1","#ec4899","#3b82f6","#eab308"];
-  const total = 80;
-  for (let i = 0; i < total; i++) {
-    const piece = document.createElement("div");
-    const cor = cores[Math.floor(Math.random() * cores.length)];
-    const left = Math.random() * 100;
-    const delay = Math.random() * 0.6;
-    const duration = 1.8 + Math.random() * 1.2;
-    const size = 6 + Math.random() * 6;
-    const rotate = Math.random() * 360;
-    piece.style.cssText = `
-      position:absolute; top:-10%; left:${left}%; width:${size}px; height:${size * 0.4}px;
-      background:${cor}; opacity:0.9; transform:rotate(${rotate}deg);
-      animation: confetti-fall ${duration}s ease-in ${delay}s forwards;
-    `;
-    overlay.appendChild(piece);
+  const cores = ["#7c5cff", "#ff5fa2", "#ffc857", "#34d399", "#22d3ee", "#fb7185"];
+  for (let i = 0; i < 90; i++) {
+    const p = document.createElement("div");
+    const size = 6 + Math.random() * 7;
+    p.style.cssText = `position:absolute;top:-10%;left:${Math.random() * 100}%;width:${size}px;height:${size * .45}px;
+      background:${cores[Math.floor(Math.random() * cores.length)]};border-radius:2px;transform:rotate(${Math.random() * 360}deg);
+      animation:confetti-fall ${1.8 + Math.random() * 1.4}s ease-in ${Math.random() * .6}s forwards`;
+    overlay.appendChild(p);
   }
-  setTimeout(() => overlay.remove(), 3200);
+  setTimeout(() => overlay.remove(), 3600);
+}
+
+function mostrarToast(texto, ms = 2400) {
+  const t = $("app-toast");
+  t.textContent = texto;
+  t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)";
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(-8px)"; }, ms);
+}
+
+function renderHero() {
+  const diaN = Math.max(1, Math.floor((startOfToday() - new Date(SEASON.inicio + "T00:00:00")) / DAY) + 1);
+  $("brand-season").textContent = `${SEASON.nome} · dia ${diaN}`;
+  $("hero-eyebrow").textContent = `${SEASON.nome} · dia ${diaN}`;
+  const h = new Date().getHours();
+  const saud = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+  $("hero-title").textContent = `${saud}, ${currentUser}!`;
+  const hoje = todayIso();
+  $("hero-today").textContent = fmt(seasonEntries().filter(e => e.autor === currentUser && e.data === hoje).reduce((s, e) => s + calcPoints(e), 0));
+  $("hero-streak").textContent = `${currentStreak(currentUser)}🔥`;
+  $("hero-saldo").textContent = fmt(saldoDe(currentUser));
+}
+
+function renderRanking() {
+  const filtered = seasonEntries().filter(e => withinPeriod(e.data, currentPeriod));
+  const totals = {};
+  allAuthors().forEach(a => totals[a] = 0);
+  filtered.forEach(e => { totals[e.autor] = (totals[e.autor] || 0) + calcPoints(e); });
+  const ranking = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(...ranking.map(r => r[1]), 1);
+  const el = $("ranking");
+  if (!ranking.length) { el.innerHTML = `<div class="empty"><div class="big">🌱</div>Nenhum registro ainda. Toque no + para começar!</div>`; return; }
+  el.innerHTML = ranking.map(([nome, pts], i) => `
+    <div class="rank-row">
+      <div class="medal">${pts > 0 ? (i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "") : ""}</div>
+      ${avatarHtml(nome)}
+      <div class="rank-body">
+        <div class="rank-top"><span>${esc(nome)}${nome === currentUser ? ' <span class="tiny faint">(você)</span>' : ""}</span><span class="rank-pts">${fmt(pts)} pts</span></div>
+        <div class="track"><div class="fill ${i === 0 && pts > 0 ? "gold" : ""}" style="width:${Math.max(0, pts / max * 100)}%"></div></div>
+      </div>
+    </div>`).join("");
 }
 
 function renderMetaCasal() {
-  const el = document.getElementById("meta-casal");
-  const { numero, inicioIso, fimIso, meta } = getCasalSemanaInfo();
-  const semanaEntries = allEntries.filter(e => e.data >= inicioIso && e.data < fimIso);
-  const total = semanaEntries.reduce((s, e) => s + calcPoints(e), 0);
-  const pct = Math.max(0, Math.min(100, (total / meta) * 100));
-  const atingiu = total >= meta;
-  el.innerHTML = `
-    <div class="flex justify-between text-sm font-medium mb-1">
-      <span>💪 Meta do casal · semana ${numero}</span>
-      <span>${fmt(total)} / ${fmt(meta)} pts</span>
-    </div>
-    <div class="w-full bg-slate-200 rounded-full h-3 mb-1">
-      <div class="bar-fill bg-emerald-500 h-3 rounded-full" style="width:${pct}%"></div>
-    </div>
-    ${atingiu ? `<p class="text-xs text-emerald-600 font-medium">🎉 Meta da semana batida! Combinem o prêmio.</p>` : `<p class="text-xs text-slate-400">A meta aumenta a cada semana (essa semana: ${fmt(meta)} pts).</p>`}
-  `;
-
-  // Comemoração (mensagem + fogos) só uma vez por semana, quando a meta é batida
-  const chaveComemoracao = "meta_casal_comemorada_" + inicioIso;
-  if (atingiu && !localStorage.getItem(chaveComemoracao)) {
-    localStorage.setItem(chaveComemoracao, "1");
+  const w = weekInfo(currentWeekIdx());
+  const total = weekTotal(w);
+  const pct = Math.max(0, Math.min(100, total / w.meta * 100));
+  const atingiu = total >= w.meta;
+  const C = 2 * Math.PI * 48;
+  $("meta-sem").textContent = `semana ${w.numero}`;
+  $("meta-casal").innerHTML = `
+    <div class="goal">
+      <div class="ring">
+        <svg width="112" height="112" viewBox="0 0 112 112">
+          <circle class="ring-bg" cx="56" cy="56" r="48" fill="none" stroke-width="10" />
+          <circle class="ring-fg" cx="56" cy="56" r="48" fill="none" stroke-width="10" stroke-linecap="round"
+                  stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}" />
+        </svg>
+        <div class="ring-center"><div><b>${Math.round(pct)}%</b><br><span>da meta</span></div></div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:22px;font-weight:800">${fmt(total)} <span class="muted" style="font-size:14px;font-weight:600">/ ${fmt(w.meta)} pts</span></div>
+        <p class="small ${atingiu ? "" : "muted"}" style="margin-top:6px;${atingiu ? "color:var(--ok);font-weight:700" : ""}">
+          ${atingiu ? "🎉 Meta batida! Combinem o prêmio." : `Faltam ${fmt(w.meta - total)} pts. A meta sobe ${META_CASAL_INCREMENTO_SEMANAL} a cada semana.`}
+        </p>
+      </div>
+    </div>`;
+  const chave = "meta_casal_comemorada_" + w.inicioIso;
+  if (atingiu && loaded.entries && !localStorage.getItem(chave)) {
+    localStorage.setItem(chave, "1");
     launchFireworks();
-    setTimeout(() => {
-      alert(`🎉 Parabéns! Vocês bateram a meta da semana ${numero} (${fmt(meta)} pts)! Combinem o prêmio de vocês.`);
-    }, 100);
+    mostrarToast(`🎉 Vocês bateram a meta da semana ${w.numero}! Combinem o prêmio.`, 5000);
   }
 }
 
-function saldoDe(autor) {
-  const totalGanho = allEntries.filter(e => e.autor === autor).reduce((s, e) => s + calcPoints(e), 0);
-  const totalGasto = allResgates.filter(r => r.autor === autor).reduce((s, r) => s + r.custo, 0);
-  return totalGanho - totalGasto;
+function renderRegras() {
+  $("regras-list").innerHTML = Object.values(ACTIVITIES).map(a =>
+    `<div class="rule-row"><span>${a.emoji} ${a.label}</span><span class="muted" style="text-align:right">${describeRule(a)}</span></div>`).join("");
+}
+
+function renderHall() {
+  const velhos = oldEntries();
+  if (!velhos.length) { $("hall").innerHTML = `<p class="small muted">Ainda não há temporada anterior.</p>`; return; }
+  const totais = [...new Set(velhos.map(e => e.autor))].map(a => [a, ganhoDe(a, velhos)]).sort((a, b) => b[1] - a[1]);
+  $("hall").innerHTML = `
+    <p class="small muted" style="margin-bottom:10px">${esc(SEASON.anterior)} · pontuação final</p>
+    ${totais.map(([n, p], i) => `
+      <div class="rank-row" style="margin-bottom:10px">
+        <div class="medal">${i === 0 ? "👑" : i === 1 ? "🥈" : ""}</div>${avatarHtml(n, true)}
+        <div class="rank-body rank-top" style="margin:0"><span>${esc(n)}</span><span>${fmt(p)} pts</span></div>
+      </div>`).join("")}`;
 }
 
 function renderLoja() {
-  const el = document.getElementById("loja-itens");
-  const autores = [...new Set(allEntries.map(e => e.autor))];
-  if (currentUser && !autores.includes(currentUser)) autores.push(currentUser);
+  const autores = allAuthors();
+  $("wallet").innerHTML = autores.map(n => `
+    <div class="wallet-item">${avatarHtml(n, true)}<div><span class="tiny muted">${esc(n)}</span><b>${fmt(saldoDe(n))}</b></div></div>`).join("");
 
-  const saldosHtml = autores.map(nome => `
-    <span class="text-xs bg-slate-100 rounded-full px-2 py-1 mr-2">${nome}: <strong>${fmt(saldoDe(nome))} pts</strong></span>
-  `).join("");
+  // cofre da temporada
+  const totalDupla = autores.reduce((s, n) => s + ganhoDe(n), 0);
+  const pctC = Math.min(100, totalDupla / COFRE.meta * 100);
+  const aberto = totalDupla >= COFRE.meta;
+  $("cofre").innerHTML = `
+    <div class="big">${COFRE.emoji}</div>
+    <h2 style="margin:6px 0 2px">Cofre da temporada</h2>
+    <p class="small muted" style="margin-bottom:12px">${aberto ? "🎉 Cofre aberto!" : "Somando os pontos da dupla, vocês abrem:"} <b style="color:var(--text)">${esc(COFRE.premio)}</b></p>
+    <div class="track" style="height:14px"><div class="fill gold" style="width:${pctC}%"></div></div>
+    <p class="small muted" style="margin-top:8px">${fmt(totalDupla)} / ${COFRE.meta} pts</p>`;
 
-  const itensHtml = STORE_ITEMS.map(item => {
-    const saldo = saldoDe(currentUser);
-    const podeResgatar = saldo >= item.custo;
-    return `
-      <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 text-sm">
-        <span>${item.emoji} ${item.label} <span class="text-slate-400">(${item.custo} pts)</span></span>
-        <button data-item-id="${item.id}" ${podeResgatar ? "" : "disabled"}
-          class="resgatar-btn text-xs rounded-lg px-3 py-1.5 font-medium ${podeResgatar ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}">
-          Resgatar
-        </button>
-      </div>
-    `;
-  }).join("");
+  // baú da semana
+  const w = weekInfo(currentWeekIdx());
+  const marcador = `🎲 [baú S${SEASON.numero}-${w.numero}]`;
+  const jaAbriu = allMessages.some(m => m.autor === currentUser && String(m.texto).startsWith(marcador));
+  const fezAlgo = seasonEntries().some(e => e.autor === currentUser && e.data >= w.inicioIso && e.data < w.fimIso);
+  $("bau").innerHTML = `
+    <button id="bau-btn" class="chest-btn" ${jaAbriu || !fezAlgo ? "disabled style='filter:grayscale(1);opacity:.5;animation:none'" : ""}>🎁</button>
+    <h2 style="margin:6px 0 2px">Baú da semana</h2>
+    <p class="small muted">${jaAbriu ? "Você já abriu o baú desta semana. Volte na próxima!" :
+      fezAlgo ? "Toque no baú para sortear um mimo grátis!" : "Registre uma atividade nesta semana para liberar o baú."}</p>`;
 
-  const historico = [...allResgates].sort((a,b) => (b.criadoEm||0)-(a.criadoEm||0)).slice(0, 10);
-  const historicoHtml = historico.length === 0
-    ? `<p class="text-xs text-slate-400 mt-3">Nenhum resgate ainda.</p>`
-    : `<p class="text-xs font-medium text-slate-500 mt-4 mb-1">Resgates recentes</p>` + historico.map(r => `
-        <p class="text-xs text-slate-500">${r.autor} resgatou ${r.item} (-${r.custo} pts)</p>
-      `).join("");
+  // recompensas por categoria
+  const saldo = saldoDe(currentUser);
+  $("loja-itens").innerHTML = STORE_CATS.map(cat => `
+    <div class="shop-cat"><span>${cat.emoji}</span><span class="${cat.lendaria ? "tag-leg" : ""}">${cat.nome}</span><small>${cat.sub}</small></div>
+    ${STORE_ITEMS.filter(i => i.cat === cat.id).map(item => {
+      const ok = saldo >= item.custo;
+      return `<div class="reward">
+        <div class="reward-ico">${item.emoji}</div>
+        <div class="reward-body">${esc(item.label)}<div class="reward-cost">${item.custo} pts</div></div>
+        <button class="btn sm resgatar-btn" data-item-id="${item.id}" ${ok ? "" : "disabled"}>Resgatar</button>
+      </div>`;
+    }).join("")}
+    <div style="height:10px"></div>`).join("");
 
-  el.innerHTML = `
-    <div class="mb-3">${saldosHtml}</div>
-    ${itensHtml}
-    ${historicoHtml}
-  `;
-
-  document.querySelectorAll(".resgatar-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const item = STORE_ITEMS.find(i => i.id === btn.dataset.itemId);
-      if (!item) return;
-      if (saldoDe(currentUser) < item.custo) return;
-      if (!confirm(`Resgatar "${item.label}" por ${item.custo} pts?`)) return;
-      await addDoc(resgatesRef, {
-        autor: currentUser,
-        item: item.label,
-        custo: item.custo,
-        criadoEm: Date.now()
-      });
-    });
-  });
-}
-
-function render() {
-  const filtered = allEntries.filter(e => withinPeriod(e.data, currentPeriod));
-
-  // ranking por pessoa
-  const totals = {};
-  filtered.forEach(e => {
-    totals[e.autor] = (totals[e.autor] || 0) + calcPoints(e);
-  });
-  const ranking = Object.entries(totals).sort((a,b) => b[1]-a[1]);
-  const maxScore = ranking.length ? Math.max(...ranking.map(r => r[1]), 1) : 1;
-
-  const rankingEl = document.getElementById("ranking");
-  if (ranking.length === 0) {
-    rankingEl.innerHTML = `<p class="text-slate-500 text-sm">Nenhum registro nesse período ainda.</p>`;
-  } else {
-    rankingEl.innerHTML = ranking.map(([nome, pts], i) => `
-      <div class="mb-3">
-        <div class="flex justify-between text-sm font-medium mb-1">
-          <span>${i === 0 ? "🥇 " : i === 1 ? "🥈 " : ""}${nome}</span>
-          <span>${fmt(pts)} pts</span>
-        </div>
-        <div class="w-full bg-slate-200 rounded-full h-3">
-          <div class="bar-fill bg-indigo-500 h-3 rounded-full" style="width:${maxScore > 0 ? Math.max(0, pts/maxScore*100) : 0}%"></div>
-        </div>
-      </div>
-    `).join("");
-  }
-
-  renderBadges();
-  renderMetaCasal();
-  renderLoja();
-  renderFeed();
+  const hist = [...seasonResgates()].sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0)).slice(0, 10);
+  $("resgates-hist").innerHTML = hist.length
+    ? hist.map(r => `<p class="small muted" style="margin-bottom:6px"><b style="color:var(--text)">${esc(r.autor)}</b> resgatou ${esc(r.item)} <span class="pts-neg">(-${r.custo} pts)</span></p>`).join("")
+    : `<p class="small muted">Nenhum resgate nesta temporada ainda.</p>`;
 }
 
 function reactionsFor(entryId) {
-  const rs = allReactions.filter(r => r.entryId === entryId);
-  const counts = {};
-  const nomes = {};
-  rs.forEach(r => {
+  const counts = {}, nomes = {};
+  allReactions.filter(r => r.entryId === entryId).forEach(r => {
     counts[r.emoji] = (counts[r.emoji] || 0) + 1;
-    nomes[r.emoji] = nomes[r.emoji] || [];
-    nomes[r.emoji].push(r.autor);
+    (nomes[r.emoji] = nomes[r.emoji] || []).push(r.autor);
   });
-  return { rs, counts, nomes };
+  return { counts, nomes };
 }
-
-function myReaction(entryId, emoji) {
-  return allReactions.find(r => r.entryId === entryId && r.emoji === emoji && r.autor === currentUser);
-}
+const myReaction = (entryId, emoji) => allReactions.find(r => r.entryId === entryId && r.emoji === emoji && r.autor === currentUser);
 
 function renderFeed() {
-  const listEl = document.getElementById("entries-list");
-  const recent = [...allEntries].sort((a,b) => b.data.localeCompare(a.data) || (b.criadoEm||0)-(a.criadoEm||0)).slice(0, 25);
-  if (recent.length === 0) {
-    listEl.innerHTML = `<p class="text-slate-500 text-sm">Nenhum registro ainda. Adicione o primeiro na aba Ranking.</p>`;
-    return;
-  }
-  listEl.innerHTML = recent.map(e => {
+  const el = $("entries-list");
+  const recent = [...seasonEntries()].sort((a, b) => b.data.localeCompare(a.data) || (b.criadoEm || 0) - (a.criadoEm || 0)).slice(0, 30);
+  if (!recent.length) { el.innerHTML = `<div class="empty"><div class="big">📭</div>Nenhuma atividade ainda nesta temporada.</div>`; return; }
+  el.innerHTML = recent.map(e => {
     const a = ACTIVITIES[e.atividade] || {};
     const pts = calcPoints(e);
     const { counts, nomes } = reactionsFor(e.id);
-    const comments = allComments.filter(c => c.entryId === e.id).sort((x,y) => (x.criadoEm||0)-(y.criadoEm||0));
+    const comments = allComments.filter(c => c.entryId === e.id).sort((x, y) => (x.criadoEm || 0) - (y.criadoEm || 0));
     const isOpen = openComments.has(e.id);
+    const [yy, mm, dd] = e.data.split("-");
     return `
-    <div class="py-3 border-b border-slate-100 text-sm" data-entry="${e.id}">
-      <div class="flex items-start justify-between">
-        <div>
-          <span class="mr-1">${a.emoji || ""}</span>
-          <span class="font-medium">${e.autor}</span>
-          <span class="text-slate-500"> · ${a.label || e.atividade} · ${describeValue(e)} · ${e.data}</span>
-          <span class="${pts < 0 ? 'text-red-600' : 'text-indigo-600'} font-medium"> (${pts >= 0 ? '+' : ''}${fmt(pts)} pts)</span>
+    <div class="feed-item" data-entry="${e.id}">
+      <div class="feed-head">
+        ${avatarHtml(e.autor, true)}
+        <div class="feed-main">
+          <div><b>${esc(e.autor)}</b> <span class="muted">· ${dd}/${mm}</span></div>
+          <div>${a.emoji || ""} ${esc(a.label || e.atividade)} <span class="muted">· ${esc(describeValue(e))}</span>
+            <span class="${pts < 0 ? "pts-neg" : "pts-pos"}">${pts >= 0 ? "+" : ""}${fmt(pts)} pts</span></div>
         </div>
-        ${e.autor === currentUser ? `
-          <span class="flex gap-2 shrink-0">
-            <button data-id="${e.id}" class="edit-btn text-slate-400 hover:text-indigo-600 text-xs">editar</button>
-            <button data-id="${e.id}" class="del-btn text-slate-400 hover:text-red-500 text-xs">excluir</button>
-          </span>
-        ` : ""}
+        ${e.autor === currentUser ? `<span style="display:flex;gap:4px">
+          <button data-id="${e.id}" class="edit-btn link-btn">editar</button>
+          <button data-id="${e.id}" class="del-btn link-btn">excluir</button></span>` : ""}
       </div>
-      ${e.fotoUrl ? `<img src="${e.fotoUrl}" data-full="${e.fotoUrl}" class="mt-2 max-h-64 rounded-lg border border-slate-200 object-cover cursor-zoom-in" />` : ""}
-      <div class="flex items-center gap-1 mt-2 flex-wrap">
-        ${REACTION_EMOJIS.map(em => `
-          <button data-entry="${e.id}" data-emoji="${em}" title="${(nomes[em]||[]).join(', ')}"
-            class="react-btn ${myReaction(e.id, em) ? 'mine' : ''} text-xs border border-slate-200 rounded-full px-2 py-0.5 hover:bg-slate-50">
-            ${em} ${counts[em] || ""}
-          </button>
-        `).join("")}
-        <button data-entry="${e.id}" class="toggle-comments-btn text-xs text-slate-500 hover:underline ml-2">
-          💬 ${comments.length ? comments.length : "comentar"}
-        </button>
+      ${e.fotoUrl ? `<img src="${e.fotoUrl}" data-full="${e.fotoUrl}" class="feed-photo" alt="foto da atividade" />` : ""}
+      <div class="react-row">
+        ${REACTION_EMOJIS.map(em => `<button data-entry="${e.id}" data-emoji="${em}" title="${esc((nomes[em] || []).join(", "))}"
+          class="react-btn ${myReaction(e.id, em) ? "mine" : ""}">${em} ${counts[em] || ""}</button>`).join("")}
+        <button data-entry="${e.id}" class="toggle-comments-btn link-btn">💬 ${comments.length || "comentar"}</button>
       </div>
-      ${Object.keys(nomes).length > 0 ? `
-        <p class="text-xs text-slate-400 mt-1">
-          ${Object.entries(nomes).map(([em, ns]) => `${em} ${ns.join(", ")}`).join(" · ")}
-        </p>
-      ` : ""}
-      ${isOpen ? `
-        <div class="mt-2 pl-2 border-l-2 border-slate-100">
-          ${comments.map(c => `
-            <p class="text-xs mb-1"><span class="font-medium">${c.autor}:</span> ${c.texto}</p>
-          `).join("")}
-          <form class="comment-form flex gap-1 mt-1" data-entry="${e.id}">
-            <input type="text" placeholder="Escreva um comentário..." required
-              class="flex-1 border border-slate-300 rounded-lg px-2 py-1 text-xs" />
-            <button class="bg-indigo-600 text-white rounded-lg px-2 py-1 text-xs">Enviar</button>
-          </form>
-        </div>
-      ` : ""}
-    </div>
-    `;
+      ${Object.keys(nomes).length ? `<p class="tiny faint" style="margin-top:6px">${Object.entries(nomes).map(([em, ns]) => `${em} ${ns.map(esc).join(", ")}`).join(" · ")}</p>` : ""}
+      ${isOpen ? `<div class="comments">
+        ${comments.map(c => `<p class="comment"><b>${esc(c.autor)}:</b> ${esc(c.texto)}</p>`).join("")}
+        <form class="comment-form inline-form" data-entry="${e.id}">
+          <input type="text" placeholder="Escreva um comentário..." required />
+          <button class="btn sm">Enviar</button>
+        </form></div>` : ""}
+    </div>`;
   }).join("");
-
-  document.querySelectorAll(".del-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      if (confirm("Excluir este registro?")) {
-        await deleteDoc(doc(db, "entries", btn.dataset.id));
-      }
-    });
-  });
-
-  document.querySelectorAll(".edit-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const entry = allEntries.find(e => e.id === btn.dataset.id);
-      if (entry) entrarEmModoEdicao(entry);
-    });
-  });
-
-  document.querySelectorAll(".react-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const entryId = btn.dataset.entry;
-      const emoji = btn.dataset.emoji;
-      const existing = myReaction(entryId, emoji);
-      if (existing) {
-        await deleteDoc(doc(db, "reactions", existing.id));
-      } else {
-        await addDoc(reactionsRef, { entryId, autor: currentUser, emoji, criadoEm: Date.now() });
-      }
-    });
-  });
-
-  document.querySelectorAll(".toggle-comments-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.entry;
-      if (openComments.has(id)) openComments.delete(id);
-      else openComments.add(id);
-      renderFeed();
-    });
-  });
-
-  document.querySelectorAll(".comment-form").forEach(form => {
-    form.addEventListener("submit", async (ev) => {
-      ev.preventDefault();
-      const input = form.querySelector("input");
-      const texto = input.value.trim();
-      if (!texto) return;
-      await addDoc(commentsRef, { entryId: form.dataset.entry, autor: currentUser, texto, criadoEm: Date.now() });
-      input.value = "";
-    });
-  });
 }
 
-// Redimensiona e comprime a foto no navegador, retornando uma string base64
-// pequena o bastante para caber num documento do Firestore (limite de 1MB),
-// evitando a necessidade do Firebase Storage (que hoje exige plano pago).
+function render() {
+  if (!currentUser) return;
+  renderHero(); renderRanking(); renderMetaCasal(); renderMedalhas(); renderLoja(); renderFeed(); renderHall();
+  checkNewBadges();
+}
+
+// ---------- eventos do feed (delegação) ----------
+$("entries-list").addEventListener("click", async (ev) => {
+  const t = ev.target.closest("button, img");
+  if (!t) return;
+  if (t.tagName === "IMG" && t.dataset.full) {
+    $("lightbox-img").src = t.dataset.full; $("lightbox").classList.remove("hidden"); return;
+  }
+  if (t.classList.contains("del-btn")) {
+    if (confirm("Excluir este registro?")) await deleteDoc(doc(db, "entries", t.dataset.id));
+  } else if (t.classList.contains("edit-btn")) {
+    const entry = allEntries.find(e => e.id === t.dataset.id);
+    if (entry) entrarEmModoEdicao(entry);
+  } else if (t.classList.contains("react-btn")) {
+    const existing = myReaction(t.dataset.entry, t.dataset.emoji);
+    if (existing) await deleteDoc(doc(db, "reactions", existing.id));
+    else await addDoc(reactionsRef, { entryId: t.dataset.entry, autor: currentUser, emoji: t.dataset.emoji, criadoEm: Date.now() });
+  } else if (t.classList.contains("toggle-comments-btn")) {
+    const id = t.dataset.entry;
+    openComments.has(id) ? openComments.delete(id) : openComments.add(id);
+    renderFeed();
+  }
+});
+$("entries-list").addEventListener("submit", async (ev) => {
+  const form = ev.target.closest(".comment-form"); if (!form) return;
+  ev.preventDefault();
+  const input = form.querySelector("input");
+  const texto = input.value.trim(); if (!texto) return;
+  await addDoc(commentsRef, { entryId: form.dataset.entry, autor: currentUser, texto, criadoEm: Date.now() });
+  input.value = "";
+});
+
+// ---------- loja (delegação) ----------
+$("loja-itens").addEventListener("click", async (ev) => {
+  const btn = ev.target.closest(".resgatar-btn"); if (!btn) return;
+  const item = STORE_ITEMS.find(i => i.id === btn.dataset.itemId);
+  if (!item || saldoDe(currentUser) < item.custo) return;
+  if (!confirm(`Resgatar "${item.label}" por ${item.custo} pts?`)) return;
+  await addDoc(resgatesRef, { autor: currentUser, item: item.label, custo: item.custo, criadoEm: Date.now() });
+  mostrarToast(`${item.emoji} Resgatado! Aproveite.`);
+});
+$("bau").addEventListener("click", async (ev) => {
+  const btn = ev.target.closest("#bau-btn"); if (!btn || btn.disabled) return;
+  const w = weekInfo(currentWeekIdx());
+  const premio = BAU_PREMIOS[Math.floor(Math.random() * BAU_PREMIOS.length)];
+  btn.disabled = true;
+  await addDoc(messagesRef, { autor: currentUser, texto: `🎲 [baú S${SEASON.numero}-${w.numero}] ${currentUser} abriu o baú da semana e ganhou: ${premio}`, criadoEm: Date.now() });
+  launchFireworks();
+  mostrarToast(`🎁 Você ganhou: ${premio}`, 4500);
+});
+
+// ---------- medalhas: trocar pessoa ----------
+$("badge-people").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-person]"); if (!b) return;
+  badgePerson = b.dataset.person; renderMedalhas();
+});
+
+// ============================================================
+// FOTO, FORMULÁRIO, EDIÇÃO
+// ============================================================
 function compressImage(file, maxDim = 900, quality = 0.6) {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    const reader = new FileReader();
+    const img = new Image(); const reader = new FileReader();
     reader.onload = () => { img.src = reader.result; };
     reader.onerror = reject;
     img.onload = () => {
       let { width, height } = img;
-      if (width > height && width > maxDim) {
-        height = Math.round(height * (maxDim / width));
-        width = maxDim;
-      } else if (height > maxDim) {
-        width = Math.round(width * (maxDim / height));
-        height = maxDim;
-      }
+      if (width > height && width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+      else if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; }
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width; canvas.height = height;
       canvas.getContext("2d").drawImage(img, 0, 0, width, height);
       resolve(canvas.toDataURL("image/jpeg", quality));
     };
@@ -616,222 +1144,95 @@ function compressImage(file, maxDim = 900, quality = 0.6) {
   });
 }
 
-function renderChat() {
-  const el = document.getElementById("chat-messages");
-  const msgs = [...allMessages].sort((a,b) => (a.criadoEm||0)-(b.criadoEm||0));
-  el.innerHTML = msgs.map(m => `
-    <div class="mb-2 text-sm ${m.autor === currentUser ? 'text-right' : ''}">
-      <span class="inline-block ${m.autor === currentUser ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-800'} rounded-2xl px-3 py-1.5 max-w-[80%]">
-        ${m.autor !== currentUser ? `<span class="block text-xs opacity-70">${m.autor}</span>` : ""}
-        ${m.texto}
-      </span>
-    </div>
-  `).join("");
-  el.scrollTop = el.scrollHeight;
-
-  if (!chatAberto && allMessages.length > chatMsgCountVisto) {
-    document.getElementById("chat-fab-badge").classList.remove("hidden");
-  }
-}
-
-// escuta em tempo real
-onSnapshot(query(entriesRef, orderBy("data", "desc")), snap => {
-  allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  render();
-});
-onSnapshot(reactionsRef, snap => {
-  allReactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  render();
-});
-onSnapshot(commentsRef, snap => {
-  allComments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  render();
-});
-onSnapshot(resgatesRef, snap => {
-  allResgates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  render();
-});
-onSnapshot(query(messagesRef, orderBy("criadoEm", "asc")), snap => {
-  allMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  if (chatMsgCountVisto === null) {
-    chatMsgCountVisto = allMessages.length;
-    localStorage.setItem("chat_msgs_vistos", String(chatMsgCountVisto));
-  }
-  renderChat();
-});
-
-// abas
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentTab = btn.dataset.tab;
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
-    document.getElementById("tab-" + currentTab).classList.remove("hidden");
-  });
-});
-
-// filtros de período
-document.querySelectorAll(".period-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentPeriod = btn.dataset.period;
-    document.querySelectorAll(".period-btn").forEach(b => b.classList.remove("bg-indigo-600","text-white"));
-    btn.classList.add("bg-indigo-600","text-white");
-    render();
-  });
-});
-
-// formulário: monta as opções de atividade dinamicamente a partir de ACTIVITIES
-const atividadeSelect = document.getElementById("atividade");
-atividadeSelect.innerHTML = Object.entries(ACTIVITIES).map(([key, a]) =>
-  `<option value="${key}">${a.emoji} ${a.label} (${describeRule(a)})</option>`
-).join("");
+const atividadeSelect = $("atividade");
+atividadeSelect.innerHTML = Object.entries(ACTIVITIES).map(([k, a]) =>
+  `<option value="${k}">${a.emoji} ${a.label} (${describeRule(a)})</option>`).join("");
 renderRegras();
 
-const valorLabel = document.getElementById("valor-label");
-const valorInput = document.getElementById("valor");
-
+const valorInput = $("valor");
 function updateValorField() {
   const a = ACTIVITIES[atividadeSelect.value];
-  valorLabel.textContent = a.campoLabel;
-  if (a.campo === "ocorrencia") {
-    valorInput.value = "1";
-  } else {
-    valorInput.value = "";
-  }
+  $("valor-label").textContent = a.campoLabel;
+  valorInput.value = a.campo === "ocorrencia" ? "1" : "";
 }
 atividadeSelect.addEventListener("change", updateValorField);
 updateValorField();
 
-const form = document.getElementById("entry-form");
-const submitBtn = form.querySelector("button[type=submit], button:not([type])");
-const formTitulo = document.getElementById("form-titulo");
-const cancelarEdicaoBtn = document.getElementById("cancelar-edicao");
-const fotoInput = document.getElementById("foto");
-const fotoPreviewWrap = document.getElementById("foto-preview-wrap");
-const fotoPreviewImg = document.getElementById("foto-preview-img");
-
-// id do registro em edição (null = modo "novo registro")
+const entryForm = $("entry-form");
+const submitBtn = $("submit-btn");
+const fotoInput = $("foto");
 let editandoId = null;
 
-function showFotoPreview(srcOuArquivo) {
-  if (!srcOuArquivo) { hideFotoPreview(); return; }
-  fotoPreviewImg.src = typeof srcOuArquivo === "string" ? srcOuArquivo : URL.createObjectURL(srcOuArquivo);
-  fotoPreviewWrap.classList.remove("hidden");
+function showFotoPreview(src) {
+  if (!src) { hideFotoPreview(); return; }
+  $("foto-preview-img").src = typeof src === "string" ? src : URL.createObjectURL(src);
+  $("foto-preview-wrap").classList.remove("hidden");
 }
-
-function hideFotoPreview() {
-  fotoPreviewWrap.classList.add("hidden");
-  fotoPreviewImg.src = "";
-}
-
+function hideFotoPreview() { $("foto-preview-wrap").classList.add("hidden"); $("foto-preview-img").src = ""; }
 fotoInput.addEventListener("change", () => showFotoPreview(fotoInput.files[0]));
+$("foto-preview-remover").addEventListener("click", () => { fotoInput.value = ""; hideFotoPreview(); });
 
-document.getElementById("foto-preview-remover").addEventListener("click", () => {
-  fotoInput.value = "";
-  hideFotoPreview();
-});
-
+function abrirSheet() { $("sheet").classList.remove("hidden"); document.body.style.overflow = "hidden"; }
+function fecharSheet() { $("sheet").classList.add("hidden"); document.body.style.overflow = ""; }
+function resetForm() {
+  editandoId = null;
+  entryForm.reset(); hideFotoPreview();
+  $("data").value = todayIso();
+  updateValorField();
+  $("form-titulo").textContent = "Registrar atividade";
+  submitBtn.textContent = "Salvar";
+}
 function entrarEmModoEdicao(entry) {
   editandoId = entry.id;
-  document.getElementById("tab-ranking").classList.remove("hidden");
-  document.getElementById("tab-feed").classList.add("hidden");
-  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-  document.querySelector('.tab-btn[data-tab="ranking"]').classList.add("active");
-
-  atividadeSelect.value = entry.atividade;
-  updateValorField();
+  atividadeSelect.value = entry.atividade; updateValorField();
   valorInput.value = entry.valor;
-  document.getElementById("data").value = entry.data;
+  $("data").value = entry.data;
   fotoInput.value = "";
-  if (entry.fotoUrl) showFotoPreview(entry.fotoUrl);
-  else hideFotoPreview();
-
-  formTitulo.textContent = "Editar atividade";
+  entry.fotoUrl ? showFotoPreview(entry.fotoUrl) : hideFotoPreview();
+  $("form-titulo").textContent = "Editar atividade";
   submitBtn.textContent = "Salvar edição";
-  cancelarEdicaoBtn.classList.remove("hidden");
-  form.scrollIntoView({ behavior: "smooth", block: "center" });
+  abrirSheet();
 }
+$("fab-add").addEventListener("click", () => { resetForm(); abrirSheet(); });
+$("cancelar-edicao").addEventListener("click", () => { fecharSheet(); resetForm(); });
+$("sheet").addEventListener("click", (ev) => { if (ev.target === $("sheet")) { fecharSheet(); resetForm(); } });
 
-function sairDoModoEdicao() {
-  editandoId = null;
-  form.reset();
-  hideFotoPreview();
-  document.getElementById("data").value = new Date().toISOString().slice(0,10);
-  updateValorField();
-  formTitulo.textContent = "Registrar atividade";
-  submitBtn.textContent = "Salvar";
-  cancelarEdicaoBtn.classList.add("hidden");
-}
-
-cancelarEdicaoBtn.addEventListener("click", sairDoModoEdicao);
-
-// toast de confirmação (usado pelo "colar print")
-function mostrarToast(texto) {
-  let toast = document.getElementById("app-toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "app-toast";
-    toast.className = "fixed top-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-2 rounded-lg shadow-lg z-[400] transition-opacity";
-    document.body.appendChild(toast);
-  }
-  toast.textContent = texto;
-  toast.style.opacity = "1";
-  clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(() => { toast.style.opacity = "0"; }, 2200);
-}
-
-// permite colar (Ctrl+V) um print em qualquer campo do formulário de
-// registro/edição de atividade, sem precisar salvar a imagem como arquivo antes
+// colar print (Ctrl+V) enquanto o formulário está aberto
 document.addEventListener("paste", (ev) => {
-  const items = ev.clipboardData && ev.clipboardData.items;
-  if (!items) return;
+  if ($("sheet").classList.contains("hidden")) return;
+  const items = ev.clipboardData && ev.clipboardData.items; if (!items) return;
   for (const item of items) {
     if (item.type && item.type.startsWith("image/")) {
-      const file = item.getAsFile();
-      if (!file) continue;
+      const file = item.getAsFile(); if (!file) continue;
       const dt = new DataTransfer();
       dt.items.add(new File([file], `colado-${Date.now()}.png`, { type: file.type || "image/png" }));
-      fotoInput.files = dt.files;
-      showFotoPreview(fotoInput.files[0]);
-      mostrarToast("📎 Print colado! Confira no campo Foto.");
-      ev.preventDefault();
-      break;
+      fotoInput.files = dt.files; showFotoPreview(fotoInput.files[0]);
+      mostrarToast("📎 Print colado!"); ev.preventDefault(); break;
     }
   }
 }, true);
 
-form.addEventListener("submit", async (ev) => {
+entryForm.addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const atividade = atividadeSelect.value;
   const valor = parseFloat(String(valorInput.value).replace(",", "."));
-  const data = document.getElementById("data").value;
+  const data = $("data").value;
   const file = fotoInput.files[0];
   if (!valor || valor <= 0 || !data) return;
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = editandoId ? "Salvando edição..." : "Salvando...";
+  const editando = !!editandoId;
+  submitBtn.disabled = true; submitBtn.textContent = "Salvando...";
   try {
     let fotoUrl = null;
-    if (file) {
-      fotoUrl = await compressImage(file);
-    } else if (editandoId && !fotoPreviewWrap.classList.contains("hidden")) {
-      // manteve a foto original (não trocou nem removeu)
+    if (file) fotoUrl = await compressImage(file);
+    else if (editando && !$("foto-preview-wrap").classList.contains("hidden")) {
       const original = allEntries.find(e => e.id === editandoId);
       fotoUrl = original ? (original.fotoUrl || null) : null;
     }
-
-    if (editandoId) {
-      await updateDoc(doc(db, "entries", editandoId), { atividade, valor, data, fotoUrl });
-    } else {
-      await addDoc(entriesRef, {
-        autor: currentUser,
-        atividade, valor, data,
-        criadoEm: Date.now(),
-        fotoUrl
-      });
-    }
-    sairDoModoEdicao();
+    if (editando) await updateDoc(doc(db, "entries", editandoId), { atividade, valor, data, fotoUrl });
+    else await addDoc(entriesRef, { autor: currentUser, atividade, valor, data, criadoEm: Date.now(), fotoUrl });
+    fecharSheet(); resetForm();
+    const pts = calcPoints({ atividade, valor });
+    mostrarToast(editando ? "✅ Atividade atualizada" : `✅ Registrado! ${pts >= 0 ? "+" : ""}${fmt(pts)} pts`);
   } catch (err) {
     alert("Erro ao salvar: " + err.message);
   } finally {
@@ -840,222 +1241,110 @@ form.addEventListener("submit", async (ev) => {
   }
 });
 
-document.getElementById("chat-form").addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  const input = document.getElementById("chat-input");
-  const texto = input.value.trim();
-  if (!texto) return;
-  await addDoc(messagesRef, { autor: currentUser, texto, criadoEm: Date.now() });
-  input.value = "";
+// ============================================================
+// ABAS, PERÍODO, TEMA
+// ============================================================
+document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {
+  currentTab = btn.dataset.tab;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+  $("tab-" + currentTab).classList.remove("hidden");
+  window.scrollTo({ top: 0 });
+}));
+document.querySelectorAll(".period-btn").forEach(btn => btn.addEventListener("click", () => {
+  currentPeriod = btn.dataset.period;
+  document.querySelectorAll(".period-btn").forEach(b => b.classList.toggle("on", b === btn));
+  renderRanking();
+}));
+
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $("theme-toggle").textContent = t === "light" ? "☀️" : "🌙";
+  document.querySelector('meta[name="theme-color"]').content = t === "light" ? "#f3f1ff" : "#0a0e1f";
+}
+{
+  let saved = null; try { saved = localStorage.getItem("ranking_theme"); } catch (e) {}
+  applyTheme(saved || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
+}
+$("theme-toggle").addEventListener("click", () => {
+  const t = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  applyTheme(t); try { localStorage.setItem("ranking_theme", t); } catch (e) {}
 });
 
-// widget flutuante de bate-papo
+// ============================================================
+// BATE-PAPO
+// ============================================================
 let chatAberto = false;
-const chatMsgsVistosSalvo = localStorage.getItem("chat_msgs_vistos");
-// null = ainda não sabemos quantas mensagens já existiam; é definido na
-// primeira leitura do chat (ver onSnapshot de messagesRef mais abaixo),
-// pra não marcar o histórico já existente como "não lido".
-let chatMsgCountVisto = chatMsgsVistosSalvo !== null ? parseInt(chatMsgsVistosSalvo, 10) : null;
+const salvoVistas = localStorage.getItem("chat_msgs_vistos");
+let chatMsgCountVisto = salvoVistas !== null ? parseInt(salvoVistas, 10) : null;
 
+function renderChat() {
+  const el = $("chat-messages");
+  const msgs = [...allMessages].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+  el.innerHTML = msgs.map(m => `
+    <div class="bubble-row ${m.autor === currentUser ? "me" : ""}">
+      <div class="bubble">${m.autor !== currentUser ? `<small>${esc(m.autor)}</small>` : ""}${esc(m.texto)}</div>
+    </div>`).join("");
+  el.scrollTop = el.scrollHeight;
+  if (!chatAberto && allMessages.length > chatMsgCountVisto) $("chat-fab-badge").classList.remove("hidden");
+}
 function abrirChat() {
   chatAberto = true;
-  document.getElementById("chat-widget").classList.remove("hidden");
-  document.getElementById("chat-fab").classList.add("hidden");
-  document.getElementById("chat-fab-badge").classList.add("hidden");
-  chatMsgCountVisto = allMessages.length;
-  localStorage.setItem("chat_msgs_vistos", String(chatMsgCountVisto));
-  const el = document.getElementById("chat-messages");
-  el.scrollTop = el.scrollHeight;
+  $("chat-widget").classList.remove("hidden"); $("chat-fab").classList.add("hidden"); $("chat-fab-badge").classList.add("hidden");
+  chatMsgCountVisto = allMessages.length; localStorage.setItem("chat_msgs_vistos", String(chatMsgCountVisto));
+  $("chat-messages").scrollTop = $("chat-messages").scrollHeight;
 }
-
-function fecharChat() {
-  chatAberto = false;
-  document.getElementById("chat-widget").classList.add("hidden");
-  document.getElementById("chat-fab").classList.remove("hidden");
-}
-
-document.getElementById("chat-fab").addEventListener("click", abrirChat);
-document.getElementById("chat-close").addEventListener("click", fecharChat);
-
-// lightbox: clique numa foto do feed pra ver em tamanho maior
-document.getElementById("lightbox").addEventListener("click", () => {
-  document.getElementById("lightbox").classList.add("hidden");
-  document.getElementById("lightbox").classList.remove("flex");
-});
-document.getElementById("entries-list").addEventListener("click", (ev) => {
-  if (ev.target.tagName === "IMG" && ev.target.dataset.full) {
-    document.getElementById("lightbox-img").src = ev.target.dataset.full;
-    const lb = document.getElementById("lightbox");
-    lb.classList.remove("hidden");
-    lb.classList.add("flex");
-  }
-});
-
-// tela de identificação
-function setupUser() {
-  document.getElementById("current-user-name").textContent = currentUser;
-  document.getElementById("gate").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
-  document.getElementById("chat-fab").classList.remove("hidden");
-}
-if (currentUser) setupUser();
-
-document.getElementById("name-form").addEventListener("submit", (ev) => {
+function fecharChat() { chatAberto = false; $("chat-widget").classList.add("hidden"); $("chat-fab").classList.remove("hidden"); }
+$("chat-fab").addEventListener("click", abrirChat);
+$("chat-close").addEventListener("click", fecharChat);
+$("chat-form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
-  const name = document.getElementById("name-input").value.trim();
-  if (!name) return;
-  currentUser = name;
-  localStorage.setItem("ranking_user", name);
-  setupUser();
+  const texto = $("chat-input").value.trim(); if (!texto) return;
+  await addDoc(messagesRef, { autor: currentUser, texto, criadoEm: Date.now() });
+  $("chat-input").value = "";
+});
+$("lightbox").addEventListener("click", () => $("lightbox").classList.add("hidden"));
+
+// ============================================================
+// TEMPO REAL
+// ============================================================
+onSnapshot(query(entriesRef, orderBy("data", "desc")), snap => {
+  allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() })); loaded.entries = true; render();
+});
+onSnapshot(reactionsRef, snap => { allReactions = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderFeed(); });
+onSnapshot(commentsRef, snap => {
+  allComments = snap.docs.map(d => ({ id: d.id, ...d.data() })); loaded.comments = true; render();
+});
+onSnapshot(resgatesRef, snap => { allResgates = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); });
+onSnapshot(query(messagesRef, orderBy("criadoEm", "asc")), snap => {
+  allMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (chatMsgCountVisto === null) { chatMsgCountVisto = allMessages.length; localStorage.setItem("chat_msgs_vistos", String(chatMsgCountVisto)); }
+  renderChat(); renderLoja();
 });
 
-document.getElementById("switch-user").addEventListener("click", () => {
-  localStorage.removeItem("ranking_user");
-  currentUser = "";
-  document.getElementById("gate").classList.remove("hidden");
-  document.getElementById("app").classList.add("hidden");
+// ============================================================
+// IDENTIFICAÇÃO
+// ============================================================
+function setupUser() {
+  $("switch-user").outerHTML = `<button id="switch-user" class="avatar" title="Trocar de usuário" style="background:${avatarColor(currentUser)}">${esc(currentUser.charAt(0).toUpperCase())}</button>`;
+  $("switch-user").addEventListener("click", trocarUsuario);
+  $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("chat-fab").classList.remove("hidden");
+  badgePerson = currentUser;
+  render();
+}
+function trocarUsuario() {
+  if (!confirm("Trocar de usuário neste aparelho?")) return;
+  localStorage.removeItem("ranking_user"); currentUser = "";
+  $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("chat-fab").classList.add("hidden"); fecharChat();
+}
+$("name-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const name = $("name-input").value.trim(); if (!name) return;
+  currentUser = name; localStorage.setItem("ranking_user", name); setupUser();
 });
-
-document.getElementById("data").value = new Date().toISOString().slice(0,10);
+$("data").value = todayIso();
+if (currentUser) setupUser();
 </script>
-
-<!-- ============================================================
-     HTML / interface
-============================================================= -->
-<div class="max-w-2xl mx-auto p-4">
-
-  <header class="text-center py-6">
-    <h1 class="text-2xl font-bold text-indigo-700">🏆 Ranking de Metas</h1>
-    <p class="text-slate-500 text-sm">Flashcards, questões, vídeo-aulas, leitura de PDF, simulados, atividade física e sono. Quem pontua mais?</p>
-  </header>
-
-  <!-- tela de identificação -->
-  <div id="gate" class="bg-white rounded-xl shadow p-6 mb-6">
-    <h2 class="font-semibold mb-3">Como você quer aparecer no ranking?</h2>
-    <form id="name-form" class="flex gap-2">
-      <input id="name-input" type="text" placeholder="Seu nome" required
-             class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
-      <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Entrar</button>
-    </form>
-    <p class="text-xs text-slate-400 mt-2">O nome fica salvo só neste navegador. Cada pessoa entra com o próprio nome no seu celular/computador.</p>
-  </div>
-
-  <div id="app" class="hidden">
-    <div class="flex justify-between items-center mb-4 text-sm text-slate-500">
-      <span>Você é: <strong id="current-user-name" class="text-slate-700"></strong></span>
-      <button id="switch-user" class="text-indigo-600 hover:underline">trocar</button>
-    </div>
-
-    <!-- abas -->
-    <div class="flex gap-4 border-b border-slate-200 mb-4 text-sm font-medium">
-      <button class="tab-btn active pb-2 border-b-2 border-transparent" data-tab="ranking">Ranking</button>
-      <button class="tab-btn pb-2 border-b-2 border-transparent" data-tab="feed">Mais</button>
-    </div>
-
-    <!-- ===================== ABA RANKING ===================== -->
-    <div id="tab-ranking" class="tab-panel">
-      <div class="bg-white rounded-xl shadow p-5 mb-6">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="font-semibold">Ranking</h2>
-          <div class="flex gap-1 text-xs">
-            <button class="period-btn px-2 py-1 rounded-md" data-period="today">Hoje</button>
-            <button class="period-btn px-2 py-1 rounded-md bg-indigo-600 text-white" data-period="7">7 dias</button>
-            <button class="period-btn px-2 py-1 rounded-md" data-period="30">30 dias</button>
-            <button class="period-btn px-2 py-1 rounded-md" data-period="all">Tudo</button>
-          </div>
-        </div>
-        <div id="ranking"></div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow p-5 mb-6">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="font-semibold" id="form-titulo">Registrar atividade</h2>
-          <button type="button" id="cancelar-edicao" class="hidden text-xs text-slate-500 hover:underline">cancelar edição</button>
-        </div>
-        <form id="entry-form" class="grid grid-cols-2 gap-3 text-sm">
-          <label class="col-span-2">
-            Atividade
-            <select id="atividade" class="w-full border border-slate-300 rounded-lg px-3 py-2 mt-1"></select>
-          </label>
-          <label class="col-span-2" id="valor-wrap">
-            <span id="valor-label">Valor</span>
-            <input id="valor" type="text" inputmode="decimal" required
-                   class="w-full border border-slate-300 rounded-lg px-3 py-2 mt-1" />
-          </label>
-          <label class="col-span-2">
-            Data
-            <input id="data" type="date" required
-                   class="w-full border border-slate-300 rounded-lg px-3 py-2 mt-1" />
-          </label>
-          <label class="col-span-2">
-            Foto (opcional, prova de que fez a atividade)
-            <input id="foto" type="file" accept="image/*" capture="environment"
-                   class="w-full text-xs mt-1" />
-            <span id="foto-dica" class="block text-xs text-slate-400 mt-1">Dica: clique em qualquer campo aqui do formulário e cole (Ctrl+V / Cmd+V) um print — não precisa clicar no campo de foto.</span>
-            <div id="foto-preview-wrap" class="hidden mt-2 flex items-center gap-2">
-              <img id="foto-preview-img" class="max-h-24 rounded-lg border border-slate-200" />
-              <button type="button" id="foto-preview-remover" class="text-xs text-red-500 hover:underline">remover foto</button>
-            </div>
-          </label>
-          <button type="submit" class="col-span-2 bg-indigo-600 text-white rounded-lg py-2 font-medium mt-1">Salvar</button>
-        </form>
-      </div>
-
-      <div class="bg-white rounded-xl shadow p-5 mb-10">
-        <h2 class="font-semibold mb-3">Feed de atividades</h2>
-        <div id="entries-list"></div>
-      </div>
-    </div>
-
-    <!-- ===================== ABA MAIS ===================== -->
-    <div id="tab-feed" class="tab-panel hidden">
-      <div class="bg-white rounded-xl shadow p-5 mb-6">
-        <h2 class="font-semibold mb-3">💪 Meta do casal</h2>
-        <div id="meta-casal"></div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow p-5 mb-6">
-        <h2 class="font-semibold mb-3">🏅 Conquistas</h2>
-        <div id="badges"></div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow p-5 mb-6">
-        <h2 class="font-semibold mb-3">🎁 Loja</h2>
-        <div id="loja-itens"></div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow p-5 mb-10">
-        <h2 class="font-semibold mb-3">Pontuação por atividade</h2>
-        <div id="regras-list"></div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ===================== WIDGET DE BATE-PAPO FLUTUANTE ===================== -->
-<button id="chat-fab" class="hidden fixed bottom-5 right-5 z-[150] bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-14 h-14 shadow-lg flex items-center justify-center text-2xl">
-  💬
-  <span id="chat-fab-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">•</span>
-</button>
-
-<div id="chat-widget" class="hidden fixed bottom-5 right-5 z-[150] w-[92vw] max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col border border-slate-200" style="height: 70vh; max-height: 560px;">
-  <div class="flex items-center justify-between px-4 py-3 bg-indigo-600 text-white rounded-t-2xl">
-    <span class="font-semibold text-sm">💬 Bate-papo</span>
-    <button id="chat-close" class="text-white/80 hover:text-white text-lg leading-none">✕</button>
-  </div>
-  <div id="chat-messages" class="flex-1 overflow-y-auto p-3"></div>
-  <form id="chat-form" class="flex gap-2 p-3 border-t border-slate-100">
-    <input id="chat-input" type="text" placeholder="Escreva uma mensagem..." required
-           class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
-    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Enviar</button>
-  </form>
-</div>
-
-<!-- ===================== LIGHTBOX DE FOTOS DO FEED ===================== -->
-<div id="lightbox" class="hidden fixed inset-0 bg-black/80 z-[300] items-center justify-center p-4 cursor-zoom-out">
-  <img id="lightbox-img" src="" class="max-w-full max-h-full rounded-lg" />
-</div>
 
 <script>
 if ("serviceWorker" in navigator) {
