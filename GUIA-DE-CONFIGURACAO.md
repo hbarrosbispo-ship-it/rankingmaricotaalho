@@ -68,3 +68,11 @@ Arquivos do PWA: `manifest.webmanifest`, `sw.js` (service worker) e a pasta `ico
 - **Retrospectiva** da semana atual, da semana passada ou do mês, com botão de compartilhar (usa a folha de compartilhamento do iPhone).
 - **Exportar dados**: backup em JSON e registros em CSV (sem as fotos).
 - Ainda não feitos, porque exigem configuração no Firebase: atividades personalizáveis (precisa mudar as regras do Firestore) e notificações push (precisa do Firebase Cloud Messaging e de um servidor).
+
+## Novo visual (inspirado em apps de estudo reais)
+
+O visual "Aurora" (degradês e vidro) foi trocado por um mais sóbrio: fundo cinza claro, cartões brancos com borda fina, verde-menta como cor principal e roxo de apoio, títulos pequenos em maiúsculas, ícones de linha e medalhas hexagonais. O tema escuro continua disponível (botão no topo) e segue o aparelho na primeira vez. Em tela larga os cartões se dividem em duas colunas.
+
+- Início: indicadores (pontos hoje, sequência, saldo, nível), faixa de **Constância** com os últimos 14 dias, metas semanais em barras.
+- Medalhas: hexágono colorido pelo nível, com a meta do nível no centro.
+- Versão anterior guardada em `backup_pre_rebranding/index_aurora.html`.

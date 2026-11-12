@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0e1f" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Maricota & Alho" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="icons/icon-192.png" />
+<title>Maricota &amp; Alho</title>
+<style>
+  /* ============================================================
+     TEMA "AURORA" — variáveis de cor (escuro por padrão, claro opcional)
+  ============================================================ */
+  :root {
+    --bg: #0a0e1f;
+    --bg-glow-1: rgba(124, 92, 255, .28);
+    --bg-glow-2: rgba(255, 95, 162, .18);
+    --card: rgba(255,255,255,.06);
+    --card-solid: #151a33;
+    --line: rgba(255,255,255,.10);
+    --text: #eef0ff;
+    --muted: #9aa3c7;
+    --faint: #6b7399;
+    --primary: #7c5cff;
+    --primary-2: #ff5fa2;
+    --grad: linear-gradient(135deg, #7c5cff 0%, #ff5fa2 100%);
+    --gold: #ffc857;
+    --ok: #34d399;
+    --bad: #fb7185;
+    --input: rgba(255,255,255,.07);
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+    --nav: rgba(14,18,40,.82);
+    --track: rgba(255,255,255,.10);
+    --tier-bronze: #cd7f32; --tier-prata: #c0c8d8; --tier-ouro: #ffc857; --tier-platina: #7be3ff;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f3f1ff;
+    --bg-glow-1: rgba(124, 92, 255, .20);
+    --bg-glow-2: rgba(255, 95, 162, .14);
+    --card: #ffffff;
+    --card-solid: #ffffff;
+    --line: #e6e2ff;
+    --text: #1b1740;
+    --muted: #6b6892;
+    --faint: #9a97b8;
+    --input: #f6f4ff;
+    --shadow: 0 8px 24px rgba(80,60,160,.12);
+    --nav: rgba(255,255,255,.90);
+    --track: #e9e5ff;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body {
+    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(600px 380px at 10% -5%, var(--bg-glow-1), transparent 70%),
+      radial-gradient(520px 360px at 100% 0%, var(--bg-glow-2), transparent 70%);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    -webkit-font-smoothing: antialiased;
+  }
+  .hidden { display: none !important; }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  input, select { font: inherit; color: var(--text); }
+  h1, h2, h3, p { margin: 0; }
+
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+  main.wrap { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+
+  /* ---------- cartões ---------- */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .card h2 { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+  .muted { color: var(--muted); }
+  .faint { color: var(--faint); }
+  .small { font-size: 12px; }
+  .tiny { font-size: 11px; }
+  .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* ---------- topo ---------- */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 8px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo {
+    width: 38px; height: 38px; border-radius: 12px; background: var(--grad);
+    display: grid; place-items: center; font-size: 20px; box-shadow: 0 6px 18px rgba(124,92,255,.45);
+  }
+  .brand-name { font-weight: 800; font-size: 17px; letter-spacing: -.2px; line-height: 1.1; }
+  .brand-sub { font-size: 11px; color: var(--muted); }
+  .top-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
+    background: var(--card); border: 1px solid var(--line); font-size: 17px;
+  }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+    font-weight: 800; color: #fff; font-size: 15px; flex-shrink: 0;
+  }
+  .avatar.sm { width: 32px; height: 32px; font-size: 13px; }
+
+  /* ---------- hero ---------- */
+  .hero {
+    background: var(--grad); border: 0; color: #fff; position: relative; overflow: hidden;
+    box-shadow: 0 14px 34px rgba(124,92,255,.40);
+  }
+  .hero::after {
+    content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px;
+    border-radius: 50%; background: rgba(255,255,255,.14);
+  }
+  .hero .eyebrow { font-size: 12px; opacity: .85; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; }
+  .hero h1 { font-size: 24px; font-weight: 800; margin: 4px 0 12px; letter-spacing: -.3px; }
+  .hero-stats { display: flex; gap: 10px; position: relative; z-index: 1; }
+  .hero-stat { flex: 1; background: rgba(255,255,255,.18); border-radius: 16px; padding: 10px 12px; backdrop-filter: blur(6px); }
+  .hero-stat b { display: block; font-size: 22px; font-weight: 800; }
+  .hero-stat span { font-size: 11px; opacity: .9; }
+
+  /* ---------- chips / pílulas ---------- */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    background: var(--input); border: 1px solid var(--line); color: var(--muted);
+  }
+  .chip.on { background: var(--grad); color: #fff; border-color: transparent; }
+
+  /* ---------- ranking ---------- */
+  .rank-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .rank-row:last-child { margin-bottom: 0; }
+  .rank-body { flex: 1; min-width: 0; }
+  .rank-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font-weight: 700; font-size: 14px; }
+  .rank-pts { font-variant-numeric: tabular-nums; }
+  .track { height: 10px; border-radius: 999px; background: var(--track); overflow: hidden; }
+  .fill { height: 100%; border-radius: 999px; background: var(--grad); transition: width .5s cubic-bezier(.2,.8,.2,1); }
+  .fill.gold { background: linear-gradient(90deg, #ffc857, #ff9f43); }
+  .fill.ok { background: linear-gradient(90deg, #34d399, #22d3ee); }
+  .medal { font-size: 20px; width: 26px; text-align: center; }
+
+  /* ---------- meta do casal (anel) ---------- */
+  .goal { display: flex; align-items: center; gap: 16px; }
+  .ring { position: relative; width: 112px; height: 112px; flex-shrink: 0; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .ring-bg { stroke: var(--track); }
+  .ring .ring-fg { stroke: url(#ringGrad); transition: stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1); }
+  .ring-center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .ring-center b { font-size: 22px; font-weight: 800; line-height: 1; }
+  .ring-center span { font-size: 10px; color: var(--muted); }
+
+  /* ---------- feed ---------- */
+  .feed-item { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .feed-item:last-child { border-bottom: 0; padding-bottom: 0; }
+  .feed-item:first-child { padding-top: 0; }
+  .feed-head { display: flex; gap: 10px; align-items: flex-start; }
+  .feed-main { flex: 1; min-width: 0; font-size: 14px; }
+  .feed-photo { margin-top: 10px; width: 100%; max-height: 300px; object-fit: cover; border-radius: 16px; border: 1px solid var(--line); cursor: zoom-in; }
+  .pts-pos { color: var(--ok); font-weight: 700; }
+  .pts-neg { color: var(--bad); font-weight: 700; }
+  .link-btn { font-size: 12px; color: var(--faint); padding: 2px 4px; }
+  .link-btn:hover { color: var(--text); }
+  .react-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+  .react-btn { font-size: 12px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--input); }
+  .react-btn.mine { border-color: var(--primary); background: rgba(124,92,255,.22); }
+  .comments { margin-top: 10px; padding-left: 12px; border-left: 2px solid var(--line); }
+  .comment { font-size: 13px; margin-bottom: 4px; }
+  .inline-form { display: flex; gap: 6px; margin-top: 8px; }
+
+  /* ---------- formulários ---------- */
+  .field { display: block; margin-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .field input[type=text], .field input[type=date], .field select, .inline-form input, .chat-input {
+    width: 100%; margin-top: 6px; padding: 12px 14px; border-radius: 14px;
+    background: var(--input); border: 1px solid var(--line); font-size: 15px; outline: none;
+  }
+  .inline-form input { margin-top: 0; padding: 9px 12px; font-size: 13px; }
+  .field input:focus, .field select:focus, .inline-form input:focus, .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124,92,255,.25); }
+  .field select option { color: #111; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 18px; border-radius: 14px; font-weight: 700; font-size: 14px;
+    background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(124,92,255,.35);
+  }
+  .btn:disabled { opacity: .5; box-shadow: none; cursor: not-allowed; }
+  .btn.block { width: 100%; }
+  .btn.ghost { background: var(--input); color: var(--text); box-shadow: none; border: 1px solid var(--line); }
+  .btn.sm { padding: 8px 14px; font-size: 12px; border-radius: 12px; }
+
+  /* ---------- medalhas ---------- */
+  .badge-cat { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .6px; text-transform: uppercase; margin: 18px 0 10px; }
+  .badge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .badge {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px;
+    display: flex; gap: 10px; align-items: flex-start; box-shadow: var(--shadow);
+  }
+  .badge-ico {
+    width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 23px; flex-shrink: 0;
+    background: var(--input); border: 3px solid var(--line);
+  }
+  .badge.locked .badge-ico { filter: grayscale(1); opacity: .45; }
+  .badge.t1 .badge-ico { border-color: var(--tier-bronze); box-shadow: 0 0 14px rgba(205,127,50,.45); }
+  .badge.t2 .badge-ico { border-color: var(--tier-prata);  box-shadow: 0 0 14px rgba(192,200,216,.45); }
+  .badge.t3 .badge-ico { border-color: var(--tier-ouro);   box-shadow: 0 0 16px rgba(255,200,87,.55); }
+  .badge.t4 .badge-ico { border-color: var(--tier-platina);box-shadow: 0 0 18px rgba(123,227,255,.65); }
+  .badge-body { flex: 1; min-width: 0; }
+  .badge-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
+  .badge-tier { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin: 2px 0 6px; }
+  .badge.t1 .badge-tier { color: var(--tier-bronze); }
+  .badge.t2 .badge-tier { color: var(--tier-prata); }
+  .badge.t3 .badge-tier { color: var(--tier-ouro); }
+  .badge.t4 .badge-tier { color: var(--tier-platina); }
+  .badge.locked .badge-tier { color: var(--faint); }
+  .badge .track { height: 6px; }
+  .badge-hint { font-size: 10.5px; color: var(--faint); margin-top: 4px; line-height: 1.3; }
+
+  /* ---------- loja ---------- */
+  .wallet { display: flex; gap: 10px; flex-wrap: wrap; }
+  .wallet-item { flex: 1; min-width: 120px; background: var(--input); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .wallet-item b { display: block; font-size: 18px; font-weight: 800; }
+  .shop-cat { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; font-size: 13px; font-weight: 800; }
+  .shop-cat small { color: var(--faint); font-weight: 600; }
+  .reward {
+    display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line);
+  }
+  .reward:last-child { border-bottom: 0; }
+  .reward-ico { font-size: 26px; width: 40px; text-align: center; }
+  .reward-body { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
+  .reward-cost { font-size: 12px; color: var(--gold); font-weight: 700; }
+  .tag-leg { background: linear-gradient(135deg,#ffc857,#ff5fa2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .vault { text-align: center; }
+  .vault .big { font-size: 40px; }
+  .chest-btn { font-size: 46px; animation: bob 2.4s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+
+  /* ---------- regras / hall ---------- */
+  details.card summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  details.card summary::-webkit-details-marker { display: none; }
+  details.card summary::after { content: "▾"; color: var(--faint); transition: transform .2s; }
+  details.card[open] summary::after { transform: rotate(180deg); }
+  details.card .det-body { margin-top: 12px; }
+  .rule-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .rule-row:last-child { border-bottom: 0; }
+
+  /* ---------- navegação inferior ---------- */
+  .bottom-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    background: var(--nav); border-top: 1px solid var(--line);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  }
+  .nav-inner { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 66px 1fr 1fr 1fr; align-items: center; }
+  .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; color: var(--faint); font-size: 10.5px; font-weight: 700; }
+  .tab-btn .ico { font-size: 21px; filter: grayscale(1); opacity: .7; transition: all .2s; }
+  .tab-btn.active { color: var(--text); }
+  .tab-btn.active .ico { filter: none; opacity: 1; transform: translateY(-2px) scale(1.1); }
+  .fab-add {
+    width: 58px; height: 58px; margin: -26px auto 0; border-radius: 50%; background: var(--grad); color: #fff;
+    font-size: 30px; font-weight: 300; display: grid; place-items: center;
+    box-shadow: 0 10px 26px rgba(124,92,255,.55); border: 4px solid var(--bg);
+  }
+
+  /* ---------- chat ---------- */
+  #chat-fab {
+    position: fixed; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 120;
+    width: 50px; height: 50px; border-radius: 50%; background: var(--card-solid); border: 1px solid var(--line);
+    box-shadow: var(--shadow); font-size: 22px; display: grid; place-items: center;
+  }
+  #chat-fab-badge { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%; background: var(--bad); border: 2px solid var(--bg); }
+  #chat-widget {
+    position: fixed; right: 12px; left: 12px; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 150;
+    max-width: 380px; margin-left: auto; height: 60vh; max-height: 520px;
+    background: var(--card-solid); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .chat-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--grad); color: #fff; font-weight: 700; font-size: 14px; }
+  #chat-messages { flex: 1; overflow-y: auto; padding: 12px; }
+  .bubble-row { margin-bottom: 8px; display: flex; }
+  .bubble-row.me { justify-content: flex-end; }
+  .bubble { max-width: 80%; padding: 8px 12px; border-radius: 18px; font-size: 14px; background: var(--input); border: 1px solid var(--line); }
+  .bubble-row.me .bubble { background: var(--grad); color: #fff; border: 0; }
+  .bubble small { display: block; font-size: 10px; opacity: .7; }
+  .chat-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); }
+  .chat-input { margin-top: 0 !important; }
+
+  /* ---------- sheet (registrar atividade) ---------- */
+  .overlay { position: fixed; inset: 0; z-index: 200; background: rgba(5,8,20,.65); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; }
+  .sheet {
+    width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
+    background: var(--card-solid); border: 1px solid var(--line); border-radius: 26px 26px 0 0;
+    padding: 10px 18px calc(22px + env(safe-area-inset-bottom)); animation: up .28s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes up { from { transform: translateY(40px); opacity: 0 } to { transform: none; opacity: 1 } }
+  .grabber { width: 42px; height: 5px; border-radius: 999px; background: var(--line); margin: 4px auto 14px; }
+  .sheet h2 { font-size: 18px; font-weight: 800; margin-bottom: 14px; }
+  .preview-wrap { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .preview-wrap img { max-height: 90px; border-radius: 12px; border: 1px solid var(--line); }
+
+  /* ---------- entrada ---------- */
+  .gate { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+  .gate-card { max-width: 400px; width: 100%; text-align: center; }
+  .gate-card .brand-logo { width: 72px; height: 72px; font-size: 36px; border-radius: 24px; margin: 0 auto 16px; }
+  .gate-card h1 { font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+
+  #lightbox { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; }
+  #lightbox img { max-width: 100%; max-height: 100%; border-radius: 14px; }
+
+  #app-toast {
+    position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 400;
+    background: var(--card-solid); border: 1px solid var(--line); color: var(--text); box-shadow: var(--shadow);
+    padding: 12px 18px; border-radius: 16px; font-size: 14px; font-weight: 600; max-width: 90vw; text-align: center;
+    transition: opacity .3s, transform .3s; opacity: 0; pointer-events: none;
+  }
+  @keyframes confetti-fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: .95; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+  /* ---------- pacote 2: nível, missões, duelo, alerta ---------- */
+  .hero-level { margin-top: 14px; position: relative; z-index: 1; }
+  .hl-top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .hl-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,.25); overflow: hidden; }
+  .hl-track div { height: 100%; border-radius: 999px; background: #fff; transition: width .6s; }
+  .hl-sub { font-size: 11px; opacity: .9; margin-top: 6px; }
+  .alerta { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 18px; margin-bottom: 14px;
+    background: rgba(255,200,87,.14); border: 1px solid rgba(255,200,87,.45); font-size: 13px; font-weight: 600; }
+  .alerta .ico { font-size: 22px; }
+  .mission { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .mission:last-of-type { border-bottom: 0; }
+  .mission-top { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .mission.done .mission-top { color: var(--ok); }
+  .duel { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; text-align: center; }
+  .duel b { display: block; font-size: 22px; font-weight: 800; }
+  .duel .vs { font-weight: 800; color: var(--faint); font-size: 13px; }
+  .duel-bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; margin: 14px 0 8px; background: var(--track); }
+  .duel-bar div { transition: width .6s; }
+  .poke { font-size: 16px; padding: 4px 8px; border-radius: 10px; background: var(--input); border: 1px solid var(--line); }
+  .poke:disabled { opacity: .4; }
+  .goal-mini { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  /* ---------- pacote 3: painel, gráficos, mapa de calor, cronômetro ---------- */
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+  .stat { background: var(--input); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+  .stat b { display: block; font-size: 20px; font-weight: 800; margin-top: 2px; }
+  .stat span { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .stat small { display: block; font-size: 10.5px; color: var(--faint); margin-top: 2px; }
+  .up { color: var(--ok); } .down { color: var(--bad); }
+  .chart { display: flex; align-items: flex-end; gap: 4px; }
+  .chart-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bars { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 96px; width: 100%; }
+  .chart-bar { width: 42%; max-width: 16px; min-height: 2px; border-radius: 6px 6px 2px 2px; transition: height .5s; }
+  .chart-label { font-size: 9.5px; color: var(--faint); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; }
+  .heat { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 3px; }
+  .heat i { aspect-ratio: 1; border-radius: 4px; background: var(--track); display: block; }
+  .heat i.l1 { background: rgba(124,92,255,.35); } .heat i.l2 { background: rgba(124,92,255,.6); }
+  .heat i.l3 { background: rgba(124,92,255,.85); } .heat i.l4 { background: #ff5fa2; }
+  .heat i.fut { opacity: 0; }
+  .heat-legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 8px; font-size: 10px; color: var(--faint); }
+  .heat-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; background: var(--track); }
+  .heat-legend i.l1 { background: rgba(124,92,255,.35); } .heat-legend i.l2 { background: rgba(124,92,255,.6); }
+  .heat-legend i.l3 { background: rgba(124,92,255,.85); } .heat-legend i.l4 { background: #ff5fa2; }
+  .timer-display { font-size: 52px; font-weight: 800; text-align: center; letter-spacing: 1px; font-variant-numeric: tabular-nums; margin: 6px 0 12px; }
+  .timer-btns { display: flex; gap: 8px; }
+  .timer-btns .btn { flex: 1; }
+  .timer-pill { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 4px; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+    background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(124,92,255,.35); cursor: pointer; }
+  .retro { white-space: pre-wrap; font-size: 13.5px; line-height: 1.55; background: var(--input); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin: 12px 0; }
+  .empty { text-align: center; padding: 18px 8px; color: var(--muted); font-size: 14px; }
+  .empty .big { font-size: 34px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ===================== ENTRADA ===================== -->
+<div id="gate" class="gate">
+  <div class="card gate-card">
+    <div class="brand-logo">🏆</div>
+    <h1 class="grad-text">Maricota &amp; Alho</h1>
+    <p class="muted" style="margin:6px 0 20px">Metas, estudos e hábitos a dois. Quem pontua mais na temporada?</p>
+    <form id="name-form">
+      <label class="field" style="text-align:left">
+        Como você quer aparecer no ranking?
+        <input id="name-input" type="text" placeholder="Seu nome" required autocomplete="off" />
+      </label>
+      <button class="btn block">Entrar</button>
+    </form>
+    <p class="tiny faint" style="margin-top:12px">O nome fica salvo só neste aparelho. Cada pessoa entra com o próprio nome no seu celular.</p>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-logo">🏆</div>
+        <div>
+          <div class="brand-name">Maricota &amp; Alho</div>
+          <div class="brand-sub" id="brand-season"></div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="theme-toggle" class="icon-btn" title="Alternar tema claro/escuro">🌙</button>
+        <button id="switch-user" class="avatar" title="Trocar de usuário"></button>
+      </div>
+    </div>
+    <div id="timer-pill" class="timer-pill hidden"></div>
+  </div>
+
+  <main class="wrap">
+
+    <!-- ===== INÍCIO ===== -->
+    <section id="tab-home" class="tab-panel">
+      <div class="card hero">
+        <div class="eyebrow" id="hero-eyebrow"></div>
+        <h1 id="hero-title"></h1>
+        <div class="hero-stats">
+          <div class="hero-stat"><b id="hero-today">0</b><span>pontos hoje</span></div>
+          <div class="hero-stat"><b id="hero-streak">0🔥</b><span>dias seguidos</span></div>
+          <div class="hero-stat"><b id="hero-saldo">0</b><span>para gastar</span></div>
+        </div>
+        <div class="hero-level">
+          <div class="hl-top"><span id="hl-nome"></span><span id="hl-xp"></span></div>
+          <div class="hl-track"><div id="hl-fill"></div></div>
+          <div class="hl-sub" id="hl-sub"></div>
+        </div>
+      </div>
+
+      <div id="alerta"></div>
+
+      <div class="card">
+        <div class="card-head"><h2>🎯 Missões da semana</h2><span class="small muted" id="missoes-sem"></span></div>
+        <div id="missoes"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>⚔️ Duelo da semana</h2><span class="small muted" id="duelo-sem"></span></div>
+        <div id="duelo"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Ranking</h2>
+          <div class="chips" id="period-chips">
+            <button class="chip period-btn" data-period="today">Hoje</button>
+            <button class="chip period-btn on" data-period="7">7 dias</button>
+            <button class="chip period-btn" data-period="30">30 dias</button>
+            <button class="chip period-btn" data-period="all">Temporada</button>
+          </div>
+        </div>
+        <div id="ranking"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>💪 Meta da dupla</h2><span class="small muted" id="meta-sem"></span></div>
+        <div id="meta-casal"></div>
+        <div id="meta-pessoal" class="goal-mini"></div>
+      </div>
+
+      <details class="card">
+        <summary>📋 Como pontuar</summary>
+        <div class="det-body" id="regras-list"></div>
+      </details>
+
+      <details class="card">
+        <summary>🏛️ Hall da fama</summary>
+        <div class="det-body" id="hall"></div>
+      </details>
+    </section>
+
+    <!-- ===== FEED ===== -->
+    <section id="tab-feed" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>Feed de atividades</h2><span class="small muted">temporada atual</span></div>
+        <div id="entries-list"></div>
+      </div>
+    </section>
+
+    <!-- ===== PAINEL ===== -->
+    <section id="tab-painel" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>⏱️ Foco</h2><span class="small muted">cronômetro de estudo</span></div>
+        <div id="timer"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>📊 Estatísticas</h2><span class="small muted">temporada atual</span></div>
+        <div class="chips" id="stat-people"></div>
+        <div class="stat-grid" id="stat-grid"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Pontos por dia</h2><span class="small muted">últimos 14 dias</span></div>
+        <div id="chart-dias"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Pontos por semana</h2><span class="small muted">temporada</span></div>
+        <div id="chart-semanas"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Onde os pontos vêm</h2><span class="small muted" id="ativ-quem"></span></div>
+        <div id="stat-ativ"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>🗓️ Mapa de calor</h2><span class="small muted">últimas 17 semanas</span></div>
+        <div id="heatmap"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>📸 Retrospectiva</h2></div>
+        <div class="chips" id="retro-chips">
+          <button class="chip on" data-retro="atual">Esta semana</button>
+          <button class="chip" data-retro="passada">Semana passada</button>
+          <button class="chip" data-retro="mes">Este mês</button>
+        </div>
+        <div class="retro" id="retro-text"></div>
+        <button id="retro-share" class="btn block">Compartilhar resumo</button>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>💾 Seus dados</h2></div>
+        <p class="small muted" style="margin-bottom:12px">Baixe uma cópia de segurança. As fotos não entram no arquivo, só a informação de que existem.</p>
+        <div class="timer-btns">
+          <button id="export-json" class="btn ghost">Backup (JSON)</button>
+          <button id="export-csv" class="btn ghost">Registros (CSV)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MEDALHAS ===== -->
+    <section id="tab-medalhas" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>🏅 Conquistas</h2><span class="small muted" id="badge-count"></span></div>
+        <div class="chips" id="badge-people"></div>
+        <p class="tiny faint" style="margin-top:10px">Cada medalha tem 4 níveis: bronze, prata, ouro e platina. As secretas aparecem quando você conquista.</p>
+      </div>
+      <div id="badges"></div>
+    </section>
+
+    <!-- ===== LOJA ===== -->
+    <section id="tab-loja" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-head"><h2>💰 Carteira</h2><span class="small muted">saldo da temporada</span></div>
+        <div class="wallet" id="wallet"></div>
+      </div>
+      <div class="card vault" id="cofre"></div>
+      <div class="card vault" id="bau"></div>
+      <div class="card">
+        <div class="card-head"><h2>🎁 Recompensas</h2></div>
+        <div id="loja-itens"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>🧾 Resgates recentes</h2></div>
+        <div id="resgates-hist"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- navegação inferior -->
+  <nav class="bottom-nav">
+    <div class="nav-inner">
+      <button class="tab-btn active" data-tab="home"><span class="ico">🏠</span>Início</button>
+      <button class="tab-btn" data-tab="feed"><span class="ico">📰</span>Feed</button>
+      <button id="fab-add" class="fab-add" aria-label="Registrar atividade">+</button>
+      <button class="tab-btn" data-tab="painel"><span class="ico">📊</span>Painel</button>
+      <button class="tab-btn" data-tab="medalhas"><span class="ico">🏅</span>Medalhas</button>
+      <button class="tab-btn" data-tab="loja"><span class="ico">🎁</span>Loja</button>
+    </div>
+  </nav>
+</div>
+
+<!-- ===================== REGISTRAR ATIVIDADE (sheet) ===================== -->
+<div id="sheet" class="overlay hidden">
+  <div class="sheet">
+    <div class="grabber"></div>
+    <h2 id="form-titulo">Registrar atividade</h2>
+    <form id="entry-form">
+      <label class="field">
+        Atividade
+        <select id="atividade"></select>
+      </label>
+      <label class="field">
+        <span id="valor-label">Valor</span>
+        <input id="valor" type="text" inputmode="decimal" required autocomplete="off" />
+      </label>
+      <label class="field">
+        Data
+        <input id="data" type="date" required />
+      </label>
+      <div class="field">
+        Foto (opcional)
+        <input id="foto" type="file" accept="image/*" style="display:block;margin-top:6px;font-size:12px;color:var(--muted)" />
+        <span class="tiny faint" style="display:block;margin-top:4px;font-weight:500">Dica: no computador, cole um print com Ctrl+V / Cmd+V em qualquer campo.</span>
+        <div id="foto-preview-wrap" class="preview-wrap hidden">
+          <img id="foto-preview-img" />
+          <button type="button" id="foto-preview-remover" class="link-btn" style="color:var(--bad)">remover foto</button>
+        </div>
+      </div>
+      <button type="submit" id="submit-btn" class="btn block">Salvar</button>
+      <button type="button" id="cancelar-edicao" class="btn ghost block" style="margin-top:8px">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== BATE-PAPO ===================== -->
+<button id="chat-fab" class="hidden" aria-label="Bate-papo">💬<span id="chat-fab-badge" class="hidden"></span></button>
+<div id="chat-widget" class="hidden">
+  <div class="chat-head"><span>💬 Bate-papo</span><button id="chat-close" style="color:#fff;font-size:18px">✕</button></div>
+  <div id="chat-messages"></div>
+  <form id="chat-form" class="chat-form">
+    <input id="chat-input" class="chat-input" type="text" placeholder="Escreva uma mensagem..." required autocomplete="off" />
+    <button class="btn sm">Enviar</button>
+  </form>
+</div>
+
+<div id="lightbox" class="hidden"><img id="lightbox-img" src="" alt="" /></div>
+<div id="app-toast"></div>
+
+<!-- gradiente do anel de progresso -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c5cff" /><stop offset="100%" stop-color="#ff5fa2" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyCrs2ntIdduqo3Jv2e4peCuWActEI7cqGI",
+  authDomain: "ranking-metas-a53e1.firebaseapp.com",
+  projectId: "ranking-metas-a53e1",
+  storageBucket: "ranking-metas-a53e1.firebasestorage.app",
+  messagingSenderId: "91386499619",
+  appId: "1:91386499619:web:ac4e2b8ca7d0ec8469d796"
+};
+
+// ============================================================
+// TEMPORADA — o "reset" de pontos.
+// Nada é apagado: o app só conta registros com data >= SEASON.inicio
+// (e resgates feitos a partir dessa data). Tudo que veio antes vira o
+// "Hall da fama" da temporada anterior. Para fazer um novo reset no futuro,
+// é só trocar numero, nome e inicio abaixo.
+// ============================================================
+// "corte" (momento exato do reset, em ms): registros criados antes dele ficam
+// na temporada anterior, mesmo que a data deles seja a de hoje.
+const SEASON = { numero: 1, nome: "Temporada 1", inicio: "2026-11-12", corte: 1794505842180, anterior: "Temporada Zero" };
+
+// ============================================================
+// ATIVIDADES E PONTOS
+// campo: "quantidade" (flashcards, questões), "horas" (sono),
+// "minutos" (vídeo-aula, PDF) ou "ocorrencia" (simulado, atividade física).
+// ============================================================
+const ACTIVITIES = {
+  flashcards: { emoji: "🗂️", label: "Flashcards", campo: "quantidade", campoLabel: "Quantidade de flashcards", bloco: 100, pontosPorBloco: 1 },
+  questoes:   { emoji: "❓", label: "Questões", campo: "quantidade", campoLabel: "Quantidade de questões", bloco: 10, pontosPorBloco: 1 },
+  videoAula:  { emoji: "🎥", label: "Vídeo-aula", campo: "minutos", campoLabel: "Minutos de vídeo-aula", pontosPorHora: 1 },
+  leituraPdf: { emoji: "📄", label: "Leitura de PDF", campo: "minutos", campoLabel: "Minutos lendo PDF", pontosPorHora: 2 },
+  simulado:   { emoji: "📝", label: "Simulado", campo: "ocorrencia", campoLabel: "Quantos simulados", pontosPorOcorrencia: 4 },
+  atividadeFisica: { emoji: "🏋️", label: "Atividade física", campo: "ocorrencia", campoLabel: "Quantas atividades", pontosPorOcorrencia: 2 },
+  sono:       { emoji: "😴", label: "Sono", campo: "horas", campoLabel: "Horas dormidas", minHoras: 7, maxHoras: 9, penalidade: -1 }
+};
+
+// Meta cooperativa da dupla: progressiva, recomeça na semana 1 a cada temporada.
+const META_CASAL_DATA_INICIO = SEASON.inicio;
+const META_CASAL_PONTOS_INICIAL = 20;
+const META_CASAL_INCREMENTO_SEMANAL = 20;
+
+// Cofre da temporada: soma dos pontos da dupla até a temporada inteira.
+const COFRE = { meta: 2500, emoji: "🏝️", premio: "Fim de semana especial a dois" };
+
+// Loja de recompensas (pontos da temporada, menos o que já foi resgatado).
+const STORE_CATS = [
+  { id: "pequena", nome: "Mimos", emoji: "🍬", sub: "pequenas alegrias" },
+  { id: "media", nome: "Programinhas", emoji: "🎈", sub: "momentos a dois" },
+  { id: "grande", nome: "Grandes prêmios", emoji: "🌟", sub: "pra comemorar" },
+  { id: "lendaria", nome: "Lendárias", emoji: "👑", sub: "só pra quem manda muito bem", lendaria: true }
+];
+const STORE_ITEMS = [
+  { id: "playlist", cat: "pequena", emoji: "🎵", label: "Dono da playlist por um dia", custo: 40 },
+  { id: "filme", cat: "pequena", emoji: "🎬", label: "Escolher o filme da noite", custo: 60 },
+  { id: "doce", cat: "pequena", emoji: "🍫", label: "Doce favorito comprado pelo outro", custo: 80 },
+  { id: "louca", cat: "pequena", emoji: "🧽", label: "Folga da louça por um dia", custo: 100 },
+  { id: "cafe", cat: "pequena", emoji: "☕", label: "Café pago pelo outro", custo: 120 },
+  { id: "serie", cat: "media", emoji: "📺", label: "Escolher a série pra maratonar", custo: 150 },
+  { id: "massagem", cat: "media", emoji: "💆", label: "Massagem de 20 minutos", custo: 200 },
+  { id: "delivery", cat: "media", emoji: "🍕", label: "Delivery escolhido por você", custo: 220 },
+  { id: "jantar", cat: "media", emoji: "🍽️", label: "Jantar em casa escolhido por você", custo: 300 },
+  { id: "passeio", cat: "grande", emoji: "🎡", label: "Passeio à escolha do vencedor", custo: 450 },
+  { id: "compra", cat: "grande", emoji: "🛍️", label: "Uma comprinha de até R$ 100", custo: 600 },
+  { id: "restaurante", cat: "grande", emoji: "🍷", label: "Jantar especial em restaurante", custo: 700 },
+  { id: "presente", cat: "lendaria", emoji: "🎁", label: "Presente surpresa", custo: 900 },
+  { id: "viagem", cat: "lendaria", emoji: "🧳", label: "Escapada de um dia inteiro, tudo por conta do outro", custo: 1500 }
+];
+
+// Baú da semana: 1 sorteio grátis por pessoa a cada semana (precisa ter registrado algo na semana).
+const BAU_PREMIOS = [
+  "Escolher o filme da noite 🎬", "Um elogio bem caprichado 💌", "Folga de uma tarefa da casa 🧺",
+  "Cafuné de 10 minutos 💆", "Escolher o jantar de hoje 🍝", "Dono da playlist por um dia 🎵",
+  "Um bilhete de amor escondido 💘", "Sobremesa por conta do outro 🍨", "Escolher o passeio do fim de semana 🌳",
+  "Uma música dedicada 🎶"
+];
+
+// ============================================================
+// A partir daqui é lógica do app.
+// ============================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, doc, onSnapshot, query, orderBy, deleteDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const entriesRef = collection(db, "entries");
+const messagesRef = collection(db, "messages");
+const reactionsRef = collection(db, "reactions");
+const commentsRef = collection(db, "comments");
+const resgatesRef = collection(db, "resgates");
+
+let allEntries = [], allReactions = [], allComments = [], allMessages = [], allResgates = [];
+const loaded = { entries: false, comments: false };
+let currentUser = localStorage.getItem("ranking_user") || "";
+let currentPeriod = "7";
+let currentTab = "home";
+let badgePerson = "";
+const openComments = new Set();
+const REACTION_EMOJIS = ["👍", "❤️", "🔥", "👏", "😂", "😮", "🎉", "💪"];
+const SEASON_TS = SEASON.corte;
+const DAY = 86400000;
+
+// ---------- utilidades ----------
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => (Math.round(n * 10) / 10).toString().replace(".", ",");
+const pad = n => String(n).padStart(2, "0");
+function localIso(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+function todayIso() { return localIso(new Date()); }
+function startOfToday() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+function avatarColor(nome) {
+  let h = 0; for (const c of nome) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `linear-gradient(135deg, hsl(${h} 75% 58%), hsl(${(h + 40) % 360} 75% 52%))`;
+}
+function avatarHtml(nome, sm) {
+  return `<div class="avatar ${sm ? "sm" : ""}" style="background:${avatarColor(nome)}">${esc((nome || "?").trim().charAt(0).toUpperCase())}</div>`;
+}
+
+// ---------- pontos ----------
+function calcPoints(e) {
+  const a = ACTIVITIES[e.atividade];
+  if (!a) return 0;
+  const v = e.valor || 0;
+  if (a.campo === "quantidade") return (v / a.bloco) * a.pontosPorBloco;
+  if (a.campo === "horas" && a.pontosPorHora !== undefined) return v * a.pontosPorHora;
+  if (a.campo === "minutos" && a.pontosPorHora !== undefined) return (v / 60) * a.pontosPorHora;
+  if (a.campo === "horas" && a.minHoras !== undefined) return (v >= a.minHoras && v <= a.maxHoras) ? 0 : a.penalidade;
+  if (a.campo === "ocorrencia") return v * a.pontosPorOcorrencia;
+  return 0;
+}
+function describeValue(e) {
+  const a = ACTIVITIES[e.atividade]; if (!a) return "";
+  if (a.campo === "quantidade") return `${e.valor} ${a.label.toLowerCase()}`;
+  if (a.campo === "horas") return `${e.valor}h`;
+  if (a.campo === "minutos") return `${e.valor}min`;
+  return `${e.valor}x`;
+}
+function describeRule(a) {
+  const p = n => `${n} ponto${n === 1 ? "" : "s"}`;
+  if (a.campo === "quantidade") return `${p(a.pontosPorBloco)} a cada ${a.bloco}`;
+  if (a.campo === "minutos") return `${p(a.pontosPorHora)} por hora`;
+  if (a.campo === "horas" && a.pontosPorHora !== undefined) return `${p(a.pontosPorHora)} por hora`;
+  if (a.campo === "horas") return `${a.penalidade} ponto se dormir menos de ${a.minHoras}h ou mais de ${a.maxHoras}h`;
+  if (a.campo === "ocorrencia") return `${p(a.pontosPorOcorrencia)} por vez`;
+  return "";
+}
+
+// ---------- temporada ----------
+const isSeasonEntry = e => e.data >= SEASON.inicio && (e.criadoEm || 0) >= SEASON.corte;
+const seasonEntries = () => allEntries.filter(isSeasonEntry);
+const seasonResgates = () => allResgates.filter(r => (r.criadoEm || 0) >= SEASON_TS);
+const oldEntries = () => allEntries.filter(e => !isSeasonEntry(e));
+const allAuthors = () => {
+  const s = new Set(allEntries.map(e => e.autor));
+  if (currentUser) s.add(currentUser);
+  return [...s];
+};
+function ganhoDe(autor, entries = seasonEntries()) {
+  return entries.filter(e => e.autor === autor).reduce((s, e) => s + calcPoints(e), 0);
+}
+function saldoDe(autor) {
+  return ganhoDe(autor) - seasonResgates().filter(r => r.autor === autor).reduce((s, r) => s + r.custo, 0);
+}
+function withinPeriod(dateStr, period) {
+  if (period === "all") return true; // a lista já vem filtrada pela temporada
+  const days = period === "today" ? 1 : parseInt(period, 10);
+  const d = new Date(dateStr + "T00:00:00");
+  const diff = (startOfToday() - d) / DAY;
+  return diff >= 0 && diff < days;
+}
+function weekInfo(idx) {
+  const inicio = new Date(META_CASAL_DATA_INICIO + "T00:00:00");
+  const ini = new Date(inicio); ini.setDate(ini.getDate() + idx * 7);
+  const fim = new Date(ini); fim.setDate(fim.getDate() + 7);
+  return { numero: idx + 1, inicioIso: localIso(ini), fimIso: localIso(fim),
+           meta: META_CASAL_PONTOS_INICIAL + META_CASAL_INCREMENTO_SEMANAL * idx };
+}
+function currentWeekIdx() {
+  const inicio = new Date(META_CASAL_DATA_INICIO + "T00:00:00");
+  return Math.max(0, Math.floor((startOfToday() - inicio) / DAY / 7));
+}
+function weekTotal(w) {
+  return seasonEntries().filter(e => e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0);
+}
+function semanasMetaBatida() {
+  let n = 0;
+  for (let i = 0; i <= currentWeekIdx(); i++) { const w = weekInfo(i); if (weekTotal(w) >= w.meta) n++; }
+  return n;
+}
+// Sequência com congelador: a cada semana fechada com 4+ dias ativos você ganha
+// 1 congelador (máx. 2). Um dia sem registro gasta um congelador em vez de
+// zerar a sequência. Tudo é recalculado a partir dos registros (sem salvar nada).
+function streakInfo(autor) {
+  const dias = new Set(seasonEntries().filter(e => e.autor === autor).map(e => e.data));
+  const hoje = todayIso();
+  const d = new Date(SEASON.inicio + "T00:00:00");
+  let streak = 0, melhor = 0, freezes = 0, usados = 0, ativosSemana = 0, i = 0;
+  while (localIso(d) <= hoje) {
+    const iso = localIso(d);
+    if (dias.has(iso)) { streak++; ativosSemana++; melhor = Math.max(melhor, streak); }
+    else if (iso !== hoje) { if (freezes > 0) { freezes--; usados++; } else streak = 0; }
+    if (i % 7 === 6) { if (ativosSemana >= 4) freezes = Math.min(2, freezes + 1); ativosSemana = 0; }
+    d.setDate(d.getDate() + 1); i++;
+  }
+  return { atual: streak, melhor, freezes, usados };
+}
+
+// ---------- missões semanais (3 por semana, giram automaticamente) ----------
+const diasAtivos = es => new Set(es.map(e => e.data)).size;
+const diasCheios = es => { const m = {}; es.forEach(e => (m[e.data] = m[e.data] || new Set()).add(e.atividade)); return Object.values(m).filter(s => s.size >= 3).length; };
+const MISSION_POOL = [
+  { id: "q50", emoji: "❓", label: "Resolver 50 questões", goal: 50, metric: es => sumBy(es, "questoes") },
+  { id: "treino3", emoji: "🏋️", label: "Treinar 3 vezes", goal: 3, metric: es => sumBy(es, "atividadeFisica") },
+  { id: "dias5", emoji: "📆", label: "Registrar em 5 dias diferentes", goal: 5, metric: diasAtivos },
+  { id: "flash300", emoji: "🗂️", label: "Revisar 300 flashcards", goal: 300, metric: es => sumBy(es, "flashcards") },
+  { id: "video120", emoji: "🎥", label: "Assistir 2h de vídeo-aula", goal: 120, fmt: x => horasFmt(x), metric: es => sumBy(es, "videoAula") },
+  { id: "sono4", emoji: "😴", label: "Dormir bem em 4 noites", goal: 4, metric: es => es.filter(e => e.atividade === "sono" && e.valor >= 7 && e.valor <= 9).length },
+  { id: "pdf90", emoji: "📄", label: "Ler 1h30 de PDF", goal: 90, fmt: x => horasFmt(x), metric: es => sumBy(es, "leituraPdf") },
+  { id: "sim1", emoji: "📝", label: "Fazer 1 simulado", goal: 1, metric: es => sumBy(es, "simulado") },
+  { id: "cheio1", emoji: "💎", label: "Ter 1 dia 100% (3+ atividades)", goal: 1, metric: diasCheios },
+  { id: "q100", emoji: "🎯", label: "Resolver 100 questões", goal: 100, metric: es => sumBy(es, "questoes") }
+];
+const MISSION_XP = 40, MISSION_BONUS_XP = 60;
+function missionsOfWeek(idx) { const n = MISSION_POOL.length; return [0, 1, 2].map(k => MISSION_POOL[(idx * 3 + k) % n]); }
+function missionProgress(autor, idx) {
+  const w = weekInfo(idx);
+  const es = seasonEntries().filter(e => e.autor === autor && e.data >= w.inicioIso && e.data < w.fimIso);
+  return missionsOfWeek(idx).map(m => { const value = m.metric(es); return { ...m, value, done: value >= m.goal }; });
+}
+function missionTotals(autor) {
+  let feitas = 0, semanasCheias = 0;
+  for (let i = 0; i <= currentWeekIdx(); i++) {
+    const p = missionProgress(autor, i), n = p.filter(m => m.done).length;
+    feitas += n; if (n === 3) semanasCheias++;
+  }
+  return { feitas, semanasCheias };
+}
+
+// ---------- XP e nível ----------
+const LEVELS = [
+  [0, "Novato"], [100, "Aprendiz"], [300, "Dedicado"], [600, "Focado"], [1000, "Veterano"], [1600, "Expert"],
+  [2400, "Mestre"], [3500, "Grão-mestre"], [5000, "Lenda"], [7500, "Mito"], [10000, "Imortal"]
+];
+function xpDe(autor) {
+  const t = missionTotals(autor);
+  return Math.max(0, Math.round(ganhoDe(autor) * 10)) + t.feitas * MISSION_XP + t.semanasCheias * MISSION_BONUS_XP;
+}
+function levelInfo(xp) {
+  let i = 0; while (i + 1 < LEVELS.length && xp >= LEVELS[i + 1][0]) i++;
+  const prox = LEVELS[i + 1];
+  return { nivel: i + 1, nome: LEVELS[i][1], base: LEVELS[i][0], prox: prox ? prox[0] : null, proxNome: prox ? prox[1] : null };
+}
+
+// ---------- duelo da semana ----------
+function duelTotals(idx) {
+  const w = weekInfo(idx);
+  const t = {}; allAuthors().forEach(a => t[a] = 0);
+  seasonEntries().filter(e => e.data >= w.inicioIso && e.data < w.fimIso).forEach(e => { t[e.autor] = (t[e.autor] || 0) + calcPoints(e); });
+  return Object.entries(t).sort((a, b) => b[1] - a[1]);
+}
+function duelWinner(idx) { const r = duelTotals(idx); return r.length > 1 && r[0][1] > 0 && r[0][1] > r[1][1] ? r[0][0] : null; }
+function duelWins(autor) { let n = 0; for (let i = 0; i < currentWeekIdx(); i++) if (duelWinner(i) === autor) n++; return n; }
+
+// ---------- meta pessoal (fica só neste aparelho) ----------
+const metaPessoalKey = () => `meta_pessoal_${currentUser}`;
+function getMetaPessoal() { const v = parseFloat(localStorage.getItem(metaPessoalKey())); return v > 0 ? v : 30; }
+
+// ============================================================
+// MEDALHAS — 4 níveis (bronze, prata, ouro, platina) + secretas
+// ============================================================
+const TIER_NAMES = ["", "Bronze", "Prata", "Ouro", "Platina"];
+const sumBy = (arr, at) => arr.filter(e => e.atividade === at).reduce((s, e) => s + (e.valor || 0), 0);
+const horasFmt = min => min >= 60 ? `${Math.round(min / 6) / 10}h` : `${min}min`;
+
+const BADGE_DEFS = [
+  // Constância
+  { id: "streak", cat: "Constância", emoji: "🔥", label: "Em chamas", desc: "dias seguidos registrando", unit: "dias", tiers: [3, 7, 14, 30], metric: c => c.bestStreak },
+  { id: "diacheio", cat: "Constância", emoji: "💎", label: "Dia 100%", desc: "dias com 3+ atividades diferentes", unit: "dias", tiers: [1, 5, 15, 30], metric: c => c.diasCompletos },
+  { id: "pontos", cat: "Constância", emoji: "🏆", label: "Colecionador", desc: "pontos acumulados na temporada", unit: "pts", tiers: [50, 150, 400, 1000], metric: c => c.pontos },
+  // Estudo
+  { id: "questoes", cat: "Estudo", emoji: "❓", label: "Mestre das questões", desc: "questões respondidas", unit: "", tiers: [100, 300, 700, 1500], metric: c => c.questoes },
+  { id: "flash", cat: "Estudo", emoji: "🗂️", label: "Memória de ferro", desc: "flashcards revisados", unit: "", tiers: [300, 1000, 2500, 5000], metric: c => c.flashcards },
+  { id: "video", cat: "Estudo", emoji: "🎥", label: "Maratonista de aulas", desc: "de vídeo-aula assistida", fmt: horasFmt, tiers: [120, 600, 1500, 3000], metric: c => c.videoMin },
+  { id: "pdf", cat: "Estudo", emoji: "📄", label: "Devorador de PDFs", desc: "de leitura de PDF", fmt: horasFmt, tiers: [120, 600, 1500, 3000], metric: c => c.pdfMin },
+  { id: "simulado", cat: "Estudo", emoji: "📝", label: "Hora da prova", desc: "simulados feitos", unit: "", tiers: [1, 3, 6, 12], metric: c => c.simulados },
+  // Corpo e mente
+  { id: "fisica", cat: "Corpo e mente", emoji: "🏋️", label: "Corpo são", desc: "atividades físicas", unit: "", tiers: [3, 10, 20, 40], metric: c => c.fisica },
+  { id: "sono", cat: "Corpo e mente", emoji: "😴", label: "Sono de campeão", desc: "noites dormindo entre 7h e 9h", unit: "noites", tiers: [3, 7, 14, 30], metric: c => c.sonoOk },
+  // Dupla e social
+  { id: "dupla", cat: "Dupla e social", emoji: "💞", label: "Dupla imbatível", desc: "semanas com a meta da dupla batida", unit: "sem.", tiers: [1, 2, 4, 8], metric: c => c.semanasMeta },
+  { id: "fotos", cat: "Dupla e social", emoji: "📸", label: "Documentado", desc: "atividades com foto", unit: "", tiers: [3, 10, 25, 50], metric: c => c.fotos },
+  { id: "papo", cat: "Dupla e social", emoji: "💬", label: "Comunicativo", desc: "comentários no feed", unit: "", tiers: [5, 15, 40, 100], metric: c => c.comentarios },
+  { id: "missoes", cat: "Constância", emoji: "🎯", label: "Missionário", desc: "missões semanais cumpridas", unit: "", tiers: [3, 10, 25, 50], metric: c => c.missoes },
+  { id: "duelos", cat: "Dupla e social", emoji: "⚔️", label: "Duelista", desc: "duelos semanais vencidos", unit: "", tiers: [1, 3, 6, 10], metric: c => c.duelos },
+  // Secretas (nível único)
+  { id: "madrugador", cat: "Segredos", emoji: "🌅", label: "Madrugador", secret: true, hint: "Registre uma atividade antes das 7h da manhã.", check: c => c.madrugador },
+  { id: "coruja", cat: "Segredos", emoji: "🦉", label: "Coruja", secret: true, hint: "Registre uma atividade depois das 23h.", check: c => c.coruja },
+  { id: "ouro", cat: "Segredos", emoji: "⚡", label: "Dia de ouro", secret: true, hint: "Faça 20 pontos ou mais em um único dia.", check: c => c.diaDeOuro },
+  { id: "largada", cat: "Segredos", emoji: "🚦", label: "Largada", secret: true, hint: "Faça o primeiro registro da temporada.", check: c => c.registros >= 1 }
+];
+
+function badgeContext(autor) {
+  const mine = seasonEntries().filter(e => e.autor === autor);
+  const porDia = {};
+  mine.forEach(e => { (porDia[e.data] = porDia[e.data] || { set: new Set(), pts: 0 }); porDia[e.data].set.add(e.atividade); porDia[e.data].pts += calcPoints(e); });
+  const dias = Object.values(porDia);
+  const hora = e => e.criadoEm ? new Date(e.criadoEm).getHours() : null;
+  return {
+    registros: mine.length,
+    bestStreak: streakInfo(autor).melhor,
+    missoes: missionTotals(autor).feitas,
+    duelos: duelWins(autor),
+    diasCompletos: dias.filter(d => d.set.size >= 3).length,
+    pontos: mine.reduce((s, e) => s + calcPoints(e), 0),
+    questoes: sumBy(mine, "questoes"),
+    flashcards: sumBy(mine, "flashcards"),
+    videoMin: sumBy(mine, "videoAula"),
+    pdfMin: sumBy(mine, "leituraPdf"),
+    simulados: sumBy(mine, "simulado"),
+    fisica: sumBy(mine, "atividadeFisica"),
+    sonoOk: mine.filter(e => e.atividade === "sono" && e.valor >= 7 && e.valor <= 9).length,
+    semanasMeta: semanasMetaBatida(),
+    fotos: mine.filter(e => e.fotoUrl).length,
+    comentarios: allComments.filter(c => c.autor === autor && (c.criadoEm || 0) >= SEASON_TS).length,
+    madrugador: mine.some(e => { const h = hora(e); return h !== null && h < 7; }),
+    coruja: mine.some(e => { const h = hora(e); return h !== null && h >= 23; }),
+    diaDeOuro: dias.some(d => d.pts >= 20)
+  };
+}
+function computeBadges(autor) {
+  const ctx = badgeContext(autor);
+  return BADGE_DEFS.map(def => {
+    if (def.secret) return { ...def, tier: def.check(ctx) ? 1 : 0, value: 0, secret: true };
+    const value = def.metric(ctx);
+    const tier = def.tiers.filter(t => value >= t).length;
+    return { ...def, value, tier };
+  });
+}
+const showVal = (def, v) => def.fmt ? def.fmt(v) : `${fmt(v)}${def.unit ? " " + def.unit : ""}`;
+
+function renderMedalhas() {
+  const autores = allAuthors();
+  if (!badgePerson || !autores.includes(badgePerson)) badgePerson = currentUser || autores[0] || "";
+  $("badge-people").innerHTML = autores.map(n =>
+    `<button class="chip ${n === badgePerson ? "on" : ""}" data-person="${esc(n)}">${esc(n)}</button>`).join("");
+
+  const list = computeBadges(badgePerson);
+  const feitas = list.reduce((s, b) => s + b.tier, 0);
+  const total = list.reduce((s, b) => s + (b.secret ? 1 : 4), 0);
+  $("badge-count").textContent = `${feitas} de ${total} níveis`;
+
+  const cats = [...new Set(list.map(b => b.cat))];
+  $("badges").innerHTML = cats.map(cat => `
+    <div class="badge-cat">${esc(cat)}</div>
+    <div class="badge-grid">
+      ${list.filter(b => b.cat === cat).map(b => {
+        if (b.secret) {
+          return `<div class="badge ${b.tier ? "t3" : "locked"}">
+            <div class="badge-ico">${b.tier ? b.emoji : "❔"}</div>
+            <div class="badge-body">
+              <div class="badge-name">${b.tier ? esc(b.label) : "Medalha secreta"}</div>
+              <div class="badge-tier">${b.tier ? "Conquistada" : "Secreta"}</div>
+              <div class="badge-hint">${b.tier ? esc(b.hint) : "Descubra como desbloquear."}</div>
+            </div></div>`;
+        }
+        const next = b.tiers[b.tier];
+        const prev = b.tier > 0 ? b.tiers[b.tier - 1] : 0;
+        const pct = next ? Math.min(100, ((b.value - prev) / (next - prev)) * 100) : 100;
+        return `<div class="badge ${b.tier ? "t" + b.tier : "locked"}">
+          <div class="badge-ico">${b.emoji}</div>
+          <div class="badge-body">
+            <div class="badge-name">${esc(b.label)}</div>
+            <div class="badge-tier">${b.tier ? TIER_NAMES[b.tier] : "Bloqueada"}</div>
+            <div class="track"><div class="fill ${b.tier === 4 ? "gold" : ""}" style="width:${pct}%"></div></div>
+            <div class="badge-hint">${next ? `${showVal(b, b.value)} / ${showVal(b, next)} ${esc(b.desc)}` : `Nível máximo! ${showVal(b, b.value)} ${esc(b.desc)}`}</div>
+          </div></div>`;
+      }).join("")}
+    </div>`).join("");
+}
+
+// comemora medalhas novas (só depois de carregar tudo; a 1ª vez só memoriza)
+function checkNewBadges() {
+  if (!currentUser || !loaded.entries || !loaded.comments) return;
+  const key = `badges_vistas_${SEASON.numero}_${currentUser}`;
+  const agora = computeBadges(currentUser).filter(b => b.tier > 0).map(b => `${b.id}:${b.tier}`);
+  const salvo = localStorage.getItem(key);
+  if (salvo === null) { localStorage.setItem(key, JSON.stringify(agora)); return; }
+  const vistas = new Set(JSON.parse(salvo));
+  const novas = computeBadges(currentUser).filter(b => b.tier > 0 && !vistas.has(`${b.id}:${b.tier}`));
+  if (novas.length) {
+    localStorage.setItem(key, JSON.stringify(agora));
+    const b = novas[0];
+    launchFireworks();
+    mostrarToast(`🏅 Nova medalha: ${b.emoji} ${b.label}${b.secret ? "" : " · " + TIER_NAMES[b.tier]}!`, 4200);
+  }
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function launchFireworks() {
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:350;overflow:hidden";
+  document.body.appendChild(overlay);
+  const cores = ["#7c5cff", "#ff5fa2", "#ffc857", "#34d399", "#22d3ee", "#fb7185"];
+  for (let i = 0; i < 90; i++) {
+    const p = document.createElement("div");
+    const size = 6 + Math.random() * 7;
+    p.style.cssText = `position:absolute;top:-10%;left:${Math.random() * 100}%;width:${size}px;height:${size * .45}px;
+      background:${cores[Math.floor(Math.random() * cores.length)]};border-radius:2px;transform:rotate(${Math.random() * 360}deg);
+      animation:confetti-fall ${1.8 + Math.random() * 1.4}s ease-in ${Math.random() * .6}s forwards`;
+    overlay.appendChild(p);
+  }
+  setTimeout(() => overlay.remove(), 3600);
+}
+
+function mostrarToast(texto, ms = 2400) {
+  const t = $("app-toast");
+  t.textContent = texto;
+  t.style.opacity = "1"; t.style.transform = "translateX(-50%) translateY(0)";
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateX(-50%) translateY(-8px)"; }, ms);
+}
+
+function renderHero() {
+  const diaN = Math.max(1, Math.floor((startOfToday() - new Date(SEASON.inicio + "T00:00:00")) / DAY) + 1);
+  $("brand-season").textContent = `${SEASON.nome} · dia ${diaN}`;
+  $("hero-eyebrow").textContent = `${SEASON.nome} · dia ${diaN}`;
+  const h = new Date().getHours();
+  const saud = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+  $("hero-title").textContent = `${saud}, ${currentUser}!`;
+  const hoje = todayIso();
+  $("hero-today").textContent = fmt(seasonEntries().filter(e => e.autor === currentUser && e.data === hoje).reduce((s, e) => s + calcPoints(e), 0));
+  const si = streakInfo(currentUser);
+  $("hero-streak").textContent = `${si.atual}🔥`;
+  $("hero-saldo").textContent = fmt(saldoDe(currentUser));
+  const xp = xpDe(currentUser), lv = levelInfo(xp);
+  $("hl-nome").textContent = `Nível ${lv.nivel} · ${lv.nome}`;
+  $("hl-xp").textContent = lv.prox ? `${xp} / ${lv.prox} XP` : `${xp} XP`;
+  $("hl-fill").style.width = (lv.prox ? Math.min(100, (xp - lv.base) / (lv.prox - lv.base) * 100) : 100) + "%";
+  $("hl-sub").textContent = `🧊 ${si.freezes} congelador${si.freezes === 1 ? "" : "es"} de sequência` +
+    (lv.prox ? ` · faltam ${lv.prox - xp} XP para ${lv.proxNome}` : " · nível máximo!");
+}
+
+function renderAlerta() {
+  const el = $("alerta");
+  const hoje = todayIso();
+  const fezHoje = seasonEntries().some(e => e.autor === currentUser && e.data === hoje);
+  const si = streakInfo(currentUser);
+  const w = weekInfo(currentWeekIdx());
+  const pct = weekTotal(w) / w.meta * 100;
+  let html = "";
+  if (!fezHoje && new Date().getHours() >= 17) {
+    html = `<span class="ico">⏰</span><span>Você ainda não registrou nada hoje.${si.atual > 0 ? ` Sua sequência de ${si.atual} dia${si.atual === 1 ? "" : "s"} está em jogo!` : " Bora começar uma sequência?"}</span>`;
+  } else if (pct >= 70 && pct < 100) {
+    html = `<span class="ico">🔥</span><span>Falta pouco! Só ${fmt(w.meta - weekTotal(w))} pts para a dupla bater a meta da semana.</span>`;
+  }
+  el.innerHTML = html ? `<div class="alerta">${html}</div>` : "";
+}
+
+function renderMissoes() {
+  const idx = currentWeekIdx(), w = weekInfo(idx);
+  $("missoes-sem").textContent = `semana ${w.numero} · +${MISSION_XP} XP cada`;
+  const prog = missionProgress(currentUser, idx);
+  const feitas = prog.filter(m => m.done).length;
+  const outros = allAuthors().filter(a => a !== currentUser);
+  $("missoes").innerHTML = prog.map(m => {
+    const v = m.fmt ? m.fmt(Math.min(m.value, m.goal)) : fmt(Math.min(m.value, m.goal));
+    const g = m.fmt ? m.fmt(m.goal) : m.goal;
+    return `<div class="mission ${m.done ? "done" : ""}">
+      <div class="mission-top"><span>${m.emoji} ${esc(m.label)}</span><span>${m.done ? "✅" : `${v} / ${g}`}</span></div>
+      <div class="track"><div class="fill ${m.done ? "ok" : ""}" style="width:${Math.min(100, m.value / m.goal * 100)}%"></div></div>
+    </div>`;
+  }).join("") + `<p class="tiny faint" style="margin-top:10px">${feitas === 3 ? `🏅 As 3 missões feitas! Bônus de +${MISSION_BONUS_XP} XP.` : `Faça as 3 para ganhar +${MISSION_BONUS_XP} XP de bônus.`}
+    ${outros.map(o => ` · ${esc(o)}: ${missionProgress(o, idx).filter(m => m.done).length}/3`).join("")}</p>`;
+}
+
+function renderDuelo() {
+  const idx = currentWeekIdx(), w = weekInfo(idx);
+  const tot = duelTotals(idx);
+  const falta = Math.max(0, Math.round((new Date(w.fimIso + "T00:00:00") - startOfToday()) / DAY));
+  $("duelo-sem").textContent = `semana ${w.numero} · ${falta} dia${falta === 1 ? "" : "s"} restante${falta === 1 ? "" : "s"}`;
+  if (tot.length < 2) { $("duelo").innerHTML = `<p class="small muted">O duelo começa quando a outra pessoa entrar no app.</p>`; return; }
+  const [a, b] = tot;
+  const soma = Math.max(0.0001, Math.max(0, a[1]) + Math.max(0, b[1]));
+  const pa = Math.max(0, a[1]) / soma * 100;
+  const dif = a[1] - b[1];
+  const placar = {}; allAuthors().forEach(n => placar[n] = duelWins(n));
+  $("duelo").innerHTML = `
+    <div class="duel">
+      <div><div style="display:flex;justify-content:center;margin-bottom:4px">${avatarHtml(a[0])}</div><span class="small muted">${esc(a[0])}</span><b>${fmt(a[1])}</b></div>
+      <div class="vs">VS</div>
+      <div><div style="display:flex;justify-content:center;margin-bottom:4px">${avatarHtml(b[0])}</div><span class="small muted">${esc(b[0])}</span><b>${fmt(b[1])}</b></div>
+    </div>
+    <div class="duel-bar"><div style="width:${a[1] <= 0 && b[1] <= 0 ? 50 : pa}%;background:var(--grad)"></div><div style="flex:1;background:#ffc857"></div></div>
+    <p class="small" style="text-align:center;font-weight:700">${dif > 0.05 ? `${esc(a[0])} lidera por ${fmt(dif)} pts` : "Empate técnico!"}</p>
+    <p class="tiny faint" style="text-align:center;margin-top:6px">Quem perder a semana paga um mimo pro outro 😉 · Placar da temporada: ${Object.entries(placar).map(([n, v]) => `${esc(n)} ${v}`).join(" × ")}</p>`;
+}
+
+function renderMetaPessoal() {
+  const w = weekInfo(currentWeekIdx());
+  const meu = seasonEntries().filter(e => e.autor === currentUser && e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0);
+  const meta = getMetaPessoal();
+  const pct = Math.max(0, Math.min(100, meu / meta * 100));
+  $("meta-pessoal").innerHTML = `
+    <div class="card-head" style="margin-bottom:8px"><span style="font-weight:700;font-size:14px">🎯 Sua meta pessoal</span>
+      <button id="edit-meta-pessoal" class="link-btn">editar</button></div>
+    <div class="track"><div class="fill ${pct >= 100 ? "ok" : ""}" style="width:${pct}%"></div></div>
+    <p class="small muted" style="margin-top:6px">${fmt(meu)} / ${fmt(meta)} pts esta semana${pct >= 100 ? " · ✅ batida!" : ""} · só você vê esta meta</p>`;
+}
+
+// comemora missões novas (1ª vez só memoriza)
+function checkNewMissions() {
+  if (!currentUser || !loaded.entries) return;
+  const key = `missoes_vistas_${SEASON.numero}_${currentUser}`;
+  const idx = currentWeekIdx();
+  const feitas = missionProgress(currentUser, idx).filter(m => m.done);
+  const agora = feitas.map(m => `${idx}:${m.id}`);
+  const salvo = localStorage.getItem(key);
+  if (salvo === null) { localStorage.setItem(key, JSON.stringify(agora)); return; }
+  const vistas = new Set(JSON.parse(salvo));
+  const novas = feitas.filter(m => !vistas.has(`${idx}:${m.id}`));
+  if (novas.length) {
+    localStorage.setItem(key, JSON.stringify([...new Set([...vistas, ...agora])]));
+    launchFireworks();
+    mostrarToast(feitas.length === 3 ? `🏅 Três missões cumpridas! +${MISSION_BONUS_XP} XP de bônus` : `🎯 Missão cumprida: ${novas[0].label} (+${MISSION_XP} XP)`, 4200);
+  }
+}
+
+function renderRanking() {
+  const filtered = seasonEntries().filter(e => withinPeriod(e.data, currentPeriod));
+  const totals = {};
+  allAuthors().forEach(a => totals[a] = 0);
+  filtered.forEach(e => { totals[e.autor] = (totals[e.autor] || 0) + calcPoints(e); });
+  const ranking = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(...ranking.map(r => r[1]), 1);
+  const el = $("ranking");
+  if (!ranking.length) { el.innerHTML = `<div class="empty"><div class="big">🌱</div>Nenhum registro ainda. Toque no + para começar!</div>`; return; }
+  el.innerHTML = ranking.map(([nome, pts], i) => `
+    <div class="rank-row">
+      <div class="medal">${pts > 0 ? (i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "") : ""}</div>
+      ${avatarHtml(nome)}
+      <div class="rank-body">
+        <div class="rank-top"><span>${esc(nome)}${nome === currentUser ? ' <span class="tiny faint">(você)</span>' : ""}</span><span class="rank-pts">${fmt(pts)} pts</span></div>
+        <div class="track"><div class="fill ${i === 0 && pts > 0 ? "gold" : ""}" style="width:${Math.max(0, pts / max * 100)}%"></div></div>
+      </div>
+      ${nome !== currentUser ? `<button class="poke" data-nome="${esc(nome)}" title="Mandar uma cutucada gentil" ${jaCutucou(nome) ? "disabled" : ""}>👋</button>` : ""}
+    </div>`).join("");
+}
+
+function renderMetaCasal() {
+  const w = weekInfo(currentWeekIdx());
+  const total = weekTotal(w);
+  const pct = Math.max(0, Math.min(100, total / w.meta * 100));
+  const atingiu = total >= w.meta;
+  const C = 2 * Math.PI * 48;
+  $("meta-sem").textContent = `semana ${w.numero}`;
+  $("meta-casal").innerHTML = `
+    <div class="goal">
+      <div class="ring">
+        <svg width="112" height="112" viewBox="0 0 112 112">
+          <circle class="ring-bg" cx="56" cy="56" r="48" fill="none" stroke-width="10" />
+          <circle class="ring-fg" cx="56" cy="56" r="48" fill="none" stroke-width="10" stroke-linecap="round"
+                  stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}" />
+        </svg>
+        <div class="ring-center"><div><b>${Math.round(pct)}%</b><br><span>da meta</span></div></div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:22px;font-weight:800">${fmt(total)} <span class="muted" style="font-size:14px;font-weight:600">/ ${fmt(w.meta)} pts</span></div>
+        <p class="small ${atingiu ? "" : "muted"}" style="margin-top:6px;${atingiu ? "color:var(--ok);font-weight:700" : ""}">
+          ${atingiu ? "🎉 Meta batida! Combinem o prêmio." : `Faltam ${fmt(w.meta - total)} pts. A meta sobe ${META_CASAL_INCREMENTO_SEMANAL} a cada semana.`}
+        </p>
+      </div>
+    </div>`;
+  const chave = "meta_casal_comemorada_" + w.inicioIso;
+  if (atingiu && loaded.entries && !localStorage.getItem(chave)) {
+    localStorage.setItem(chave, "1");
+    launchFireworks();
+    mostrarToast(`🎉 Vocês bateram a meta da semana ${w.numero}! Combinem o prêmio.`, 5000);
+  }
+}
+
+function renderRegras() {
+  $("regras-list").innerHTML = Object.values(ACTIVITIES).map(a =>
+    `<div class="rule-row"><span>${a.emoji} ${a.label}</span><span class="muted" style="text-align:right">${describeRule(a)}</span></div>`).join("");
+}
+
+function renderHall() {
+  const velhos = oldEntries();
+  if (!velhos.length) { $("hall").innerHTML = `<p class="small muted">Ainda não há temporada anterior.</p>`; return; }
+  const totais = [...new Set(velhos.map(e => e.autor))].map(a => [a, ganhoDe(a, velhos)]).sort((a, b) => b[1] - a[1]);
+  $("hall").innerHTML = `
+    <p class="small muted" style="margin-bottom:10px">${esc(SEASON.anterior)} · pontuação final</p>
+    ${totais.map(([n, p], i) => `
+      <div class="rank-row" style="margin-bottom:10px">
+        <div class="medal">${i === 0 ? "👑" : i === 1 ? "🥈" : ""}</div>${avatarHtml(n, true)}
+        <div class="rank-body rank-top" style="margin:0"><span>${esc(n)}</span><span>${fmt(p)} pts</span></div>
+      </div>`).join("")}`;
+}
+
+function renderLoja() {
+  const autores = allAuthors();
+  $("wallet").innerHTML = autores.map(n => `
+    <div class="wallet-item">${avatarHtml(n, true)}<div><span class="tiny muted">${esc(n)}</span><b>${fmt(saldoDe(n))}</b></div></div>`).join("");
+
+  // cofre da temporada
+  const totalDupla = autores.reduce((s, n) => s + ganhoDe(n), 0);
+  const pctC = Math.min(100, totalDupla / COFRE.meta * 100);
+  const aberto = totalDupla >= COFRE.meta;
+  $("cofre").innerHTML = `
+    <div class="big">${COFRE.emoji}</div>
+    <h2 style="margin:6px 0 2px">Cofre da temporada</h2>
+    <p class="small muted" style="margin-bottom:12px">${aberto ? "🎉 Cofre aberto!" : "Somando os pontos da dupla, vocês abrem:"} <b style="color:var(--text)">${esc(COFRE.premio)}</b></p>
+    <div class="track" style="height:14px"><div class="fill gold" style="width:${pctC}%"></div></div>
+    <p class="small muted" style="margin-top:8px">${fmt(totalDupla)} / ${COFRE.meta} pts</p>`;
+
+  // baú da semana
+  const w = weekInfo(currentWeekIdx());
+  const marcador = `🎲 [baú S${SEASON.numero}-${w.numero}]`;
+  const jaAbriu = allMessages.some(m => m.autor === currentUser && String(m.texto).startsWith(marcador));
+  const fezAlgo = seasonEntries().some(e => e.autor === currentUser && e.data >= w.inicioIso && e.data < w.fimIso);
+  $("bau").innerHTML = `
+    <button id="bau-btn" class="chest-btn" ${jaAbriu || !fezAlgo ? "disabled style='filter:grayscale(1);opacity:.5;animation:none'" : ""}>🎁</button>
+    <h2 style="margin:6px 0 2px">Baú da semana</h2>
+    <p class="small muted">${jaAbriu ? "Você já abriu o baú desta semana. Volte na próxima!" :
+      fezAlgo ? "Toque no baú para sortear um mimo grátis!" : "Registre uma atividade nesta semana para liberar o baú."}</p>`;
+
+  // recompensas por categoria
+  const saldo = saldoDe(currentUser);
+  $("loja-itens").innerHTML = STORE_CATS.map(cat => `
+    <div class="shop-cat"><span>${cat.emoji}</span><span class="${cat.lendaria ? "tag-leg" : ""}">${cat.nome}</span><small>${cat.sub}</small></div>
+    ${STORE_ITEMS.filter(i => i.cat === cat.id).map(item => {
+      const ok = saldo >= item.custo;
+      return `<div class="reward">
+        <div class="reward-ico">${item.emoji}</div>
+        <div class="reward-body">${esc(item.label)}<div class="reward-cost">${item.custo} pts</div></div>
+        <button class="btn sm resgatar-btn" data-item-id="${item.id}" ${ok ? "" : "disabled"}>Resgatar</button>
+      </div>`;
+    }).join("")}
+    <div style="height:10px"></div>`).join("");
+
+  const hist = [...seasonResgates()].sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0)).slice(0, 10);
+  $("resgates-hist").innerHTML = hist.length
+    ? hist.map(r => `<p class="small muted" style="margin-bottom:6px"><b style="color:var(--text)">${esc(r.autor)}</b> resgatou ${esc(r.item)} <span class="pts-neg">(-${r.custo} pts)</span></p>`).join("")
+    : `<p class="small muted">Nenhum resgate nesta temporada ainda.</p>`;
+}
+
+function reactionsFor(entryId) {
+  const counts = {}, nomes = {};
+  allReactions.filter(r => r.entryId === entryId).forEach(r => {
+    counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+    (nomes[r.emoji] = nomes[r.emoji] || []).push(r.autor);
+  });
+  return { counts, nomes };
+}
+const myReaction = (entryId, emoji) => allReactions.find(r => r.entryId === entryId && r.emoji === emoji && r.autor === currentUser);
+
+function renderFeed() {
+  const el = $("entries-list");
+  const recent = [...seasonEntries()].sort((a, b) => b.data.localeCompare(a.data) || (b.criadoEm || 0) - (a.criadoEm || 0)).slice(0, 30);
+  if (!recent.length) { el.innerHTML = `<div class="empty"><div class="big">📭</div>Nenhuma atividade ainda nesta temporada.</div>`; return; }
+  el.innerHTML = recent.map(e => {
+    const a = ACTIVITIES[e.atividade] || {};
+    const pts = calcPoints(e);
+    const { counts, nomes } = reactionsFor(e.id);
+    const comments = allComments.filter(c => c.entryId === e.id).sort((x, y) => (x.criadoEm || 0) - (y.criadoEm || 0));
+    const isOpen = openComments.has(e.id);
+    const [yy, mm, dd] = e.data.split("-");
+    return `
+    <div class="feed-item" data-entry="${e.id}">
+      <div class="feed-head">
+        ${avatarHtml(e.autor, true)}
+        <div class="feed-main">
+          <div><b>${esc(e.autor)}</b> <span class="muted">· ${dd}/${mm}</span></div>
+          <div>${a.emoji || ""} ${esc(a.label || e.atividade)} <span class="muted">· ${esc(describeValue(e))}</span>
+            <span class="${pts < 0 ? "pts-neg" : "pts-pos"}">${pts >= 0 ? "+" : ""}${fmt(pts)} pts</span></div>
+        </div>
+        ${e.autor === currentUser ? `<span style="display:flex;gap:4px">
+          <button data-id="${e.id}" class="edit-btn link-btn">editar</button>
+          <button data-id="${e.id}" class="del-btn link-btn">excluir</button></span>` : ""}
+      </div>
+      ${e.fotoUrl ? `<img src="${e.fotoUrl}" data-full="${e.fotoUrl}" class="feed-photo" alt="foto da atividade" />` : ""}
+      <div class="react-row">
+        ${REACTION_EMOJIS.map(em => `<button data-entry="${e.id}" data-emoji="${em}" title="${esc((nomes[em] || []).join(", "))}"
+          class="react-btn ${myReaction(e.id, em) ? "mine" : ""}">${em} ${counts[em] || ""}</button>`).join("")}
+        <button data-entry="${e.id}" class="toggle-comments-btn link-btn">💬 ${comments.length || "comentar"}</button>
+      </div>
+      ${Object.keys(nomes).length ? `<p class="tiny faint" style="margin-top:6px">${Object.entries(nomes).map(([em, ns]) => `${em} ${ns.map(esc).join(", ")}`).join(" · ")}</p>` : ""}
+      ${isOpen ? `<div class="comments">
+        ${comments.map(c => `<p class="comment"><b>${esc(c.autor)}:</b> ${esc(c.texto)}</p>`).join("")}
+        <form class="comment-form inline-form" data-entry="${e.id}">
+          <input type="text" placeholder="Escreva um comentário..." required />
+          <button class="btn sm">Enviar</button>
+        </form></div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+function render() {
+  if (!currentUser) return;
+  renderHero(); renderAlerta(); renderMissoes(); renderDuelo(); renderRanking(); renderMetaCasal(); renderMetaPessoal();
+  renderMedalhas(); renderLoja(); renderFeed(); renderHall(); renderPainel();
+  checkNewBadges(); checkNewMissions();
+}
+
+// ============================================================
+// PAINEL: estatísticas, gráficos, mapa de calor, retrospectiva
+// ============================================================
+let statPerson = "";
+let retroModo = "atual";
+const hueOf = nome => { let h = 0; for (const c of nome) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const solid = nome => `hsl(${hueOf(nome)} 75% 58%)`;
+const ddmm = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+const addDias = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+function ptsPorDia(autor) {
+  const m = {};
+  allEntries.filter(e => e.autor === autor).forEach(e => { m[e.data] = (m[e.data] || 0) + calcPoints(e); });
+  return m;
+}
+function barChart(labels, series) {
+  const max = Math.max(1, ...series.flatMap(s => s.vals));
+  return `<div class="legend">${series.map(s => `<span><i style="background:${solid(s.nome)}"></i>${esc(s.nome)}</span>`).join("")}</div>
+    <div class="chart">${labels.map((l, i) => `
+      <div class="chart-col">
+        <div class="chart-bars">${series.map(s => `<div class="chart-bar" title="${esc(s.nome)}: ${fmt(s.vals[i])} pts" style="height:${Math.max(0, s.vals[i]) / max * 100}%;background:${solid(s.nome)}"></div>`).join("")}</div>
+        <div class="chart-label">${l}</div>
+      </div>`).join("")}</div>`;
+}
+
+function renderPainel() {
+  const autores = allAuthors();
+  if (!statPerson || !autores.includes(statPerson)) statPerson = currentUser;
+  $("stat-people").innerHTML = autores.map(n => `<button class="chip ${n === statPerson ? "on" : ""}" data-person="${esc(n)}">${esc(n)}</button>`).join("");
+  $("ativ-quem").textContent = statPerson;
+
+  // --- números da temporada ---
+  const mine = seasonEntries().filter(e => e.autor === statPerson);
+  const porDia = {}; mine.forEach(e => { porDia[e.data] = (porDia[e.data] || 0) + calcPoints(e); });
+  const dias = Object.keys(porDia).length;
+  const total = mine.reduce((s, e) => s + calcPoints(e), 0);
+  let melhor = ["", 0]; Object.entries(porDia).forEach(([d, p]) => { if (p > melhor[1]) melhor = [d, p]; });
+  const idx = currentWeekIdx(), wA = weekInfo(idx);
+  const dentro = w => mine.filter(e => e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0);
+  const semA = dentro(wA), semP = idx > 0 ? dentro(weekInfo(idx - 1)) : null;
+  let deltaHtml = `<b>–</b><small>sem semana anterior ainda</small>`;
+  if (semP !== null && semP > 0) {
+    const dl = Math.round((semA - semP) / semP * 100);
+    deltaHtml = `<b class="${dl >= 0 ? "up" : "down"}">${dl >= 0 ? "▲" : "▼"} ${Math.abs(dl)}%</b><small>${fmt(semA)} vs ${fmt(semP)} pts</small>`;
+  } else if (semP !== null) deltaHtml = `<b>${fmt(semA)}</b><small>semana passada: 0 pts</small>`;
+  $("stat-grid").innerHTML = `
+    <div class="stat"><span>Pontos</span><b>${fmt(total)}</b></div>
+    <div class="stat"><span>Dias ativos</span><b>${dias}</b></div>
+    <div class="stat"><span>Média por dia ativo</span><b>${dias ? fmt(total / dias) : "0"}</b></div>
+    <div class="stat"><span>Melhor dia</span><b>${fmt(melhor[1])}</b><small>${melhor[0] ? ddmm(melhor[0]) : "–"}</small></div>
+    <div class="stat"><span>Tempo de estudo</span><b>${horasFmt(sumBy(mine, "videoAula") + sumBy(mine, "leituraPdf"))}</b><small>vídeo + PDF</small></div>
+    <div class="stat"><span>Questões</span><b>${fmt(sumBy(mine, "questoes"))}</b></div>
+    <div class="stat"><span>Flashcards</span><b>${fmt(sumBy(mine, "flashcards"))}</b></div>
+    <div class="stat"><span>Esta semana vs anterior</span>${deltaHtml}</div>`;
+
+  // --- pontos por dia (14 dias, a dupla toda) ---
+  const hoje = startOfToday();
+  const dias14 = Array.from({ length: 14 }, (_, i) => localIso(addDias(hoje, i - 13)));
+  const mapas = Object.fromEntries(autores.map(a => [a, ptsPorDia(a)]));
+  $("chart-dias").innerHTML = barChart(dias14.map(d => d.slice(8)), autores.map(a => ({ nome: a, vals: dias14.map(d => mapas[a][d] || 0) })));
+
+  // --- pontos por semana (temporada, até 8 semanas) ---
+  const ini = Math.max(0, idx - 7);
+  const sems = Array.from({ length: idx - ini + 1 }, (_, i) => weekInfo(ini + i));
+  $("chart-semanas").innerHTML = barChart(sems.map(w => "S" + w.numero), autores.map(a => ({
+    nome: a, vals: sems.map(w => seasonEntries().filter(e => e.autor === a && e.data >= w.inicioIso && e.data < w.fimIso).reduce((s, e) => s + calcPoints(e), 0))
+  }))) + `<p class="tiny faint" style="margin-top:10px">Meta da dupla nesta semana: ${fmt(wA.meta)} pts (soma dos dois).</p>`;
+
+  // --- por atividade ---
+  const porAtiv = Object.entries(ACTIVITIES).map(([k, a]) => [a, mine.filter(e => e.atividade === k).reduce((s, e) => s + calcPoints(e), 0)]);
+  const maxA = Math.max(1, ...porAtiv.map(x => x[1]));
+  $("stat-ativ").innerHTML = total === 0 && mine.length === 0
+    ? `<p class="small muted">Sem registros nesta temporada ainda.</p>`
+    : porAtiv.sort((a, b) => b[1] - a[1]).map(([a, p]) => `
+      <div style="margin-bottom:12px"><div class="rank-top" style="margin-bottom:5px;font-weight:600;font-size:13px"><span>${a.emoji} ${a.label}</span><span>${fmt(p)} pts</span></div>
+      <div class="track" style="height:8px"><div class="fill" style="width:${Math.max(0, p / maxA * 100)}%"></div></div></div>`).join("");
+
+  // --- mapa de calor (17 semanas, de segunda a domingo, usa todo o histórico) ---
+  const mp = mapas[statPerson] || {};
+  const seg = addDias(hoje, -((hoje.getDay() + 6) % 7));
+  const inicioH = addDias(seg, -16 * 7);
+  let cel = "";
+  for (let i = 0; i < 17 * 7; i++) {
+    const d = addDias(inicioH, i), iso = localIso(d), p = mp[iso] || 0;
+    const lv = d > hoje ? "fut" : p <= 0 ? "" : p < 5 ? "l1" : p < 10 ? "l2" : p < 20 ? "l3" : "l4";
+    cel += `<i class="${lv}" title="${ddmm(iso)}: ${fmt(p)} pts"></i>`;
+  }
+  $("heatmap").innerHTML = `<div class="heat">${cel}</div>
+    <div class="heat-legend">menos <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> mais</div>`;
+
+  renderRetro();
+}
+
+// ---------- retrospectiva ----------
+function retroPeriodo() {
+  const idx = currentWeekIdx();
+  if (retroModo === "atual") { const w = weekInfo(idx); return { titulo: `Semana ${w.numero}`, ini: w.inicioIso, fim: w.fimIso }; }
+  if (retroModo === "passada") { if (idx === 0) return null; const w = weekInfo(idx - 1); return { titulo: `Semana ${w.numero}`, ini: w.inicioIso, fim: w.fimIso }; }
+  const h = new Date();
+  const ini = localIso(new Date(h.getFullYear(), h.getMonth(), 1));
+  const fim = localIso(new Date(h.getFullYear(), h.getMonth() + 1, 1));
+  return { titulo: h.toLocaleDateString("pt-BR", { month: "long" }), ini, fim };
+}
+function retroTexto() {
+  const p = retroPeriodo();
+  if (!p) return "Ainda não há semana anterior nesta temporada.";
+  const es = seasonEntries().filter(e => e.data >= p.ini && e.data < p.fim);
+  const fimShow = localIso(addDias(new Date(p.fim + "T00:00:00"), -1));
+  if (!es.length) return `📸 Retrospectiva · ${p.titulo} (${ddmm(p.ini)} a ${ddmm(fimShow)})\n\nNenhum registro neste período ainda.`;
+  const autores = [...new Set(es.map(e => e.autor))];
+  const resumo = autores.map(a => {
+    const m = es.filter(e => e.autor === a);
+    const pts = m.reduce((s, e) => s + calcPoints(e), 0);
+    return { a, pts, dias: new Set(m.map(e => e.data)).size, q: sumBy(m, "questoes"), f: sumBy(m, "flashcards"),
+             est: sumBy(m, "videoAula") + sumBy(m, "leituraPdf"), tr: sumBy(m, "atividadeFisica"), sim: sumBy(m, "simulado") };
+  }).sort((x, y) => y.pts - x.pts);
+  const medalhas = ["🥇", "🥈", "🥉"];
+  let t = `📸 Retrospectiva · ${p.titulo} (${ddmm(p.ini)} a ${ddmm(fimShow)})\n`;
+  resumo.forEach((r, i) => {
+    t += `\n${medalhas[i] || "•"} ${r.a}: ${fmt(r.pts)} pts em ${r.dias} dia${r.dias === 1 ? "" : "s"}`;
+    const det = [r.q && `${fmt(r.q)} questões`, r.f && `${fmt(r.f)} flashcards`, r.est && `${horasFmt(r.est)} de estudo`, r.tr && `${fmt(r.tr)} treino${r.tr === 1 ? "" : "s"}`, r.sim && `${fmt(r.sim)} simulado${r.sim === 1 ? "" : "s"}`].filter(Boolean);
+    if (det.length) t += `\n   ${det.join(" · ")}`;
+  });
+  const soma = resumo.reduce((s, r) => s + r.pts, 0);
+  t += `\n\n💞 Juntos: ${fmt(soma)} pts`;
+  if (resumo.length > 1 && resumo[0].pts > resumo[1].pts) t += `\n🏆 Destaque: ${resumo[0].a}`;
+  return t + `\n\n— Maricota & Alho`;
+}
+function renderRetro() {
+  document.querySelectorAll("#retro-chips .chip").forEach(c => c.classList.toggle("on", c.dataset.retro === retroModo));
+  $("retro-text").textContent = retroTexto();
+}
+$("retro-chips").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-retro]"); if (!b) return;
+  retroModo = b.dataset.retro; renderRetro();
+});
+$("retro-share").addEventListener("click", async () => {
+  const text = retroTexto();
+  try {
+    if (navigator.share) { await navigator.share({ text }); return; }
+    await navigator.clipboard.writeText(text); mostrarToast("📋 Resumo copiado!");
+  } catch (e) { if (e && e.name !== "AbortError") mostrarToast("Não consegui compartilhar, copie o texto manualmente."); }
+});
+$("stat-people").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-person]"); if (!b) return;
+  statPerson = b.dataset.person; renderPainel();
+});
+
+// ---------- exportar dados ----------
+function baixar(nome, conteudo, mime) {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: mime }));
+  const a = document.createElement("a"); a.href = url; a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  mostrarToast("💾 Arquivo gerado: " + nome);
+}
+$("export-json").addEventListener("click", () => {
+  const dados = {
+    app: "Maricota & Alho", exportadoEm: new Date().toISOString(), temporada: SEASON,
+    registros: allEntries.map(({ fotoUrl, ...e }) => ({ ...e, temFoto: !!fotoUrl })),
+    resgates: allResgates, comentarios: allComments, reacoes: allReactions, mensagens: allMessages
+  };
+  baixar(`backup-maricota-alho-${todayIso()}.json`, JSON.stringify(dados, null, 2), "application/json");
+});
+$("export-csv").addEventListener("click", () => {
+  const cel = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const linhas = [["data", "autor", "atividade", "valor", "pontos", "temporada"].join(",")];
+  [...allEntries].sort((a, b) => a.data.localeCompare(b.data)).forEach(e =>
+    linhas.push([e.data, e.autor, e.atividade, e.valor, fmt(calcPoints(e)).replace(",", "."), isSeasonEntry(e) ? SEASON.nome : SEASON.anterior].map(cel).join(",")));
+  baixar(`registros-maricota-alho-${todayIso()}.csv`, "﻿" + linhas.join("\n"), "text/csv;charset=utf-8");
+});
+
+// ============================================================
+// CRONÔMETRO DE ESTUDO (+ pomodoro opcional)
+// O estado fica salvo no aparelho, então sobrevive a recarregar a página.
+// ============================================================
+const TIMER_KEY = "foco_timer";
+const TIMER_PADRAO = { ativ: "videoAula", start: null, acum: 0, marco: 0, pomo: false };
+function timerGet() { try { return { ...TIMER_PADRAO, ...(JSON.parse(localStorage.getItem(TIMER_KEY)) || {}) }; } catch (e) { return { ...TIMER_PADRAO }; } }
+function timerSet(s) { try { localStorage.setItem(TIMER_KEY, JSON.stringify(s)); } catch (e) {} }
+const timerElapsed = s => s.acum + (s.start ? Date.now() - s.start : 0);
+function relogio(ms) {
+  const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+function goTab(nome) { document.querySelector(`.tab-btn[data-tab="${nome}"]`).click(); }
+
+function initTimer() {
+  const opcoes = Object.entries(ACTIVITIES).filter(([, a]) => a.campo === "minutos")
+    .map(([k, a]) => `<option value="${k}">${a.emoji} ${a.label}</option>`).join("");
+  $("timer").innerHTML = `
+    <label class="field" style="margin-bottom:0">O que você vai fazer?
+      <select id="timer-ativ">${opcoes}</select></label>
+    <div class="timer-display" id="timer-display">00:00</div>
+    <label class="small muted" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;justify-content:center">
+      <input type="checkbox" id="timer-pomo" /> Modo pomodoro (aviso de pausa a cada 25 min)</label>
+    <div class="timer-btns">
+      <button class="btn" id="timer-toggle">Iniciar</button>
+      <button class="btn ghost" id="timer-stop">Parar e registrar</button>
+    </div>`;
+  const s = timerGet();
+  $("timer-ativ").value = ACTIVITIES[s.ativ] ? s.ativ : "videoAula";
+  $("timer-pomo").checked = !!s.pomo;
+  $("timer-ativ").addEventListener("change", () => { const x = timerGet(); x.ativ = $("timer-ativ").value; timerSet(x); tick(); });
+  $("timer-pomo").addEventListener("change", () => { const x = timerGet(); x.pomo = $("timer-pomo").checked; timerSet(x); });
+  $("timer-toggle").addEventListener("click", () => {
+    const x = timerGet();
+    if (x.start) { x.acum = timerElapsed(x); x.start = null; } else { x.start = Date.now(); }
+    timerSet(x); tick();
+  });
+  $("timer-stop").addEventListener("click", () => {
+    const x = timerGet(); const ms = timerElapsed(x);
+    if (ms < 30000) {
+      timerSet({ ...TIMER_PADRAO, ativ: x.ativ, pomo: x.pomo }); tick();
+      mostrarToast("Tempo muito curto para registrar (menos de 30 s)."); return;
+    }
+    const minutos = Math.max(1, Math.round(ms / 60000));
+    timerSet({ ...TIMER_PADRAO, ativ: x.ativ, pomo: x.pomo }); tick();
+    resetForm(); atividadeSelect.value = x.ativ; updateValorField(); valorInput.value = String(minutos); abrirSheet();
+    mostrarToast(`⏱️ ${minutos} min prontos para registrar. Confira e salve!`);
+  });
+  $("timer-pill").addEventListener("click", () => goTab("painel"));
+  tick();
+  setInterval(tick, 1000);
+}
+function tick() {
+  const s = timerGet(), ms = timerElapsed(s), rodando = !!s.start;
+  const disp = $("timer-display"); if (!disp) return;
+  disp.textContent = relogio(ms);
+  $("timer-toggle").textContent = rodando ? "Pausar" : (ms > 0 ? "Continuar" : "Iniciar");
+  const pill = $("timer-pill");
+  if (ms > 0) {
+    const a = ACTIVITIES[s.ativ] || {};
+    pill.classList.remove("hidden");
+    pill.innerHTML = `<span>⏱️ ${relogio(ms)} · ${a.emoji || ""} ${esc(a.label || "")}</span><span>${rodando ? "● rodando" : "⏸ pausado"}</span>`;
+  } else pill.classList.add("hidden");
+  if (rodando && s.pomo) {
+    const bloco = Math.floor(ms / (25 * 60000));
+    if (bloco > s.marco) {
+      s.marco = bloco; timerSet(s);
+      mostrarToast("🍅 25 minutos de foco! Hora de uma pausa curta.", 6000);
+      try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+    }
+  }
+}
+
+// ---------- cutucada gentil (vai pro bate-papo, 1 por dia por pessoa) ----------
+const pokeKey = nome => `cutucou_${currentUser}_${nome}_${todayIso()}`;
+const jaCutucou = nome => !!localStorage.getItem(pokeKey(nome));
+$("ranking").addEventListener("click", async (ev) => {
+  const b = ev.target.closest(".poke"); if (!b || b.disabled) return;
+  const nome = b.dataset.nome;
+  b.disabled = true;
+  localStorage.setItem(pokeKey(nome), "1");
+  await addDoc(messagesRef, { autor: currentUser, texto: `👋 ${currentUser} cutucou ${nome}: bora registrar alguma coisa hoje?`, criadoEm: Date.now() });
+  mostrarToast(`👋 Cutucada enviada para ${nome}!`);
+});
+$("meta-pessoal").addEventListener("click", (ev) => {
+  if (!ev.target.closest("#edit-meta-pessoal")) return;
+  const v = parseFloat(String(prompt("Quantos pontos você quer fazer por semana? (só você vê)", getMetaPessoal()) || "").replace(",", "."));
+  if (v > 0) { localStorage.setItem(metaPessoalKey(), String(v)); renderMetaPessoal(); }
+});
+
+// ---------- eventos do feed (delegação) ----------
+$("entries-list").addEventListener("click", async (ev) => {
+  const t = ev.target.closest("button, img");
+  if (!t) return;
+  if (t.tagName === "IMG" && t.dataset.full) {
+    $("lightbox-img").src = t.dataset.full; $("lightbox").classList.remove("hidden"); return;
+  }
+  if (t.classList.contains("del-btn")) {
+    if (confirm("Excluir este registro?")) await deleteDoc(doc(db, "entries", t.dataset.id));
+  } else if (t.classList.contains("edit-btn")) {
+    const entry = allEntries.find(e => e.id === t.dataset.id);
+    if (entry) entrarEmModoEdicao(entry);
+  } else if (t.classList.contains("react-btn")) {
+    const existing = myReaction(t.dataset.entry, t.dataset.emoji);
+    if (existing) await deleteDoc(doc(db, "reactions", existing.id));
+    else await addDoc(reactionsRef, { entryId: t.dataset.entry, autor: currentUser, emoji: t.dataset.emoji, criadoEm: Date.now() });
+  } else if (t.classList.contains("toggle-comments-btn")) {
+    const id = t.dataset.entry;
+    openComments.has(id) ? openComments.delete(id) : openComments.add(id);
+    renderFeed();
+  }
+});
+$("entries-list").addEventListener("submit", async (ev) => {
+  const form = ev.target.closest(".comment-form"); if (!form) return;
+  ev.preventDefault();
+  const input = form.querySelector("input");
+  const texto = input.value.trim(); if (!texto) return;
+  await addDoc(commentsRef, { entryId: form.dataset.entry, autor: currentUser, texto, criadoEm: Date.now() });
+  input.value = "";
+});
+
+// ---------- loja (delegação) ----------
+$("loja-itens").addEventListener("click", async (ev) => {
+  const btn = ev.target.closest(".resgatar-btn"); if (!btn) return;
+  const item = STORE_ITEMS.find(i => i.id === btn.dataset.itemId);
+  if (!item || saldoDe(currentUser) < item.custo) return;
+  if (!confirm(`Resgatar "${item.label}" por ${item.custo} pts?`)) return;
+  await addDoc(resgatesRef, { autor: currentUser, item: item.label, custo: item.custo, criadoEm: Date.now() });
+  mostrarToast(`${item.emoji} Resgatado! Aproveite.`);
+});
+$("bau").addEventListener("click", async (ev) => {
+  const btn = ev.target.closest("#bau-btn"); if (!btn || btn.disabled) return;
+  const w = weekInfo(currentWeekIdx());
+  const premio = BAU_PREMIOS[Math.floor(Math.random() * BAU_PREMIOS.length)];
+  btn.disabled = true;
+  await addDoc(messagesRef, { autor: currentUser, texto: `🎲 [baú S${SEASON.numero}-${w.numero}] ${currentUser} abriu o baú da semana e ganhou: ${premio}`, criadoEm: Date.now() });
+  launchFireworks();
+  mostrarToast(`🎁 Você ganhou: ${premio}`, 4500);
+});
+
+// ---------- medalhas: trocar pessoa ----------
+$("badge-people").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-person]"); if (!b) return;
+  badgePerson = b.dataset.person; renderMedalhas();
+});
+
+// ============================================================
+// FOTO, FORMULÁRIO, EDIÇÃO
+// ============================================================
+function compressImage(file, maxDim = 900, quality = 0.6) {
+  return new Promise((resolve, reject) => {
+    const img = new Image(); const reader = new FileReader();
+    reader.onload = () => { img.src = reader.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > height && width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+      else if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+const atividadeSelect = $("atividade");
+atividadeSelect.innerHTML = Object.entries(ACTIVITIES).map(([k, a]) =>
+  `<option value="${k}">${a.emoji} ${a.label} (${describeRule(a)})</option>`).join("");
+renderRegras();
+
+const valorInput = $("valor");
+function updateValorField() {
+  const a = ACTIVITIES[atividadeSelect.value];
+  $("valor-label").textContent = a.campoLabel;
+  valorInput.value = a.campo === "ocorrencia" ? "1" : "";
+}
+atividadeSelect.addEventListener("change", updateValorField);
+updateValorField();
+
+const entryForm = $("entry-form");
+const submitBtn = $("submit-btn");
+const fotoInput = $("foto");
+let editandoId = null;
+
+function showFotoPreview(src) {
+  if (!src) { hideFotoPreview(); return; }
+  $("foto-preview-img").src = typeof src === "string" ? src : URL.createObjectURL(src);
+  $("foto-preview-wrap").classList.remove("hidden");
+}
+function hideFotoPreview() { $("foto-preview-wrap").classList.add("hidden"); $("foto-preview-img").src = ""; }
+fotoInput.addEventListener("change", () => showFotoPreview(fotoInput.files[0]));
+$("foto-preview-remover").addEventListener("click", () => { fotoInput.value = ""; hideFotoPreview(); });
+
+function abrirSheet() { $("sheet").classList.remove("hidden"); document.body.style.overflow = "hidden"; }
+function fecharSheet() { $("sheet").classList.add("hidden"); document.body.style.overflow = ""; }
+function resetForm() {
+  editandoId = null;
+  entryForm.reset(); hideFotoPreview();
+  $("data").value = todayIso();
+  updateValorField();
+  $("form-titulo").textContent = "Registrar atividade";
+  submitBtn.textContent = "Salvar";
+}
+function entrarEmModoEdicao(entry) {
+  editandoId = entry.id;
+  atividadeSelect.value = entry.atividade; updateValorField();
+  valorInput.value = entry.valor;
+  $("data").value = entry.data;
+  fotoInput.value = "";
+  entry.fotoUrl ? showFotoPreview(entry.fotoUrl) : hideFotoPreview();
+  $("form-titulo").textContent = "Editar atividade";
+  submitBtn.textContent = "Salvar edição";
+  abrirSheet();
+}
+$("fab-add").addEventListener("click", () => { resetForm(); abrirSheet(); });
+$("cancelar-edicao").addEventListener("click", () => { fecharSheet(); resetForm(); });
+$("sheet").addEventListener("click", (ev) => { if (ev.target === $("sheet")) { fecharSheet(); resetForm(); } });
+
+// colar print (Ctrl+V) enquanto o formulário está aberto
+document.addEventListener("paste", (ev) => {
+  if ($("sheet").classList.contains("hidden")) return;
+  const items = ev.clipboardData && ev.clipboardData.items; if (!items) return;
+  for (const item of items) {
+    if (item.type && item.type.startsWith("image/")) {
+      const file = item.getAsFile(); if (!file) continue;
+      const dt = new DataTransfer();
+      dt.items.add(new File([file], `colado-${Date.now()}.png`, { type: file.type || "image/png" }));
+      fotoInput.files = dt.files; showFotoPreview(fotoInput.files[0]);
+      mostrarToast("📎 Print colado!"); ev.preventDefault(); break;
+    }
+  }
+}, true);
+
+entryForm.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const atividade = atividadeSelect.value;
+  const valor = parseFloat(String(valorInput.value).replace(",", "."));
+  const data = $("data").value;
+  const file = fotoInput.files[0];
+  if (!valor || valor <= 0 || !data) return;
+  const editando = !!editandoId;
+  submitBtn.disabled = true; submitBtn.textContent = "Salvando...";
+  try {
+    let fotoUrl = null;
+    if (file) fotoUrl = await compressImage(file);
+    else if (editando && !$("foto-preview-wrap").classList.contains("hidden")) {
+      const original = allEntries.find(e => e.id === editandoId);
+      fotoUrl = original ? (original.fotoUrl || null) : null;
+    }
+    if (editando) await updateDoc(doc(db, "entries", editandoId), { atividade, valor, data, fotoUrl });
+    else await addDoc(entriesRef, { autor: currentUser, atividade, valor, data, criadoEm: Date.now(), fotoUrl });
+    fecharSheet(); resetForm();
+    const pts = calcPoints({ atividade, valor });
+    mostrarToast(editando ? "✅ Atividade atualizada" : `✅ Registrado! ${pts >= 0 ? "+" : ""}${fmt(pts)} pts`);
+  } catch (err) {
+    alert("Erro ao salvar: " + err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = editandoId ? "Salvar edição" : "Salvar";
+  }
+});
+
+// ============================================================
+// ABAS, PERÍODO, TEMA
+// ============================================================
+document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {
+  currentTab = btn.dataset.tab;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+  $("tab-" + currentTab).classList.remove("hidden");
+  window.scrollTo({ top: 0 });
+}));
+document.querySelectorAll(".period-btn").forEach(btn => btn.addEventListener("click", () => {
+  currentPeriod = btn.dataset.period;
+  document.querySelectorAll(".period-btn").forEach(b => b.classList.toggle("on", b === btn));
+  renderRanking();
+}));
+
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $("theme-toggle").textContent = t === "light" ? "☀️" : "🌙";
+  document.querySelector('meta[name="theme-color"]').content = t === "light" ? "#f3f1ff" : "#0a0e1f";
+}
+{
+  let saved = null; try { saved = localStorage.getItem("ranking_theme"); } catch (e) {}
+  applyTheme(saved || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
+}
+$("theme-toggle").addEventListener("click", () => {
+  const t = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  applyTheme(t); try { localStorage.setItem("ranking_theme", t); } catch (e) {}
+});
+
+// ============================================================
+// BATE-PAPO
+// ============================================================
+let chatAberto = false;
+const salvoVistas = localStorage.getItem("chat_msgs_vistos");
+let chatMsgCountVisto = salvoVistas !== null ? parseInt(salvoVistas, 10) : null;
+
+function renderChat() {
+  const el = $("chat-messages");
+  const msgs = [...allMessages].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+  el.innerHTML = msgs.map(m => `
+    <div class="bubble-row ${m.autor === currentUser ? "me" : ""}">
+      <div class="bubble">${m.autor !== currentUser ? `<small>${esc(m.autor)}</small>` : ""}${esc(m.texto)}</div>
+    </div>`).join("");
+  el.scrollTop = el.scrollHeight;
+  if (!chatAberto && allMessages.length > chatMsgCountVisto) $("chat-fab-badge").classList.remove("hidden");
+}
+function abrirChat() {
+  chatAberto = true;
+  $("chat-widget").classList.remove("hidden"); $("chat-fab").classList.add("hidden"); $("chat-fab-badge").classList.add("hidden");
+  chatMsgCountVisto = allMessages.length; localStorage.setItem("chat_msgs_vistos", String(chatMsgCountVisto));
+  $("chat-messages").scrollTop = $("chat-messages").scrollHeight;
+}
+function fecharChat() { chatAberto = false; $("chat-widget").classList.add("hidden"); $("chat-fab").classList.remove("hidden"); }
+$("chat-fab").addEventListener("click", abrirChat);
+$("chat-close").addEventListener("click", fecharChat);
+$("chat-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const texto = $("chat-input").value.trim(); if (!texto) return;
+  await addDoc(messagesRef, { autor: currentUser, texto, criadoEm: Date.now() });
+  $("chat-input").value = "";
+});
+$("lightbox").addEventListener("click", () => $("lightbox").classList.add("hidden"));
+
+// ============================================================
+// TEMPO REAL
+// ============================================================
+onSnapshot(query(entriesRef, orderBy("data", "desc")), snap => {
+  allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() })); loaded.entries = true; render();
+});
+onSnapshot(reactionsRef, snap => { allReactions = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderFeed(); });
+onSnapshot(commentsRef, snap => {
+  allComments = snap.docs.map(d => ({ id: d.id, ...d.data() })); loaded.comments = true; render();
+});
+onSnapshot(resgatesRef, snap => { allResgates = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); });
+onSnapshot(query(messagesRef, orderBy("criadoEm", "asc")), snap => {
+  allMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (chatMsgCountVisto === null) { chatMsgCountVisto = allMessages.length; localStorage.setItem("chat_msgs_vistos", String(chatMsgCountVisto)); }
+  renderChat(); renderLoja();
+});
+
+// ============================================================
+// IDENTIFICAÇÃO
+// ============================================================
+function setupUser() {
+  $("switch-user").outerHTML = `<button id="switch-user" class="avatar" title="Trocar de usuário" style="background:${avatarColor(currentUser)}">${esc(currentUser.charAt(0).toUpperCase())}</button>`;
+  $("switch-user").addEventListener("click", trocarUsuario);
+  $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("chat-fab").classList.remove("hidden");
+  badgePerson = currentUser;
+  render();
+}
+function trocarUsuario() {
+  if (!confirm("Trocar de usuário neste aparelho?")) return;
+  localStorage.removeItem("ranking_user"); currentUser = "";
+  $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("chat-fab").classList.add("hidden"); fecharChat();
+}
+$("name-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const name = $("name-input").value.trim(); if (!name) return;
+  currentUser = name; localStorage.setItem("ranking_user", name); setupUser();
+});
+$("data").value = todayIso();
+initTimer();
+if (currentUser) setupUser();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
